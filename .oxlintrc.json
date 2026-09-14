@@ -20,7 +20,8 @@
     "no-unused-vars": [
       "warn",
       {
-        "varsIgnorePattern": "^(I[A-Z]|.*Port)"
+        "varsIgnorePattern": "^(I[A-Z]|.*Port)",
+        "argsIgnorePattern": "^_"
       }
     ],
     "no-underscore-dangle": "off",
@@ -30,7 +31,8 @@
     "typescript/no-unsafe-assignment": "error",
     "typescript/no-unsafe-call": "error",
     "typescript/no-unsafe-member-access": "error",
-    "typescript/no-unsafe-return": "error"
+    "typescript/no-unsafe-return": "error",
+    "react/react-in-jsx-scope": "off"
   },
   "ignorePatterns": ["dist/", "node_modules/", ".next/", "*.json", "*.md", "*.css"],
   "overrides": [
