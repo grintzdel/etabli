@@ -4,6 +4,7 @@
     { "path": "./tsconfig.root.json" },
     { "path": "./packages/contract" },
     { "path": "./packages/shared" },
-    { "path": "./packages/test-utils" }
+    { "path": "./packages/test-utils" },
+    { "path": "./packages/server" }
   ]
 }

@@ -13,7 +13,9 @@
     "typecheck": "tsc --build --verbose",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
-    "check": "pnpm run build:packages && pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test"
+    "check": "pnpm run build:packages && pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test",
+    "dev:server": "pnpm --filter @etabli/server run dev",
+    "db:migrate": "pnpm --filter @etabli/server run db:migrate"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
