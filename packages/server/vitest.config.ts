@@ -6,5 +6,6 @@ export default defineConfig({
     include: ['src/**/*.test.ts'],
     environment: 'node',
     testTimeout: 30_000,
+    env: { JWT_SECRET: 'test-secret-not-a-secret-thirty-two-chars' },
   },
 })

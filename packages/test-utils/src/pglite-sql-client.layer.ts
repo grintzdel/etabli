@@ -4,6 +4,8 @@ import type { Connection } from '@effect/sql/SqlConnection'
 import { SqlError } from '@effect/sql/SqlError'
 import * as Statement from '@effect/sql/Statement'
 import { PGlite } from '@electric-sql/pglite'
+import { btree_gist } from '@electric-sql/pglite/contrib/btree_gist'
+import { citext } from '@electric-sql/pglite/contrib/citext'
 import * as Context from 'effect/Context'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
@@ -86,7 +88,7 @@ export const PgLiteSqlClientLayer = (
       const pg = yield* Effect.acquireRelease(
         Effect.tryPromise({
           try: async () => {
-            const db = new PGlite()
+            const db = new PGlite({ extensions: { citext, btree_gist } })
             await db.waitReady
             return db
           },
