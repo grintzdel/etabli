@@ -11,10 +11,18 @@ export type SessionNavProps = {
 
 export const SessionNav = ({ displayName, isPlatformAdmin, isFabmanager, signOut }: SessionNavProps) => (
   <>
+    <Link href="/habilitations" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
+      Habilitations
+    </Link>
     {isFabmanager ? (
-      <Link href="/manage/machines" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
-        Machines
-      </Link>
+      <>
+        <Link href="/manage/machines" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
+          Machines
+        </Link>
+        <Link href="/manage/certifications" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
+          File
+        </Link>
+      </>
     ) : null}
     {isPlatformAdmin ? (
       <Link href="/admin/ateliers" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">

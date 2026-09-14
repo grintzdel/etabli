@@ -1,0 +1,31 @@
+{
+  "name": "@etabli/bc-certification",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@effect/platform": "^0.97.2",
+    "@effect/sql": "^0.52.1",
+    "@etabli/contract": "workspace:*",
+    "@etabli/shared": "workspace:*",
+    "effect": "^3.22.2"
+  },
+  "devDependencies": {
+    "@etabli/test-utils": "workspace:*",
+    "@types/node": "^22.10.2",
+    "tsdown": "^0.23.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}

@@ -11,6 +11,9 @@
       "path": "./packages/bc-atelier"
     },
     {
+      "path": "./packages/bc-certification"
+    },
+    {
       "path": "./packages/bc-identity"
     },
     {
