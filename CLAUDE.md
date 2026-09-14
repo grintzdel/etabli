@@ -30,8 +30,17 @@ traité comme `verify-full` — comportement voulu, à ignorer.
 Le jalon 1 (`bc-identity`) est conçu :
 `docs/superpowers/specs/2026-09-14-jalon-1-identite-design.md` fixe le périmètre, la
 durée de vie du jeton, la sémantique de la déconnexion, le rôle exact de
-`proxy.ts` et la base sur laquelle tournent les E2E. Prochaine étape : son plan
-d'implémentation.
+`proxy.ts` et la base sur laquelle tournent les E2E.
+
+L'outillage de test de la §10 est en place. `compose.yaml` lance un
+`postgres:18-alpine` sur `:5433` — Neon est en 18.6. `pnpm verify` lève le
+conteneur, joue les migrations, puis les E2E contre deux serveurs (`:3001`
+l'API, `:3000` le web). Sur une machine neuve il n'y a rien à copier :
+`db:test:up` crée `.env.test` depuis `.env.test.example` s'il manque.
+
+Playwright ne réutilise jamais un serveur déjà sur `:3001` : un `pnpm dev`
+qui traîne est branché sur Neon, et le réutiliser ferait tourner les E2E
+contre la base de développement.
 
 ## Repos de référence
 
