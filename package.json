@@ -19,7 +19,10 @@
     "dev": "concurrently -k -n api,web -c yellow,cyan \"pnpm run dev:server\" \"pnpm run dev:web\"",
     "dev:web": "pnpm --filter @etabli/web run dev",
     "test:e2e": "pnpm --filter @etabli/web run test:e2e",
-    "verify": "pnpm run check && pnpm --filter @etabli/web run build && pnpm run test:e2e"
+    "verify": "pnpm run check && pnpm --filter @etabli/web run build && pnpm run db:test:up && pnpm run db:migrate:test && pnpm run test:e2e",
+    "db:test:up": "docker compose up -d --wait postgres && ([ -f .env.test ] || cp .env.test.example .env.test)",
+    "db:test:down": "docker compose down",
+    "db:migrate:test": "pnpm --filter @etabli/server run db:migrate:test"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

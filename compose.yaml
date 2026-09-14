@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: etabli
+      POSTGRES_PASSWORD: etabli
+      POSTGRES_DB: etabli_test
+    ports:
+      - '5433:5432'
+    # PGDATA moved under /var/lib/postgresql/<major>/docker in the 18 image; the
+    # declared volume is still the parent, so the tmpfs has to cover the parent.
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U etabli -d etabli_test']
+      interval: 1s
+      timeout: 3s
+      retries: 30

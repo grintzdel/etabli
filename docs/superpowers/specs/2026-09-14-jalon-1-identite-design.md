@@ -360,8 +360,9 @@ de démarrage de l'API se lise comme tel, au lieu de se manifester en 500 dans u
 ### La base
 
 Un `compose.yaml` à la racine lance un Postgres à la même version majeure que Neon, sur un port
-dédié. Un `.env.test` non versionné le pointe ; un `.env.test.example` est versionné. Le workflow CI
-gagne un `services: postgres`, et `pnpm verify` joue les migrations avant les E2E.
+dédié. Neon est en 18.6, donc l'image est `postgres:18-alpine`. Un `.env.test` non versionné le
+pointe ; un `.env.test.example` est versionné. `pnpm verify` lève le conteneur puis joue les
+migrations avant les E2E, et la CI n'a rien de plus à déclarer — voir l'écart 11.3.
 
 Détail qui coûterait une demi-heure s'il n'était pas écrit : le `.gitignore` ignore `.env.*` avec une
 seule exception, `!.env.example`. Il faut y ajouter `!.env.test.example`, faute de quoi le fichier
@@ -421,6 +422,22 @@ version majeure du conteneur est épinglée sur celle de Neon.
 La §10 de la spec maîtresse ne liste pas `POST /auth/logout`, et ce jalon n'en ajoute pas. Ce n'est
 pas un oubli : avec un jeton sans état, il n'y a rien à révoquer. La note existe pour que l'absence
 se lise comme une décision.
+
+### 11.3 · La CI utilise compose, pas `services:`
+
+La §10 de ce document disait d'abord que le workflow CI gagnerait un bloc `services: postgres`. Il
+n'en gagne aucun : `pnpm verify` appelle `docker compose up -d --wait`, en local comme en CI.
+
+Un bloc `services:` redéclare l'image, les identifiants et le port que `compose.yaml` déclare déjà.
+Deux déclarations de la même chose dérivent — la version se bumpe d'un côté et pas de l'autre, et
+l'écart n'est visible dans aucun diff. Avec compose des deux côtés, `image: postgres:18-alpine` ne
+s'écrit qu'une fois, et `pnpm verify` est littéralement la même commande sur les deux machines.
+
+Ce que `services:` aurait donné en plus : un démarrage en parallèle du checkout et de
+`pnpm install`. Quelques secondes sur un job plafonné à vingt minutes.
+
+`.env.test` étant non versionné, la CI ne l'a pas. `db:test:up` le crée depuis `.env.test.example`
+s'il manque, donc ni le workflow ni une machine neuve n'ont d'étape de copie à faire.
 
 ---
 
