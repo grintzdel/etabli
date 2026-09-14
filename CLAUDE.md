@@ -12,10 +12,15 @@ plages avec le paramètre `pages`).
 
 ## État
 
-Conception validée et commitée. Aucun code écrit. Le plan d'implémentation du
-jalon 0 est écrit :
-`docs/superpowers/plans/2026-09-14-jalon-0-fondations.md` — 10 tâches, de la
-racine pnpm à la page d'accueil. Prochaine étape : l'exécuter, tâche par tâche.
+Jalon 0 exécuté et étiqueté `jalon-0`. Le monorepo tient : `contract`,
+`shared`, `test-utils`, `server` et `apps/web`. `pnpm verify` est vert — 63
+tests unitaires, `next build`, 9 E2E Playwright.
+
+Reste à faire avant le jalon 1 : brancher une vraie base Neon. `.env` n'existe
+pas, donc `pnpm db:migrate` et `pnpm dev:server` n'ont jamais tourné contre
+Postgres. Le migrator et le client SQL ne sont couverts que par pglite.
+
+Prochaine étape : le plan du jalon 1 (`bc-identity`).
 
 ## Repos de référence
 
