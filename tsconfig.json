@@ -11,6 +11,9 @@
       "path": "./packages/bc-atelier"
     },
     {
+      "path": "./packages/bc-booking"
+    },
+    {
       "path": "./packages/bc-certification"
     },
     {
