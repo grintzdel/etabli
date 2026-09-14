@@ -12,3 +12,15 @@ export class AtelierNotJoinableError extends Schema.TaggedError<AtelierNotJoinab
   { atelierId: Schema.String },
   HttpApiSchema.annotations({ status: 404 })
 ) {}
+
+export class AtelierUnknownError extends Schema.TaggedError<AtelierUnknownError>()(
+  'AtelierUnknownError',
+  { atelierId: Schema.String },
+  HttpApiSchema.annotations({ status: 404 })
+) {}
+
+export class AtelierSlugTakenError extends Schema.TaggedError<AtelierSlugTakenError>()(
+  'AtelierSlugTakenError',
+  { slug: Schema.String },
+  HttpApiSchema.annotations({ status: 409 })
+) {}
