@@ -23,6 +23,7 @@
     "@effect/sql": "^0.52.1",
     "@effect/sql-pg": "^0.53.0",
     "@etabli/bc-atelier": "workspace:*",
+    "@etabli/bc-booking": "workspace:*",
     "@etabli/bc-certification": "workspace:*",
     "@etabli/bc-identity": "workspace:*",
     "@etabli/contract": "workspace:*",

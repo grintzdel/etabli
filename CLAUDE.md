@@ -12,75 +12,55 @@ plages avec le paramètre `pages`).
 
 ## État
 
-Jalon 0 terminé et étiqueté `jalon-0`. Le monorepo tient : `contract`,
-`shared`, `test-utils`, `server` et `apps/web`. `pnpm verify` est vert — 63
-tests unitaires, `next build`, 9 E2E Playwright.
+Jalons 0 à 3 terminés et sur `main`. Jalon 4 (réservation) commencé.
 
-Neon est branché. `pnpm db:migrate` a appliqué `0001_create_domain_events`
-contre la base réelle, et un second passage ne réapplique rien.
-`pnpm dev:server` démarre contre Neon ; avec un mot de passe faux il refuse de
-démarrer, donc la connexion est bien sur le chemin du boot et non différée.
-Les chemins `@effect/sql-pg` et `PgMigrator.layer` ne sont donc plus couverts
-par le seul pglite.
+`pnpm check` est vert : 332 tests unitaires, `next build`. Les 51 E2E
+Playwright passent mais **ne tournent plus dans `pnpm verify`, sur décision de
+l'auteur** — `pnpm db:test:up` puis `pnpm test:e2e` pour les lancer.
 
-Sur une machine neuve : copier `.env.example` en `.env` et y mettre l'URL
-*pooled* du projet Neon. `pg` émet un avertissement sur `sslmode=require`
-traité comme `verify-full` — comportement voulu, à ignorer.
+Ce qui existe, package par package :
 
-Le jalon 1 (`bc-identity`) est conçu :
-`docs/superpowers/specs/2026-09-14-jalon-1-identite-design.md` fixe le périmètre, la
-durée de vie du jeton, la sémantique de la déconnexion, le rôle exact de
-`proxy.ts` et la base sur laquelle tournent les E2E.
+- `bc-identity` — inscription, connexion, `GET /auth/me`, bcrypt, jose,
+  `AuthMiddleware`, cookie httpOnly posé par Next, `proxy.ts`
+- `bc-atelier` — ateliers, adhésions, machines ; annuaire public et fiche avec
+  `use cache` / `cacheTag` ; onboarding persisté ; routes `/admin/ateliers` et
+  `/manage/machines`
+- `bc-certification` — demander, accorder, révoquer ; file de validation
+  fabmanager ; l'habilitation porte sur **une machine**, pas sur un type — écart
+  assumé au §9 de la spec
+- `bc-booking` — pour l'instant le domaine, la migration `0005`, le repository
+  et `GET /machines/:id/availability`. Les commands d'écriture viennent ensuite.
 
-Le jalon 1 est implémenté : `packages/bc-identity` (domaine, deux commands,
-une query, repository SQL et mémoire, hacheur bcrypt, émetteur jose,
-middleware d'authentification), les trois routes montées sur `etabliApi`, et
-côté web `modules/identity`, `src/server/` et les pages `(auth)` et `(app)`.
-72 tests unitaires verts, `next build` vert.
+Neon est branché et à jour des cinq migrations. Sur une machine neuve : copier
+`.env.example` en `.env` et y mettre l'URL *pooled* du projet Neon. `pg` émet un
+avertissement sur `sslmode=require` traité comme `verify-full` — comportement
+voulu, à ignorer.
 
-**Les E2E ne tournent plus dans `pnpm verify`, sur décision de l'auteur.** Les
-16 tests Playwright existent et passent (`pnpm test:e2e`, 3,4 s), mais le gate
-s'arrête à `check` + `next build`. Pour les lancer : `pnpm db:test:up` puis
-`pnpm test:e2e`.
+`pnpm db:seed:test` insère trois ateliers de démonstration de façon idempotente ;
+le `globalSetup` de Playwright l'appelle. `E2E_SKIP_SEED=1` le désactive.
+`compose.yaml` lance un `postgres:18-alpine` sur `:5433`. Playwright ne réutilise
+jamais un serveur déjà sur `:3001` : un `pnpm dev` qui traîne est branché sur
+Neon, et le réutiliser ferait tourner les E2E contre la base de développement.
 
-Le jalon 2 est aux deux tiers. Côté serveur, `packages/bc-atelier` porte le
-domaine (atelier, adhésion, machine), la migration `0003_create_ateliers`, le
-repository SQL et mémoire, et les deux lectures publiques `GET /ateliers` et
-`GET /ateliers/:slug` montées sur `etabliApi`. La recherche par proximité est
-une haversine en SQL nu — pas de PostGIS, pglite n'en a pas besoin.
+Les contextes ne se dépendent pas. Chacun déclare un port pour ce qu'il attend
+d'un autre — `MembershipLookup`, `MemberProfile`, `MachineDirectory`,
+`MemberDirectory`, `MachineCatalog` — et `packages/server/src/layers/` les
+branche. Le Tag `AuthMiddleware` et `AccountSuspendedError` vivent dans `shared`.
 
-Côté web, `modules/atelier` (modèle, port, adapters HTTP et mémoire,
-composants) alimente `/ateliers` et `/ateliers/[slug]`. Les deux lectures
-passent par `use cache` avec `cacheTag('ateliers')` et
-`cacheTag('atelier-<slug>')`, sur un `cacheLife('minutes')` : quand les routes
-d'administration arriveront, c'est `revalidateTag` qui rendra une publication
-visible tout de suite. `app/not-found.tsx` remplace le 404 anglais de Next.
+### Réservation — ce qui est tranché
 
-`pnpm db:seed:test` insère trois ateliers de démonstration (deux publiés, un
-brouillon) de façon idempotente ; le `globalSetup` de Playwright l'appelle, si
-bien que `pnpm test:e2e` se suffit à lui-même après `pnpm db:test:up`.
-`E2E_SKIP_SEED=1` le désactive.
+La contrainte d'exclusion `bookings_no_overlap` est en base, sous
+`btree_gist` : la règle 2 est donc garantie deux fois, comme le veut le §5 de la
+spec. Le repository SQL traduit la violation `23P01` en `BookingOverlapError`.
 
-`POST /onboarding/complete` crée l'adhésion et marque le profil. Il est
-idempotent : repasser par l'onboarding remplace la pratique déclarée sans
-créer de seconde adhésion. `GET /auth/me` rend désormais les adhésions, la
-pratique et `onboardingCompletedAt`.
+`@effect/sql-pg` tourne sur `pg` en TCP et `SqlClient.withTransaction` est
+disponible : **aucun changement de driver n'est nécessaire** pour les écritures
+multi-instructions. La limite « pas de transaction » de `neon-http` vient des
+règles Drizzle globales et ne s'applique pas ici.
 
-Les deux contextes ne se dépendent pas. Chacun déclare un port pour ce qu'il
-attend de l'autre — `MembershipLookup` côté identité, `MemberProfile` côté
-atelier — et `packages/server/src/layers/onboarding.layer.ts` les branche. Le
-Tag `AuthMiddleware` et `AccountSuspendedError` ont migré dans `shared` pour
-qu'un contexte puisse exiger une route authentifiée sans importer
-`bc-identity`.
-
-Reste à faire pour clore le jalon : le parcours web d'onboarding, et les
-routes d'administration qui créent un atelier autrement qu'en SQL.
-
-`compose.yaml` lance un `postgres:18-alpine` sur `:5433` — Neon est en 18.6.
-`db:test:up` crée `.env.test` depuis `.env.test.example` s'il manque.
-Playwright ne réutilise jamais un serveur déjà sur `:3001` : un `pnpm dev`
-qui traîne est branché sur Neon, et le réutiliser ferait tourner les E2E
-contre la base de développement.
+Les horaires d'ouverture sont des constantes (`8h`–`22h`, `Europe/Paris`) tant
+que le §7 les garde en v1.1. Les créneaux sont calculés en heure locale de
+l'atelier, transition d'heure d'été comprise.
 
 ## Repos de référence
 

@@ -1,0 +1,36 @@
+export const BookingStatus = {
+  CONFIRMED: 'CONFIRMED',
+  CHECKED_IN: 'CHECKED_IN',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+  NO_SHOW: 'NO_SHOW',
+} as const
+export type BookingStatus = (typeof BookingStatus)[keyof typeof BookingStatus]
+
+export const ACTIVE_BOOKING_STATUSES = [BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN] as const
+
+export const CheckInMethod = {
+  NFC: 'NFC',
+  MANUAL: 'MANUAL',
+} as const
+export type CheckInMethod = (typeof CheckInMethod)[keyof typeof CheckInMethod]
+
+export const BookableMachineStatus = {
+  AVAILABLE: 'AVAILABLE',
+  MAINTENANCE: 'MAINTENANCE',
+  RETIRED: 'RETIRED',
+} as const
+export type BookableMachineStatus = (typeof BookableMachineStatus)[keyof typeof BookableMachineStatus]
+
+export const SlotReason = {
+  FREE: 'FREE',
+  BOOKED: 'BOOKED',
+  PAST: 'PAST',
+  MACHINE_UNAVAILABLE: 'MACHINE_UNAVAILABLE',
+} as const
+export type SlotReason = (typeof SlotReason)[keyof typeof SlotReason]
+
+export const ATELIER_TIME_ZONE = 'Europe/Paris'
+export const OPENING_HOUR = 8
+export const CLOSING_HOUR = 22
+export const AVAILABILITY_DAYS = 7

@@ -1,4 +1,5 @@
 export * from './atelier'
+export * from './booking'
 export * from './build-path'
 export * from './certification'
 export * from './health'
