@@ -1,3 +1,4 @@
+export * from './atelier'
 export * from './build-path'
 export * from './health'
 export * from './identity'
