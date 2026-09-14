@@ -12,6 +12,6 @@ const HttpLive = makeHttpLive({ port, infrastructure: ServerInfrastructureLayer 
 const program = Effect.gen(function* () {
   const config = yield* AppConfig
   yield* Effect.log(`Etabli server starting (env=${config.env}, port=${port})`)
-}).pipe(Effect.zipRight(Layer.launch(HttpLive))) as unknown as Effect.Effect<void, unknown, never>
+}).pipe(Effect.zipRight(Layer.launch(HttpLive)))
 
 NodeRuntime.runMain(program)

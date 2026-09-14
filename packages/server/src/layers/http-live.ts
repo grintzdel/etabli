@@ -2,6 +2,8 @@ import { createServer } from 'node:http'
 
 import { HttpApiBuilder, HttpServer } from '@effect/platform'
 import { NodeHttpServer } from '@effect/platform-node'
+import type { PgClient } from '@effect/sql-pg'
+import type * as SqlClient from '@effect/sql/SqlClient'
 import * as Layer from 'effect/Layer'
 
 import { ApiLive } from './api-live'
@@ -10,7 +12,7 @@ import { SqlClientLive } from './sql-client.layer'
 
 export interface MakeHttpLiveOptions {
   readonly port: number
-  readonly infrastructure: Layer.Layer<never, unknown, never>
+  readonly infrastructure: Layer.Layer<SqlClient.SqlClient | PgClient.PgClient, unknown, never>
   readonly withMigrator?: boolean
 }
 
