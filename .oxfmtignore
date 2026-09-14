@@ -6,3 +6,5 @@ pnpm-lock.yaml
 *.tsbuildinfo
 docs/
 CLAUDE.md
+README.md
+next-env.d.ts

@@ -18,7 +18,8 @@
     "db:migrate": "pnpm --filter @etabli/server run db:migrate",
     "dev": "concurrently -k -n api,web -c yellow,cyan \"pnpm run dev:server\" \"pnpm run dev:web\"",
     "dev:web": "pnpm --filter @etabli/web run dev",
-    "test:e2e": "pnpm --filter @etabli/web run test:e2e"
+    "test:e2e": "pnpm --filter @etabli/web run test:e2e",
+    "verify": "pnpm run check && pnpm --filter @etabli/web run build && pnpm run test:e2e"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

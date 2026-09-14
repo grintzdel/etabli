@@ -58,7 +58,7 @@ describe('workspace language rules', () => {
 
   it('declares no TypeScript enum anywhere', () => {
     const offenders = sources.filter((file) =>
-      /(?:^|\s)(?:const\s+)?enum\s+[A-Za-z_$]/.test(stripComments(readFileSync(join(root, file), 'utf8')))
+      /(?:^|[\s;])(?:const\s+)?enum\s+[A-Za-z_$][\w$]*\s*\{/.test(stripComments(readFileSync(join(root, file), 'utf8')))
     )
 
     expect(offenders).toEqual([])

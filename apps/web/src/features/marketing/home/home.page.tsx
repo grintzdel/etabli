@@ -35,7 +35,7 @@ const steps = [
 export const HomePage = () => (
   <main className="mx-auto flex max-w-5xl flex-col gap-16 px-6 py-20">
     <section className="flex flex-col gap-6">
-      <StatusBadge tone="warn" label="Réseau d'ateliers partagés" />
+      <StatusBadge tone="warn" label="Réseau d'ateliers partagés" className="self-start" />
       <h1 className="font-display text-4xl leading-tight font-bold tracking-tight uppercase sm:text-6xl">
         On ne réserve pas une découpeuse laser parce qu'elle est libre. On la réserve parce qu'on a le droit de s'en
         servir.
