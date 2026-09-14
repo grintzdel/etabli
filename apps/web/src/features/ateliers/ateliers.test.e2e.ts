@@ -38,7 +38,7 @@ test('lists the published ateliers and hides the drafts', async ({ page }) => {
   await page.goto('/ateliers')
   const ateliers = page.getByRole('list', { name: 'Ateliers' })
 
-  await expect(ateliers.getByRole('link', { name: 'La Forge' })).toBeVisible()
+  await expect(ateliers.getByRole('link', { name: 'La Forge', exact: true })).toBeVisible()
   await expect(ateliers.getByRole('link', { name: 'Fabrique Lyonnaise' })).toBeVisible()
   await expect(ateliers.getByRole('link', { name: /en préparation/i })).toHaveCount(0)
 })
@@ -48,13 +48,13 @@ test('narrows the directory down to one city', async ({ page }) => {
   const ateliers = page.getByRole('list', { name: 'Ateliers' })
 
   await expect(ateliers.getByRole('link', { name: 'Fabrique Lyonnaise' })).toBeVisible()
-  await expect(ateliers.getByRole('link', { name: 'La Forge' })).toHaveCount(0)
+  await expect(ateliers.getByRole('link', { name: 'La Forge', exact: true })).toHaveCount(0)
 })
 
 test('narrows the directory down to one machine kind', async ({ page }) => {
   await page.goto('/ateliers?machineKind=WOOD_LATHE')
   const ateliers = page.getByRole('list', { name: 'Ateliers' })
 
-  await expect(ateliers.getByRole('link', { name: 'La Forge' })).toBeVisible()
+  await expect(ateliers.getByRole('link', { name: 'La Forge', exact: true })).toBeVisible()
   await expect(ateliers.getByRole('link', { name: 'Fabrique Lyonnaise' })).toHaveCount(0)
 })

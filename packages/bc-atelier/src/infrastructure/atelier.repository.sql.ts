@@ -1,6 +1,6 @@
 import * as SqlClient from '@effect/sql/SqlClient'
 import { RepoError } from '@etabli/shared/errors'
-import type { AtelierId } from '@etabli/shared/schema'
+import type { AtelierId, UserId } from '@etabli/shared/schema'
 import * as DateTime from 'effect/DateTime'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
@@ -182,6 +182,33 @@ export const makeAtelierRepositorySql = (sql: SqlClient.SqlClient) =>
       `.pipe(
         Effect.map((rows) => (rows[0] === undefined ? null : toAtelier(rows[0]))),
         Effect.mapError(fail('ateliers.findPublishedBySlug'))
+      ),
+
+    findPublishedById: (id: AtelierId) =>
+      sql<AtelierRow>`
+        SELECT id, slug, name, description, street, postal_code, city, country,
+               latitude::double precision AS latitude, longitude::double precision AS longitude,
+               status, created_at, updated_at
+        FROM ateliers
+        WHERE id = ${id} AND status = ${AtelierStatus.PUBLISHED}
+        LIMIT 1
+      `.pipe(
+        Effect.map((rows) => (rows[0] === undefined ? null : toAtelier(rows[0]))),
+        Effect.mapError(fail('ateliers.findPublishedById'))
+      ),
+
+    findMembership: (userId: UserId, atelierId: AtelierId) =>
+      sql<MembershipRow>`
+        SELECT * FROM memberships WHERE user_id = ${userId} AND atelier_id = ${atelierId} LIMIT 1
+      `.pipe(
+        Effect.map((rows) => (rows[0] === undefined ? null : toMembership(rows[0]))),
+        Effect.mapError(fail('memberships.findOne'))
+      ),
+
+    listMembershipsForUser: (userId: UserId) =>
+      sql<MembershipRow>`SELECT * FROM memberships WHERE user_id = ${userId} ORDER BY joined_at ASC`.pipe(
+        Effect.map((rows) => rows.map(toMembership)),
+        Effect.mapError(fail('memberships.listForUser'))
       ),
 
     listMachines: (atelierId: AtelierId) =>

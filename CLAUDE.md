@@ -61,8 +61,20 @@ brouillon) de façon idempotente ; le `globalSetup` de Playwright l'appelle, si
 bien que `pnpm test:e2e` se suffit à lui-même après `pnpm db:test:up`.
 `E2E_SKIP_SEED=1` le désactive.
 
-Reste à faire pour clore le jalon : l'onboarding qui produit une adhésion, et
-les routes d'administration qui créent un atelier autrement qu'en SQL.
+`POST /onboarding/complete` crée l'adhésion et marque le profil. Il est
+idempotent : repasser par l'onboarding remplace la pratique déclarée sans
+créer de seconde adhésion. `GET /auth/me` rend désormais les adhésions, la
+pratique et `onboardingCompletedAt`.
+
+Les deux contextes ne se dépendent pas. Chacun déclare un port pour ce qu'il
+attend de l'autre — `MembershipLookup` côté identité, `MemberProfile` côté
+atelier — et `packages/server/src/layers/onboarding.layer.ts` les branche. Le
+Tag `AuthMiddleware` et `AccountSuspendedError` ont migré dans `shared` pour
+qu'un contexte puisse exiger une route authentifiée sans importer
+`bc-identity`.
+
+Reste à faire pour clore le jalon : le parcours web d'onboarding, et les
+routes d'administration qui créent un atelier autrement qu'en SQL.
 
 `compose.yaml` lance un `postgres:18-alpine` sur `:5433` — Neon est en 18.6.
 `db:test:up` crée `.env.test` depuis `.env.test.example` s'il manque.

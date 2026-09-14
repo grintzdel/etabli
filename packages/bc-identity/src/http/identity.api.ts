@@ -1,12 +1,13 @@
 import { HttpApiEndpoint, HttpApiGroup } from '@effect/platform'
 import type { CurrentUser, RegisterInput, Session } from '@etabli/contract'
 import { routes } from '@etabli/contract'
+import { AuthMiddleware } from '@etabli/shared/auth-context'
+import { AccountSuspendedError } from '@etabli/shared/errors'
 import type { AssertEquals } from '@etabli/shared/type-level'
 import * as Schema from 'effect/Schema'
 
-import { AccountSuspendedError, EmailAlreadyTakenError, InvalidCredentialsError } from '../domain/errors'
+import { EmailAlreadyTakenError, InvalidCredentialsError } from '../domain/errors'
 import { CurrentUserSchema, LoginPayloadSchema, RegisterPayloadSchema, SessionSchema } from '../domain/user.schema'
-import { AuthMiddleware } from './auth.middleware'
 
 export const identityContractParity: AssertEquals<Schema.Schema.Encoded<typeof SessionSchema>, Session> = true
 export const currentUserContractParity: AssertEquals<

@@ -1,10 +1,20 @@
 export type PlatformRole = 'MEMBER' | 'PLATFORM_ADMIN'
 
+export type MembershipRole = 'MEMBER' | 'FABMANAGER'
+
+export type Membership = {
+  readonly atelierId: string
+  readonly role: MembershipRole
+}
+
 export type CurrentUser = {
   readonly id: string
   readonly email: string
   readonly displayName: string
   readonly platformRole: PlatformRole
+  readonly practice: ReadonlyArray<string>
+  readonly onboardingCompletedAt: string | null
+  readonly memberships: ReadonlyArray<Membership>
   readonly createdAt: string
 }
 

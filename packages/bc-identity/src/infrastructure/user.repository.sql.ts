@@ -55,6 +55,19 @@ export const makeUserRepositorySql = (sql: SqlClient.SqlClient) =>
         Effect.mapError(fail('users.findById'))
       ),
 
+    markOnboarded: (id, practice, at) =>
+      sql<UserRow>`
+        UPDATE users
+        SET practice = ${toPgTextArray(practice)}::text[],
+            onboarding_completed_at = ${DateTime.toDate(at)},
+            updated_at = ${DateTime.toDate(at)}
+        WHERE id = ${id}
+        RETURNING *
+      `.pipe(
+        Effect.map((rows) => (rows[0] === undefined ? null : toUser(rows[0]))),
+        Effect.mapError(fail('users.markOnboarded'))
+      ),
+
     insert: (user) =>
       sql<UserRow>`
         INSERT INTO users (id, email, password_hash, display_name, platform_role, practice, onboarding_completed_at, status, created_at, updated_at)

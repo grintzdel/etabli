@@ -6,3 +6,9 @@ export class AtelierNotFoundError extends Schema.TaggedError<AtelierNotFoundErro
   { slug: Schema.String },
   HttpApiSchema.annotations({ status: 404 })
 ) {}
+
+export class AtelierNotJoinableError extends Schema.TaggedError<AtelierNotJoinableError>()(
+  'AtelierNotJoinableError',
+  { atelierId: Schema.String },
+  HttpApiSchema.annotations({ status: 404 })
+) {}

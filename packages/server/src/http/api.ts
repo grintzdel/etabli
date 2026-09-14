@@ -1,7 +1,11 @@
 import { HttpApi } from '@effect/platform'
-import { atelierApiGroup } from '@etabli/bc-atelier'
+import { atelierApiGroup, onboardingApiGroup } from '@etabli/bc-atelier'
 import { identityApiGroup } from '@etabli/bc-identity'
 
 import { healthApiGroup } from './health.api'
 
-export const etabliApi = HttpApi.make('etabli').add(healthApiGroup).add(identityApiGroup).add(atelierApiGroup)
+export const etabliApi = HttpApi.make('etabli')
+  .add(healthApiGroup)
+  .add(identityApiGroup)
+  .add(atelierApiGroup)
+  .add(onboardingApiGroup)

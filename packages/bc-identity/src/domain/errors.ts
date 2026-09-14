@@ -12,9 +12,3 @@ export class InvalidCredentialsError extends Schema.TaggedError<InvalidCredentia
   {},
   HttpApiSchema.annotations({ status: 401 })
 ) {}
-
-export class AccountSuspendedError extends Schema.TaggedError<AccountSuspendedError>()(
-  'AccountSuspendedError',
-  {},
-  HttpApiSchema.annotations({ status: 403 })
-) {}

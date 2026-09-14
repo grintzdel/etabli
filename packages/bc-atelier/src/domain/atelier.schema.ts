@@ -8,6 +8,7 @@ import {
   DIRECTORY_PAGE_SIZE,
   MachineKind,
   MachineStatus,
+  MAX_PRACTICES,
 } from './atelier.constants'
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -173,3 +174,23 @@ export const toAtelierDetail = (atelier: Atelier, machines: ReadonlyArray<Machin
       status: machine.status,
     })),
 })
+
+export const Practice = Schema.Array(Schema.Trim.pipe(Schema.minLength(1)))
+  .pipe(Schema.minItems(1), Schema.maxItems(MAX_PRACTICES))
+  .annotations({ message: () => 'Déclarez au moins une pratique' })
+
+export const CompleteOnboardingSchema = Schema.Struct({
+  atelierId: AtelierId,
+  practice: Practice,
+})
+export type CompleteOnboarding = Schema.Schema.Type<typeof CompleteOnboardingSchema>
+
+export const OnboardingResultSchema = Schema.Struct({
+  atelierId: AtelierId,
+  atelierSlug: Slug,
+  atelierName: Schema.String,
+  role: MembershipRoleSchema,
+  practice: Schema.Array(Schema.String),
+  joinedAt: Schema.DateTimeUtc,
+})
+export type OnboardingResult = Schema.Schema.Type<typeof OnboardingResultSchema>

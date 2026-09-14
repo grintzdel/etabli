@@ -2,10 +2,9 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 
+import { MembershipList } from '@/modules/atelier/react/components/MembershipList'
 import { AccountCard } from '@/modules/identity/react/components/AccountCard'
-import { LogoutButton } from '@/modules/identity/react/components/LogoutButton'
-import { identityPort } from '@/server/container'
-import { logoutAction } from '@/server/identity.actions'
+import { atelierPort, identityPort } from '@/server/container'
 import { readSessionToken } from '@/server/session'
 import { Surface } from '@/ui/Surface'
 
@@ -21,7 +20,18 @@ const AccountDetails = async () => {
   const result = await identityPort.me(token)
   if (!result.ok) redirect('/connexion?next=/compte')
 
-  return <AccountCard user={result.value} />
+  const directory = await atelierPort.list({})
+
+  return (
+    <>
+      <AccountCard user={result.value} />
+
+      <section className="flex flex-col gap-4">
+        <h2 className="font-display text-2xl font-semibold tracking-wide uppercase">Mes ateliers</h2>
+        <MembershipList memberships={result.value.memberships} ateliers={directory.ok ? directory.value : []} />
+      </section>
+    </>
+  )
 }
 
 const AccountDetailsFallback = () => (
@@ -34,7 +44,6 @@ export const AccountPage = () => (
   <main className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-20">
     <header className="flex flex-wrap items-center justify-between gap-4">
       <h1 className="font-display text-3xl font-bold tracking-tight uppercase">Mon compte</h1>
-      <LogoutButton action={logoutAction} />
     </header>
 
     <Suspense fallback={<AccountDetailsFallback />}>

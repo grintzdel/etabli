@@ -1,11 +1,13 @@
+import { AccountSuspendedError } from '@etabli/shared/errors'
 import type { RepoError } from '@etabli/shared/errors'
 import * as Effect from 'effect/Effect'
 
-import { AccountSuspendedError, InvalidCredentialsError } from '../../../domain/errors'
+import { InvalidCredentialsError } from '../../../domain/errors'
 import { UserStatus } from '../../../domain/user.constants'
 import type { LoginPayload, Session } from '../../../domain/user.schema'
 import { toCurrentUser } from '../../../domain/user.schema'
 import { UserRepository } from '../../../infrastructure/user.repository'
+import { MembershipLookup } from '../../ports/membership-lookup'
 import { PasswordHasher } from '../../ports/password-hasher'
 import { TokenIssuer } from '../../ports/token-issuer'
 
@@ -14,12 +16,13 @@ export const loginUser = (
 ): Effect.Effect<
   Session,
   InvalidCredentialsError | AccountSuspendedError | RepoError,
-  UserRepository | PasswordHasher | TokenIssuer
+  UserRepository | PasswordHasher | TokenIssuer | MembershipLookup
 > =>
   Effect.gen(function* () {
     const repository = yield* UserRepository
     const hasher = yield* PasswordHasher
     const tokens = yield* TokenIssuer
+    const memberships = yield* MembershipLookup
 
     const user = yield* repository.findByEmail(payload.email)
 
@@ -35,5 +38,6 @@ export const loginUser = (
     if (user.status === UserStatus.SUSPENDED) return yield* Effect.fail(new AccountSuspendedError())
 
     const issued = yield* tokens.issue(user.id)
-    return { token: issued.token, expiresAt: issued.expiresAt, user: toCurrentUser(user) }
+    const joined = yield* memberships.forUser(user.id)
+    return { token: issued.token, expiresAt: issued.expiresAt, user: toCurrentUser(user, joined) }
   })

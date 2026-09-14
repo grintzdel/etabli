@@ -1,10 +1,27 @@
-import type { AtelierDetail, AtelierSummary, MachineKind, MachineStatus, PublicMachine } from '@etabli/contract'
+import type {
+  AtelierDetail,
+  AtelierSummary,
+  CompleteOnboardingInput,
+  MachineKind,
+  MachineStatus,
+  OnboardingResult,
+  PublicMachine,
+} from '@etabli/contract'
 
-export type { AtelierDetail, AtelierSummary, MachineKind, MachineStatus, PublicMachine }
+export type {
+  AtelierDetail,
+  AtelierSummary,
+  CompleteOnboardingInput,
+  MachineKind,
+  MachineStatus,
+  OnboardingResult,
+  PublicMachine,
+}
 
 export const AtelierFailureCode = {
   INVALID_FILTER: 'INVALID_FILTER',
   NOT_FOUND: 'NOT_FOUND',
+  UNAUTHORIZED: 'UNAUTHORIZED',
   UNREACHABLE: 'UNREACHABLE',
 } as const
 export type AtelierFailureCode = (typeof AtelierFailureCode)[keyof typeof AtelierFailureCode]
@@ -21,6 +38,7 @@ export type AtelierResult<A> =
 export const FAILURE_MESSAGES: Readonly<Record<AtelierFailureCode, string>> = {
   INVALID_FILTER: 'Ces critères de recherche ne sont pas valides.',
   NOT_FOUND: "Cet atelier n'existe pas ou n'est pas encore publié.",
+  UNAUTHORIZED: 'Votre session a expiré.',
   UNREACHABLE: "L'annuaire est momentanément indisponible.",
 }
 
@@ -81,3 +99,12 @@ export const parseDirectoryFilters = (
 
 export const formatDistance = (km: number): string =>
   km < 10 ? `${km.toFixed(1).replace('.', ',')} km` : `${Math.round(km)} km`
+
+export const PRACTICES: ReadonlyArray<string> = [
+  'Bois',
+  'Métal',
+  'Textile',
+  'Électronique',
+  'Impression 3D',
+  'Découpe laser',
+]

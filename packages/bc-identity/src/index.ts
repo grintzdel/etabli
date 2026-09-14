@@ -1,5 +1,6 @@
 export * from './application/commands/login-user/login-user.command'
 export * from './application/commands/register-user/register-user.command'
+export * from './application/ports/membership-lookup'
 export * from './application/ports/password-hasher'
 export * from './application/ports/token-issuer'
 export * from './application/queries/get-current-user/get-current-user.query'
