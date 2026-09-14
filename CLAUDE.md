@@ -12,8 +12,10 @@ plages avec le paramètre `pages`).
 
 ## État
 
-Conception validée et commitée. Aucun code écrit. Prochaine étape : plan
-d'implémentation du jalon 0 (fondations du monorepo).
+Conception validée et commitée. Aucun code écrit. Le plan d'implémentation du
+jalon 0 est écrit :
+`docs/superpowers/plans/2026-09-14-jalon-0-fondations.md` — 10 tâches, de la
+racine pnpm à la page d'accueil. Prochaine étape : l'exécuter, tâche par tâche.
 
 ## Repos de référence
 

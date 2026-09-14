@@ -1,0 +1,45 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "react", "jsx-a11y", "import"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "rules": {
+    "unicorn/filename-case": [
+      "error",
+      {
+        "cases": {
+          "kebabCase": true,
+          "pascalCase": false
+        },
+        "ignore": ["\\.tsx$"]
+      }
+    ],
+    "no-unused-vars": [
+      "warn",
+      {
+        "varsIgnorePattern": "^(I[A-Z]|.*Port)"
+      }
+    ],
+    "no-underscore-dangle": "off",
+    "import/no-unassigned-import": "off",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-unsafe-argument": "error",
+    "typescript/no-unsafe-assignment": "error",
+    "typescript/no-unsafe-call": "error",
+    "typescript/no-unsafe-member-access": "error",
+    "typescript/no-unsafe-return": "error"
+  },
+  "ignorePatterns": ["dist/", "node_modules/", ".next/", "*.json", "*.md", "*.css"],
+  "overrides": [
+    {
+      "files": ["*.port.ts"],
+      "rules": {
+        "no-unused-vars": "off",
+        "typescript/no-unused-vars": "off"
+      }
+    }
+  ]
+}
