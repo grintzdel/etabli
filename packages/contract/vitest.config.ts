@@ -2,6 +2,8 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    projects: ['packages/*'],
+    name: '@etabli/contract',
+    include: ['src/**/*.test.ts'],
+    environment: 'node',
   },
 })
