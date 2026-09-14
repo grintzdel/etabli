@@ -5,6 +5,7 @@ import * as Layer from 'effect/Layer'
 
 import { AtelierStatus, EARTH_RADIUS_KM, MachineStatus } from '../domain/atelier.constants'
 import type { Atelier, AtelierSummary, ListAteliersParams, Machine, Membership, Slug } from '../domain/atelier.schema'
+import { toAdminAtelier } from '../domain/atelier.schema'
 import type { AtelierRepositoryService } from './atelier.repository'
 import { AtelierRepository } from './atelier.repository'
 
@@ -110,6 +111,23 @@ export const makeAtelierRepositoryMemory = (): AtelierRepositoryMemory => {
           .filter((machine) => machine.atelierId === atelierId)
           .toSorted((a, b) => a.name.localeCompare(b.name))
       ),
+    listAll: () =>
+      Effect.sync(() =>
+        [...ateliers.values()]
+          .toSorted((a, b) => a.name.localeCompare(b.name))
+          .map((atelier) => toAdminAtelier(atelier, liveMachinesOf(atelier.id).length))
+      ),
+    findAnyById: (id: AtelierId) => Effect.sync(() => ateliers.get(id) ?? null),
+    findAnyBySlug: (slug: Slug) =>
+      Effect.sync(() => [...ateliers.values()].find((atelier) => atelier.slug === slug) ?? null),
+    updateStatus: (id: AtelierId, status: AtelierStatus, at: Atelier['updatedAt']) =>
+      Effect.sync(() => {
+        const atelier = ateliers.get(id)
+        if (atelier === undefined) return null
+        const updated = { ...atelier, status, updatedAt: at }
+        ateliers.set(id, updated)
+        return updated
+      }),
     insertAtelier: (atelier) =>
       Effect.sync(() => {
         ateliers.set(atelier.id, atelier)

@@ -1,27 +1,48 @@
 import type {
+  AdminAtelier,
   AtelierDetail,
+  AtelierStatus,
   AtelierSummary,
   CompleteOnboardingInput,
+  CreateAtelierInput,
   MachineKind,
   MachineStatus,
   OnboardingResult,
   PublicMachine,
+  SetAtelierStatusInput,
 } from '@etabli/contract'
 
 export type {
+  AdminAtelier,
   AtelierDetail,
+  AtelierStatus,
   AtelierSummary,
   CompleteOnboardingInput,
+  CreateAtelierInput,
   MachineKind,
   MachineStatus,
   OnboardingResult,
   PublicMachine,
+  SetAtelierStatusInput,
 }
+
+export const ATELIER_STATUSES: ReadonlyArray<AtelierStatus> = ['DRAFT', 'PUBLISHED', 'CLOSED']
+
+export const ATELIER_STATUS_LABELS: Readonly<Record<AtelierStatus, string>> = {
+  DRAFT: 'Brouillon',
+  PUBLISHED: 'Publié',
+  CLOSED: 'Fermé',
+}
+
+export const isAtelierStatus = (value: string): value is AtelierStatus =>
+  (ATELIER_STATUSES as ReadonlyArray<string>).includes(value)
 
 export const AtelierFailureCode = {
   INVALID_FILTER: 'INVALID_FILTER',
   NOT_FOUND: 'NOT_FOUND',
   UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
+  SLUG_TAKEN: 'SLUG_TAKEN',
   UNREACHABLE: 'UNREACHABLE',
 } as const
 export type AtelierFailureCode = (typeof AtelierFailureCode)[keyof typeof AtelierFailureCode]
@@ -39,6 +60,8 @@ export const FAILURE_MESSAGES: Readonly<Record<AtelierFailureCode, string>> = {
   INVALID_FILTER: 'Ces critères de recherche ne sont pas valides.',
   NOT_FOUND: "Cet atelier n'existe pas ou n'est pas encore publié.",
   UNAUTHORIZED: 'Votre session a expiré.',
+  FORBIDDEN: 'Cette page est réservée à l’administration de la plateforme.',
+  SLUG_TAKEN: 'Un autre atelier occupe déjà cet identifiant d’URL.',
   UNREACHABLE: "L'annuaire est momentanément indisponible.",
 }
 

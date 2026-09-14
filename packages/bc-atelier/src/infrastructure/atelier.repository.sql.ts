@@ -6,8 +6,16 @@ import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 
 import { AtelierStatus, EARTH_RADIUS_KM, MachineStatus } from '../domain/atelier.constants'
-import type { Atelier, AtelierSummary, ListAteliersParams, Machine, Membership, Slug } from '../domain/atelier.schema'
-import { Slug as SlugSchema } from '../domain/atelier.schema'
+import type {
+  AdminAtelier,
+  Atelier,
+  AtelierSummary,
+  ListAteliersParams,
+  Machine,
+  Membership,
+  Slug,
+} from '../domain/atelier.schema'
+import { Slug as SlugSchema, toAdminAtelier } from '../domain/atelier.schema'
 import { AtelierRepository } from './atelier.repository'
 
 interface AtelierRow {
@@ -92,6 +100,12 @@ const toSummary = (row: SummaryRow): AtelierSummary => ({
   machineKinds: (row.machine_kinds ?? []) as AtelierSummary['machineKinds'],
   distanceKm: row.distance_km === null ? null : Number(row.distance_km),
 })
+
+interface AdminRow extends AtelierRow {
+  readonly machine_count: number
+}
+
+const toAdminRow = (row: AdminRow): AdminAtelier => toAdminAtelier(toAtelier(row), Number(row.machine_count))
 
 const toMachine = (row: MachineRow): Machine => ({
   id: row.id as Machine['id'],
@@ -215,6 +229,60 @@ export const makeAtelierRepositorySql = (sql: SqlClient.SqlClient) =>
       sql<MachineRow>`SELECT * FROM machines WHERE atelier_id = ${atelierId} ORDER BY name ASC`.pipe(
         Effect.map((rows) => rows.map(toMachine)),
         Effect.mapError(fail('machines.listForAtelier'))
+      ),
+
+    listAll: () =>
+      sql<AdminRow>`
+        SELECT a.id, a.slug, a.name, a.description, a.street, a.postal_code, a.city, a.country,
+               a.latitude::double precision AS latitude, a.longitude::double precision AS longitude,
+               a.status, a.created_at, a.updated_at,
+               count(m.id)::int AS machine_count
+        FROM ateliers a
+        LEFT JOIN machines m ON m.atelier_id = a.id AND m.status <> ${MachineStatus.RETIRED}
+        GROUP BY a.id
+        ORDER BY a.name ASC
+      `.pipe(
+        Effect.map((rows) => rows.map(toAdminRow)),
+        Effect.mapError(fail('ateliers.listAll'))
+      ),
+
+    findAnyById: (id: AtelierId) =>
+      sql<AtelierRow>`
+        SELECT id, slug, name, description, street, postal_code, city, country,
+               latitude::double precision AS latitude, longitude::double precision AS longitude,
+               status, created_at, updated_at
+        FROM ateliers
+        WHERE id = ${id}
+        LIMIT 1
+      `.pipe(
+        Effect.map((rows) => (rows[0] === undefined ? null : toAtelier(rows[0]))),
+        Effect.mapError(fail('ateliers.findAnyById'))
+      ),
+
+    findAnyBySlug: (slug: Slug) =>
+      sql<AtelierRow>`
+        SELECT id, slug, name, description, street, postal_code, city, country,
+               latitude::double precision AS latitude, longitude::double precision AS longitude,
+               status, created_at, updated_at
+        FROM ateliers
+        WHERE slug = ${slug}
+        LIMIT 1
+      `.pipe(
+        Effect.map((rows) => (rows[0] === undefined ? null : toAtelier(rows[0]))),
+        Effect.mapError(fail('ateliers.findAnyBySlug'))
+      ),
+
+    updateStatus: (id: AtelierId, status: Atelier['status'], at: Atelier['updatedAt']) =>
+      sql<AtelierRow>`
+        UPDATE ateliers
+        SET status = ${status}, updated_at = ${DateTime.toDate(at)}
+        WHERE id = ${id}
+        RETURNING id, slug, name, description, street, postal_code, city, country,
+               latitude::double precision AS latitude, longitude::double precision AS longitude,
+               status, created_at, updated_at
+      `.pipe(
+        Effect.map((rows) => (rows[0] === undefined ? null : toAtelier(rows[0]))),
+        Effect.mapError(fail('ateliers.updateStatus'))
       ),
 
     insertAtelier: (atelier) =>

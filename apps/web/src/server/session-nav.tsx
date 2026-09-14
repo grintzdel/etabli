@@ -12,5 +12,11 @@ export const CurrentSessionNav = async () => {
   const result = await identityPort.me(token)
   if (!result.ok) return <SignedOutLinks />
 
-  return <SessionNav displayName={result.value.displayName} signOut={logoutAction} />
+  return (
+    <SessionNav
+      displayName={result.value.displayName}
+      isPlatformAdmin={result.value.platformRole === 'PLATFORM_ADMIN'}
+      signOut={logoutAction}
+    />
+  )
 }

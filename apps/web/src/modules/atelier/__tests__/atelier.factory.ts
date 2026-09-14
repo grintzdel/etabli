@@ -1,4 +1,4 @@
-import type { AtelierDetail, AtelierSummary, PublicMachine } from '@/modules/atelier/core/model/atelier'
+import type { AdminAtelier, AtelierDetail, AtelierSummary, PublicMachine } from '@/modules/atelier/core/model/atelier'
 
 let counter = 0
 
@@ -48,6 +48,20 @@ export const detailFixture = (overrides: Partial<AtelierDetail> = {}): AtelierDe
     latitude: 48.8638,
     longitude: 2.4485,
     machines: [machineFixture()],
+    ...overrides,
+  }
+}
+
+export const adminAtelierFixture = (overrides: Partial<AdminAtelier> = {}): AdminAtelier => {
+  counter += 1
+  return {
+    id: `30000000-0000-4000-8000-${String(counter).padStart(12, '0')}`,
+    slug: `atelier-${counter}`,
+    name: `Atelier ${counter}`,
+    city: 'Montreuil',
+    status: 'DRAFT',
+    machineCount: 0,
+    createdAt: '2026-01-01T00:00:00.000Z',
     ...overrides,
   }
 }

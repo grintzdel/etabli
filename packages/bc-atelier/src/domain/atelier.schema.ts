@@ -194,3 +194,40 @@ export const OnboardingResultSchema = Schema.Struct({
   joinedAt: Schema.DateTimeUtc,
 })
 export type OnboardingResult = Schema.Schema.Type<typeof OnboardingResultSchema>
+
+export const CreateAtelierSchema = Schema.Struct({
+  slug: Slug,
+  name: Schema.Trim.pipe(Schema.minLength(1)).annotations({ message: () => 'Le nom est obligatoire' }),
+  description: Schema.optionalWith(Schema.Trim, { default: () => '' }),
+  street: Schema.optionalWith(Schema.Trim, { default: () => '' }),
+  postalCode: Schema.optionalWith(Schema.Trim, { default: () => '' }),
+  city: Schema.Trim.pipe(Schema.minLength(1)).annotations({ message: () => 'La ville est obligatoire' }),
+  country: Schema.optionalWith(Schema.Trim.pipe(Schema.minLength(1)), { default: () => 'FR' }),
+  latitude: Latitude,
+  longitude: Longitude,
+})
+export type CreateAtelier = Schema.Schema.Type<typeof CreateAtelierSchema>
+
+export const SetAtelierStatusSchema = Schema.Struct({ status: AtelierStatusSchema })
+export type SetAtelierStatus = Schema.Schema.Type<typeof SetAtelierStatusSchema>
+
+export const AdminAtelierSchema = Schema.Struct({
+  id: AtelierId,
+  slug: Slug,
+  name: Schema.String,
+  city: Schema.String,
+  status: AtelierStatusSchema,
+  machineCount: Schema.Int,
+  createdAt: Schema.DateTimeUtc,
+})
+export type AdminAtelier = Schema.Schema.Type<typeof AdminAtelierSchema>
+
+export const toAdminAtelier = (atelier: Atelier, machineCount: number): AdminAtelier => ({
+  id: atelier.id,
+  slug: atelier.slug,
+  name: atelier.name,
+  city: atelier.city,
+  status: atelier.status,
+  machineCount,
+  createdAt: atelier.createdAt,
+})

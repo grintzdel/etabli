@@ -65,3 +65,29 @@ export type OnboardingResult = {
   readonly practice: ReadonlyArray<string>
   readonly joinedAt: string
 }
+
+export type AdminAtelier = {
+  readonly id: string
+  readonly slug: string
+  readonly name: string
+  readonly city: string
+  readonly status: AtelierStatus
+  readonly machineCount: number
+  readonly createdAt: string
+}
+
+export type CreateAtelierInput = {
+  readonly slug: string
+  readonly name: string
+  readonly description?: string
+  readonly street?: string
+  readonly postalCode?: string
+  readonly city: string
+  readonly country?: string
+  readonly latitude: number
+  readonly longitude: number
+}
+
+export type SetAtelierStatusInput = {
+  readonly status: AtelierStatus
+}
