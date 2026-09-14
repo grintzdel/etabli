@@ -12,8 +12,22 @@ plages avec le paramètre `pages`).
 
 ## État
 
-Conception validée et commitée. Aucun code écrit. Prochaine étape : plan
-d'implémentation du jalon 0 (fondations du monorepo).
+Jalon 0 terminé et étiqueté `jalon-0`. Le monorepo tient : `contract`,
+`shared`, `test-utils`, `server` et `apps/web`. `pnpm verify` est vert — 63
+tests unitaires, `next build`, 9 E2E Playwright.
+
+Neon est branché. `pnpm db:migrate` a appliqué `0001_create_domain_events`
+contre la base réelle, et un second passage ne réapplique rien.
+`pnpm dev:server` démarre contre Neon ; avec un mot de passe faux il refuse de
+démarrer, donc la connexion est bien sur le chemin du boot et non différée.
+Les chemins `@effect/sql-pg` et `PgMigrator.layer` ne sont donc plus couverts
+par le seul pglite.
+
+Sur une machine neuve : copier `.env.example` en `.env` et y mettre l'URL
+*pooled* du projet Neon. `pg` émet un avertissement sur `sslmode=require`
+traité comme `verify-full` — comportement voulu, à ignorer.
+
+Prochaine étape : le plan du jalon 1 (`bc-identity`).
 
 ## Repos de référence
 

@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.next/
+coverage/
+pnpm-lock.yaml
+*.tsbuildinfo
+docs/
+CLAUDE.md
+README.md
+next-env.d.ts

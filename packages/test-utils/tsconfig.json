@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.pkg-base.json",
+  "include": ["src/**/*"],
+  "references": [{ "path": "../shared" }]
+}
