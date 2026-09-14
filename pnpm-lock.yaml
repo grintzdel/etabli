@@ -97,6 +97,40 @@ importers:
         specifier: ^3.2.7
         version: 3.2.7(@types/node@22.20.2)(jiti@2.7.0)(jsdom@30.0.1)(lightningcss@1.32.0)(tsx@4.23.13)
 
+  packages/bc-atelier:
+    dependencies:
+      '@effect/platform':
+        specifier: ^0.97.2
+        version: 0.97.2(effect@3.22.2)
+      '@effect/sql':
+        specifier: ^0.52.1
+        version: 0.52.1(@effect/experimental@0.61.1(@effect/platform@0.97.2(effect@3.22.2))(effect@3.22.2))(@effect/platform@0.97.2(effect@3.22.2))(effect@3.22.2)
+      '@etabli/contract':
+        specifier: workspace:*
+        version: link:../contract
+      '@etabli/shared':
+        specifier: workspace:*
+        version: link:../shared
+      effect:
+        specifier: ^3.22.2
+        version: 3.22.2
+    devDependencies:
+      '@etabli/test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.2
+      tsdown:
+        specifier: ^0.23.0
+        version: 0.23.0(tsx@4.23.13)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.7
+        version: 3.2.7(@types/node@22.20.2)(jiti@2.7.0)(jsdom@30.0.1)(lightningcss@1.32.0)(tsx@4.23.13)
+
   packages/bc-identity:
     dependencies:
       '@effect/platform':
@@ -166,6 +200,9 @@ importers:
       '@effect/sql-pg':
         specifier: ^0.53.0
         version: 0.53.0(@effect/experimental@0.61.1(@effect/platform@0.97.2(effect@3.22.2))(effect@3.22.2))(@effect/platform@0.97.2(effect@3.22.2))(@effect/sql@0.52.1(@effect/experimental@0.61.1(@effect/platform@0.97.2(effect@3.22.2))(effect@3.22.2))(@effect/platform@0.97.2(effect@3.22.2))(effect@3.22.2))(effect@3.22.2)
+      '@etabli/bc-atelier':
+        specifier: workspace:*
+        version: link:../bc-atelier
       '@etabli/bc-identity':
         specifier: workspace:*
         version: link:../bc-identity

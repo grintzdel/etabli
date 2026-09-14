@@ -8,6 +8,9 @@
       "path": "./packages/contract"
     },
     {
+      "path": "./packages/bc-atelier"
+    },
+    {
       "path": "./packages/bc-identity"
     },
     {
