@@ -1,5 +1,5 @@
 import type { RepoError } from '@etabli/shared/errors'
-import type { AtelierId } from '@etabli/shared/schema'
+import type { AtelierId, UserId } from '@etabli/shared/schema'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 
@@ -89,6 +89,21 @@ export const makeAtelierRepositoryMemory = (): AtelierRepositoryMemory => {
             (atelier) => atelier.slug === slug && atelier.status === AtelierStatus.PUBLISHED
           ) ?? null
       ),
+    findPublishedById: (id: AtelierId) =>
+      Effect.sync(
+        () =>
+          [...ateliers.values()].find((atelier) => atelier.id === id && atelier.status === AtelierStatus.PUBLISHED) ??
+          null
+      ),
+    findMembership: (userId: UserId, atelierId: AtelierId) =>
+      Effect.sync(
+        () =>
+          [...memberships.values()].find(
+            (membership) => membership.userId === userId && membership.atelierId === atelierId
+          ) ?? null
+      ),
+    listMembershipsForUser: (userId: UserId) =>
+      Effect.sync(() => [...memberships.values()].filter((membership) => membership.userId === userId)),
     listMachines: (atelierId) =>
       Effect.sync(() =>
         [...machines.values()]

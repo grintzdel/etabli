@@ -51,3 +51,17 @@ export type ListAteliersQuery = {
   readonly limit?: string
   readonly offset?: string
 }
+
+export type CompleteOnboardingInput = {
+  readonly atelierId: string
+  readonly practice: ReadonlyArray<string>
+}
+
+export type OnboardingResult = {
+  readonly atelierId: string
+  readonly atelierSlug: string
+  readonly atelierName: string
+  readonly role: 'MEMBER' | 'FABMANAGER'
+  readonly practice: ReadonlyArray<string>
+  readonly joinedAt: string
+}

@@ -16,6 +16,14 @@ export const makeUserRepositoryMemory = (seed: ReadonlyArray<User> = []) => {
         byId.set(user.id, user)
         return user
       }),
+    markOnboarded: (id, practice, at) =>
+      Effect.sync(() => {
+        const user = byId.get(id)
+        if (user === undefined) return null
+        const updated = { ...user, practice, onboardingCompletedAt: at, updatedAt: at }
+        byId.set(id, updated)
+        return updated
+      }),
   })
 }
 

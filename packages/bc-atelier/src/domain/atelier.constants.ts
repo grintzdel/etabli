@@ -25,3 +25,4 @@ export type MachineStatus = (typeof MachineStatus)[keyof typeof MachineStatus]
 export const DIRECTORY_PAGE_SIZE = 20
 export const DIRECTORY_MAX_PAGE_SIZE = 100
 export const EARTH_RADIUS_KM = 6371
+export const MAX_PRACTICES = 12

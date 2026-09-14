@@ -15,5 +15,5 @@ export const getCurrentUser: Effect.Effect<CurrentUser, UnauthorizedError | Repo
     const user = yield* repository.findById(auth.userId)
     if (user === null) return yield* Effect.fail(new UnauthorizedError({ reason: 'account no longer exists' }))
 
-    return toCurrentUser(user)
+    return toCurrentUser(user, auth.memberships)
   })

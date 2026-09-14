@@ -30,6 +30,9 @@ export class IdentityInMemoryAdapter implements IIdentityPort {
         email,
         displayName: input.displayName,
         platformRole: 'MEMBER',
+        practice: [],
+        onboardingCompletedAt: null,
+        memberships: [],
         createdAt: new Date().toISOString(),
       },
     }

@@ -1,4 +1,5 @@
-import { PlatformRoleSchema } from '@etabli/shared/auth-context'
+import type { AuthMembership } from '@etabli/shared/auth-context'
+import { AuthMembershipSchema, PlatformRoleSchema } from '@etabli/shared/auth-context'
 import { UserId } from '@etabli/shared/schema'
 import * as Schema from 'effect/Schema'
 
@@ -44,6 +45,9 @@ export const CurrentUserSchema = Schema.Struct({
   email: Schema.String,
   displayName: Schema.String,
   platformRole: PlatformRoleSchema,
+  practice: Schema.Array(Schema.String),
+  onboardingCompletedAt: Schema.NullOr(Schema.DateTimeUtc),
+  memberships: Schema.Array(AuthMembershipSchema),
   createdAt: Schema.DateTimeUtc,
 })
 export type CurrentUser = Schema.Schema.Type<typeof CurrentUserSchema>
@@ -68,10 +72,13 @@ export const SessionSchema = Schema.Struct({
 })
 export type Session = Schema.Schema.Type<typeof SessionSchema>
 
-export const toCurrentUser = (user: User): CurrentUser => ({
+export const toCurrentUser = (user: User, memberships: ReadonlyArray<AuthMembership> = []): CurrentUser => ({
   id: user.id,
   email: user.email,
   displayName: user.displayName,
   platformRole: user.platformRole,
+  practice: user.practice,
+  onboardingCompletedAt: user.onboardingCompletedAt,
+  memberships,
   createdAt: user.createdAt,
 })
