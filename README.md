@@ -1,5 +1,7 @@
 # Établi
 
+[![CI](https://github.com/grintzdel/etabli/actions/workflows/ci.yml/badge.svg)](https://github.com/grintzdel/etabli/actions/workflows/ci.yml)
+
 Plateforme d'un réseau d'ateliers partagés : habilitations machine, réservation de créneaux, check-in NFC.
 Projet fil rouge M2 EEMI 2026 · Next.js 16.3.
 
