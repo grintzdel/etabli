@@ -27,7 +27,11 @@ Sur une machine neuve : copier `.env.example` en `.env` et y mettre l'URL
 *pooled* du projet Neon. `pg` émet un avertissement sur `sslmode=require`
 traité comme `verify-full` — comportement voulu, à ignorer.
 
-Prochaine étape : le plan du jalon 1 (`bc-identity`).
+Le jalon 1 (`bc-identity`) est conçu :
+`docs/superpowers/specs/2026-09-14-jalon-1-identite-design.md` fixe le périmètre, la
+durée de vie du jeton, la sémantique de la déconnexion, le rôle exact de
+`proxy.ts` et la base sur laquelle tournent les E2E. Prochaine étape : son plan
+d'implémentation.
 
 ## Repos de référence
 
