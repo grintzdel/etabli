@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 
 import { SESSION_COOKIE } from '@/modules/identity/core/model/session'
 
-const PRIVATE_PREFIXES = ['/compte']
+const PRIVATE_PREFIXES = ['/compte', '/bienvenue']
 
 const isPrivate = (pathname: string): boolean =>
   PRIVATE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))

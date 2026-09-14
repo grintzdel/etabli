@@ -1,4 +1,11 @@
-import type { AtelierDetail, AtelierResult, AtelierSummary, DirectoryFilters } from '../model/atelier'
+import type {
+  AtelierDetail,
+  AtelierResult,
+  AtelierSummary,
+  CompleteOnboardingInput,
+  DirectoryFilters,
+  OnboardingResult,
+} from '../model/atelier'
 import { AtelierFailureCode, failure } from '../model/atelier'
 import type { IAtelierPort } from '../ports/atelier.port'
 
@@ -44,5 +51,22 @@ export class AtelierInMemoryAdapter implements IAtelierPort {
     const sheet = this.sheets.get(slug)
     if (sheet === undefined) return failure(AtelierFailureCode.NOT_FOUND)
     return { ok: true, value: sheet }
+  }
+
+  async completeOnboarding(_token: string, input: CompleteOnboardingInput): Promise<AtelierResult<OnboardingResult>> {
+    const sheet = [...this.sheets.values()].find((candidate) => candidate.id === input.atelierId)
+    if (sheet === undefined) return failure(AtelierFailureCode.NOT_FOUND)
+
+    return {
+      ok: true,
+      value: {
+        atelierId: sheet.id,
+        atelierSlug: sheet.slug,
+        atelierName: sheet.name,
+        role: 'MEMBER',
+        practice: input.practice,
+        joinedAt: new Date().toISOString(),
+      },
+    }
   }
 }

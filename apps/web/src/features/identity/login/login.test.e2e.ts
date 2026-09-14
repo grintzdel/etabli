@@ -8,7 +8,7 @@ const register = async (page: import('@playwright/test').Page, email: string) =>
   await page.getByLabel(/adresse e-mail/i).fill(email)
   await page.getByLabel(/mot de passe/i).fill(PASSWORD)
   await page.getByRole('button', { name: /créer mon compte/i }).click()
-  await expect(page).toHaveURL(/\/compte$/)
+  await expect(page).toHaveURL(/\/bienvenue$/)
 }
 
 test('signing out returns to the sign-in page and closes the private area', async ({ page }) => {

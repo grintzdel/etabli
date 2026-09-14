@@ -23,7 +23,7 @@ export const registerAction = async (_previous: AuthFormState, formData: FormDat
   if (!result.ok) return { error: result.error.message, email, displayName }
 
   await writeSessionCookie(result.value.token, result.value.expiresAt)
-  redirect('/compte')
+  redirect('/bienvenue')
 }
 
 export const loginAction = async (_previous: AuthFormState, formData: FormData): Promise<AuthFormState> => {

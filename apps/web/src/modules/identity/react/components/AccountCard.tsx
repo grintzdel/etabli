@@ -16,6 +16,8 @@ export const AccountCard = ({ user }: { readonly user: CurrentUser }) => (
     <dl className="text-graphite-200 grid gap-2 sm:grid-cols-[12rem_1fr]">
       <dt className="text-graphite-400">Adresse e-mail</dt>
       <dd>{user.email}</dd>
+      <dt className="text-graphite-400">Pratiques déclarées</dt>
+      <dd>{user.practice.length === 0 ? 'Aucune' : user.practice.join(', ')}</dd>
       <dt className="text-graphite-400">Compte créé le</dt>
       <dd>
         <time dateTime={user.createdAt}>

@@ -1,22 +1,30 @@
 import { buildPath, routes } from '@etabli/contract'
 
-import type { AtelierDetail, AtelierResult, AtelierSummary, DirectoryFilters } from '../model/atelier'
+import type {
+  AtelierDetail,
+  AtelierResult,
+  AtelierSummary,
+  CompleteOnboardingInput,
+  DirectoryFilters,
+  OnboardingResult,
+} from '../model/atelier'
 import { AtelierFailureCode, failure } from '../model/atelier'
 import type { IAtelierPort } from '../ports/atelier.port'
 
 const codeOf = (status: number): AtelierFailureCode => {
   if (status === 404) return AtelierFailureCode.NOT_FOUND
   if (status === 400) return AtelierFailureCode.INVALID_FILTER
+  if (status === 401 || status === 403) return AtelierFailureCode.UNAUTHORIZED
   return AtelierFailureCode.UNREACHABLE
 }
 
 export class AtelierHttpAdapter implements IAtelierPort {
   constructor(private readonly baseUrl: string) {}
 
-  private async call<A>(path: string): Promise<AtelierResult<A>> {
+  private async call<A>(path: string, init?: RequestInit): Promise<AtelierResult<A>> {
     let response: Response
     try {
-      response = await fetch(`${this.baseUrl}${path}`)
+      response = await fetch(`${this.baseUrl}${path}`, init)
     } catch {
       return failure(AtelierFailureCode.UNREACHABLE)
     }
@@ -41,5 +49,14 @@ export class AtelierHttpAdapter implements IAtelierPort {
 
   getBySlug(slug: string): Promise<AtelierResult<AtelierDetail>> {
     return this.call<AtelierDetail>(buildPath(routes.ateliers.getBySlug, { slug }))
+  }
+
+  completeOnboarding(token: string, input: CompleteOnboardingInput): Promise<AtelierResult<OnboardingResult>> {
+    return this.call<OnboardingResult>(routes.onboarding.complete, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+      body: JSON.stringify(input),
+      cache: 'no-store',
+    })
   }
 }
