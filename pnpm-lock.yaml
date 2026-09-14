@@ -35,6 +35,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@etabli/contract':
+        specifier: workspace:*
+        version: link:../../packages/contract
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -94,6 +97,46 @@ importers:
         specifier: ^3.2.7
         version: 3.2.7(@types/node@22.20.2)(jiti@2.7.0)(jsdom@30.0.1)(lightningcss@1.32.0)(tsx@4.23.13)
 
+  packages/bc-identity:
+    dependencies:
+      '@effect/platform':
+        specifier: ^0.97.2
+        version: 0.97.2(effect@3.22.2)
+      '@effect/sql':
+        specifier: ^0.52.1
+        version: 0.52.1(@effect/experimental@0.61.1(@effect/platform@0.97.2(effect@3.22.2))(effect@3.22.2))(@effect/platform@0.97.2(effect@3.22.2))(effect@3.22.2)
+      '@etabli/contract':
+        specifier: workspace:*
+        version: link:../contract
+      '@etabli/shared':
+        specifier: workspace:*
+        version: link:../shared
+      bcryptjs:
+        specifier: ^3.0.2
+        version: 3.0.3
+      effect:
+        specifier: ^3.22.2
+        version: 3.22.2
+      jose:
+        specifier: ^6.1.0
+        version: 6.2.12
+    devDependencies:
+      '@etabli/test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.2
+      tsdown:
+        specifier: ^0.23.0
+        version: 0.23.0(tsx@4.23.13)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.7
+        version: 3.2.7(@types/node@22.20.2)(jiti@2.7.0)(jsdom@30.0.1)(lightningcss@1.32.0)(tsx@4.23.13)
+
   packages/contract:
     devDependencies:
       tsdown:
@@ -123,6 +166,9 @@ importers:
       '@effect/sql-pg':
         specifier: ^0.53.0
         version: 0.53.0(@effect/experimental@0.61.1(@effect/platform@0.97.2(effect@3.22.2))(effect@3.22.2))(@effect/platform@0.97.2(effect@3.22.2))(@effect/sql@0.52.1(@effect/experimental@0.61.1(@effect/platform@0.97.2(effect@3.22.2))(effect@3.22.2))(@effect/platform@0.97.2(effect@3.22.2))(effect@3.22.2))(effect@3.22.2)
+      '@etabli/bc-identity':
+        specifier: workspace:*
+        version: link:../bc-identity
       '@etabli/contract':
         specifier: workspace:*
         version: link:../contract
@@ -154,6 +200,9 @@ importers:
 
   packages/shared:
     dependencies:
+      '@effect/platform':
+        specifier: ^0.97.2
+        version: 0.97.2(effect@3.22.2)
       effect:
         specifier: ^3.22.2
         version: 3.22.2
@@ -1717,6 +1766,10 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
+  bcryptjs@3.0.3:
+    resolution: {integrity: sha512-GlF5wPWnSa/X5LKM1o0wz0suXIINz1iHRLvTS+sLyi7XPbe5ycmYI3DlZqVGZZtDgl4DmasFg7gOB3JYbphV5g==}
+    hasBin: true
+
   bidi-js@1.1.0:
     resolution: {integrity: sha512-fX1Onk0tdVPC7obPWB5EbJ1z7NVhLq4m2xZLq2YXBkxzMXIGRpNMU88n0EPgWseKl12J7zXs7qrDxPK4sRs2fg==}
 
@@ -1931,6 +1984,9 @@ packages:
   jiti@2.7.0:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
     hasBin: true
+
+  jose@6.2.12:
+    resolution: {integrity: sha512-9NiFmJEex0sy2Dk58j2UGBSHgUs2ypF9eZSu4L6vjOX3Dp96Sw1F3uL+H+D1sx02jZZdzUT0HgvCy59CuvXcWw==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -3711,6 +3767,8 @@ snapshots:
 
   baseline-browser-mapping@2.11.23: {}
 
+  bcryptjs@3.0.3: {}
+
   bidi-js@1.1.0:
     dependencies:
       require-from-string: 2.0.2
@@ -3902,6 +3960,8 @@ snapshots:
   is-potential-custom-element-name@1.0.1: {}
 
   jiti@2.7.0: {}
+
+  jose@6.2.12: {}
 
   js-tokens@4.0.0: {}
 

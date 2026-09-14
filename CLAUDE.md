@@ -32,12 +32,19 @@ Le jalon 1 (`bc-identity`) est conçu :
 durée de vie du jeton, la sémantique de la déconnexion, le rôle exact de
 `proxy.ts` et la base sur laquelle tournent les E2E.
 
-L'outillage de test de la §10 est en place. `compose.yaml` lance un
-`postgres:18-alpine` sur `:5433` — Neon est en 18.6. `pnpm verify` lève le
-conteneur, joue les migrations, puis les E2E contre deux serveurs (`:3001`
-l'API, `:3000` le web). Sur une machine neuve il n'y a rien à copier :
-`db:test:up` crée `.env.test` depuis `.env.test.example` s'il manque.
+Le jalon 1 est implémenté : `packages/bc-identity` (domaine, deux commands,
+une query, repository SQL et mémoire, hacheur bcrypt, émetteur jose,
+middleware d'authentification), les trois routes montées sur `etabliApi`, et
+côté web `modules/identity`, `src/server/` et les pages `(auth)` et `(app)`.
+72 tests unitaires verts, `next build` vert.
 
+**Les E2E ne tournent plus dans `pnpm verify`, sur décision de l'auteur.** Les
+16 tests Playwright existent et passent (`pnpm test:e2e`, 3,4 s), mais le gate
+s'arrête à `check` + `next build`. Pour les lancer : `pnpm db:test:up` puis
+`pnpm test:e2e`.
+
+`compose.yaml` lance un `postgres:18-alpine` sur `:5433` — Neon est en 18.6.
+`db:test:up` crée `.env.test` depuis `.env.test.example` s'il manque.
 Playwright ne réutilise jamais un serveur déjà sur `:3001` : un `pnpm dev`
 qui traîne est branché sur Neon, et le réutiliser ferait tourner les E2E
 contre la base de développement.
@@ -97,5 +104,7 @@ de symboles et les rares commentaires restent en anglais.
 
 ## TDD
 
-Non négociable, confirmé par l'auteur. Pour chaque tranche : E2E Playwright
-rouge d'abord, puis unitaires rouges couche par couche, puis implémentation.
+La règle d'origine — E2E rouge, puis unitaires rouges, puis implémentation —
+a été levée par l'auteur au jalon 1 : le code a été écrit d'abord, les tests
+ensuite. Les E2E ont ensuite été sorties de `pnpm verify`. Redemander avant
+de rétablir l'un ou l'autre.

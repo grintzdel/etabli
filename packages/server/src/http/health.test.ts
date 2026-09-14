@@ -1,10 +1,15 @@
 import { HttpApiBuilder, HttpServer } from '@effect/platform'
+import { PgLiteSqlClientLayer } from '@etabli/test-utils'
 import * as Layer from 'effect/Layer'
 import { afterAll, describe, expect, it } from 'vitest'
 
 import { ApiLive } from '../layers/api-live'
 
-const { dispose, handler } = HttpApiBuilder.toWebHandler(Layer.mergeAll(ApiLive, HttpServer.layerContext))
+const { dispose, handler } = HttpApiBuilder.toWebHandler(
+  Layer.mergeAll(ApiLive, HttpServer.layerContext).pipe(
+    Layer.provide(PgLiteSqlClientLayer({ withAllMigrations: true }))
+  )
+)
 
 afterAll(() => dispose())
 
