@@ -1,6 +1,6 @@
 import * as SqlClient from '@effect/sql/SqlClient'
 import { RepoError } from '@etabli/shared/errors'
-import type { AtelierId, UserId } from '@etabli/shared/schema'
+import type { AtelierId, MachineId, UserId } from '@etabli/shared/schema'
 import * as DateTime from 'effect/DateTime'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
@@ -14,6 +14,7 @@ import type {
   Machine,
   Membership,
   Slug,
+  UpdateMachine,
 } from '../domain/atelier.schema'
 import { Slug as SlugSchema, toAdminAtelier } from '../domain/atelier.schema'
 import { AtelierRepository } from './atelier.repository'
@@ -301,6 +302,28 @@ export const makeAtelierRepositorySql = (sql: SqlClient.SqlClient) =>
           rows[0] === undefined ? noRow('ateliers.insert') : Effect.succeed(toAtelier(rows[0]))
         ),
         Effect.mapError(fail('ateliers.insert'))
+      ),
+
+    findMachineById: (id: MachineId) =>
+      sql<MachineRow>`SELECT * FROM machines WHERE id = ${id} LIMIT 1`.pipe(
+        Effect.map((rows) => (rows[0] === undefined ? null : toMachine(rows[0]))),
+        Effect.mapError(fail('machines.findById'))
+      ),
+
+    updateMachine: (id: MachineId, patch: UpdateMachine, at: Machine['updatedAt']) =>
+      sql<MachineRow>`
+        UPDATE machines
+        SET name = coalesce(${patch.name ?? null}::text, name),
+            description = coalesce(${patch.description ?? null}::text, description),
+            status = coalesce(${patch.status ?? null}::text, status),
+            requires_certification = coalesce(${patch.requiresCertification ?? null}::boolean, requires_certification),
+            slot_duration_minutes = coalesce(${patch.slotDurationMinutes ?? null}::integer, slot_duration_minutes),
+            updated_at = ${DateTime.toDate(at)}
+        WHERE id = ${id}
+        RETURNING *
+      `.pipe(
+        Effect.map((rows) => (rows[0] === undefined ? null : toMachine(rows[0]))),
+        Effect.mapError(fail('machines.update'))
       ),
 
     insertMachine: (machine) =>

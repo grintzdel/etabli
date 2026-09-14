@@ -1,5 +1,5 @@
 import type { RepoError } from '@etabli/shared/errors'
-import type { AtelierId, UserId } from '@etabli/shared/schema'
+import type { AtelierId, MachineId, UserId } from '@etabli/shared/schema'
 import * as Context from 'effect/Context'
 import type * as Effect from 'effect/Effect'
 
@@ -12,6 +12,7 @@ import type {
   Machine,
   Membership,
   Slug,
+  UpdateMachine,
 } from '../domain/atelier.schema'
 
 export interface AtelierRepositoryService {
@@ -30,6 +31,12 @@ export interface AtelierRepositoryService {
     at: Atelier['updatedAt']
   ) => Effect.Effect<Atelier | null, RepoError>
   readonly insertAtelier: (atelier: Atelier) => Effect.Effect<Atelier, RepoError>
+  readonly findMachineById: (id: MachineId) => Effect.Effect<Machine | null, RepoError>
+  readonly updateMachine: (
+    id: MachineId,
+    patch: UpdateMachine,
+    at: Machine['updatedAt']
+  ) => Effect.Effect<Machine | null, RepoError>
   readonly insertMachine: (machine: Machine) => Effect.Effect<Machine, RepoError>
   readonly insertMembership: (membership: Membership) => Effect.Effect<Membership, RepoError>
 }

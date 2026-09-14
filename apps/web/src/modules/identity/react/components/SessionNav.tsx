@@ -5,11 +5,17 @@ import { buttonVariants } from '@/ui/Button'
 export type SessionNavProps = {
   readonly displayName: string
   readonly isPlatformAdmin: boolean
+  readonly isFabmanager: boolean
   readonly signOut: () => Promise<void>
 }
 
-export const SessionNav = ({ displayName, isPlatformAdmin, signOut }: SessionNavProps) => (
+export const SessionNav = ({ displayName, isPlatformAdmin, isFabmanager, signOut }: SessionNavProps) => (
   <>
+    {isFabmanager ? (
+      <Link href="/manage/machines" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
+        Machines
+      </Link>
+    ) : null}
     {isPlatformAdmin ? (
       <Link href="/admin/ateliers" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
         Administration

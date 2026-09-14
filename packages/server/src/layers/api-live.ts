@@ -7,6 +7,7 @@ import { etabliApi } from '../http/api'
 import { AtelierLive } from '../http/atelier.handlers'
 import { HealthLive } from '../http/health.handlers'
 import { IdentityLive } from '../http/identity.handlers'
+import { ManageLive } from '../http/manage.handlers'
 import { OnboardingLive } from '../http/onboarding.handlers'
 import { AtelierServicesLive } from './atelier.layer'
 import { IdentityAuthLive, IdentityServicesLive } from './identity.layer'
@@ -18,6 +19,7 @@ export const ApiLive = HttpApiBuilder.api(etabliApi).pipe(
   Layer.provide(AtelierLive),
   Layer.provide(OnboardingLive),
   Layer.provide(AdminLive),
+  Layer.provide(ManageLive),
   Layer.provide(IdentityServicesLive),
   Layer.provide(AtelierServicesLive),
   Layer.provide(MemberProfileLive.pipe(Layer.provide(UserRepositorySqlLayer))),

@@ -16,6 +16,7 @@ export const CurrentSessionNav = async () => {
     <SessionNav
       displayName={result.value.displayName}
       isPlatformAdmin={result.value.platformRole === 'PLATFORM_ADMIN'}
+      isFabmanager={result.value.memberships.some((membership) => membership.role === 'FABMANAGER')}
       signOut={logoutAction}
     />
   )
