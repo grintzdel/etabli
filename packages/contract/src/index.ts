@@ -1,5 +1,6 @@
 export * from './atelier'
 export * from './build-path'
+export * from './certification'
 export * from './health'
 export * from './identity'
 export * from './routes'

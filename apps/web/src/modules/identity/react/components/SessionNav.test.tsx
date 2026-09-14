@@ -16,14 +16,21 @@ describe('SessionNav', () => {
     expect(screen.queryByRole('link', { name: /administration/i })).not.toBeInTheDocument()
   })
 
-  it('hides the parc from someone who fabmanages nothing', () => {
+  it('offers the habilitations to every signed-in member', () => {
     render(<SessionNav displayName="Camille Roux" isPlatformAdmin={false} isFabmanager={false} signOut={signOut} />)
-    expect(screen.queryByRole('link', { name: /machines/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /habilitations/i })).toHaveAttribute('href', '/habilitations')
   })
 
-  it('offers the parc to a fabmanager', () => {
+  it('hides the parc and the review queue from someone who fabmanages nothing', () => {
+    render(<SessionNav displayName="Camille Roux" isPlatformAdmin={false} isFabmanager={false} signOut={signOut} />)
+    expect(screen.queryByRole('link', { name: /^machines$/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /^file$/i })).not.toBeInTheDocument()
+  })
+
+  it('offers the parc and the review queue to a fabmanager', () => {
     render(<SessionNav displayName="Camille Roux" isPlatformAdmin={false} isFabmanager signOut={signOut} />)
-    expect(screen.getByRole('link', { name: /machines/i })).toHaveAttribute('href', '/manage/machines')
+    expect(screen.getByRole('link', { name: /^machines$/i })).toHaveAttribute('href', '/manage/machines')
+    expect(screen.getByRole('link', { name: /^file$/i })).toHaveAttribute('href', '/manage/certifications')
   })
 
   it('offers the administration to a platform admin', () => {
