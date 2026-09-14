@@ -24,3 +24,9 @@ export class AtelierSlugTakenError extends Schema.TaggedError<AtelierSlugTakenEr
   { slug: Schema.String },
   HttpApiSchema.annotations({ status: 409 })
 ) {}
+
+export class MachineUnknownError extends Schema.TaggedError<MachineUnknownError>()(
+  'MachineUnknownError',
+  { machineId: Schema.String },
+  HttpApiSchema.annotations({ status: 404 })
+) {}

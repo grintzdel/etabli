@@ -5,11 +5,15 @@ import type {
   AtelierSummary,
   CompleteOnboardingInput,
   CreateAtelierInput,
+  CreateMachineInput,
   MachineKind,
   MachineStatus,
+  ManagedMachine,
+  ManagedParc,
   OnboardingResult,
   PublicMachine,
   SetAtelierStatusInput,
+  UpdateMachineInput,
 } from '@etabli/contract'
 
 export type {
@@ -19,11 +23,15 @@ export type {
   AtelierSummary,
   CompleteOnboardingInput,
   CreateAtelierInput,
+  CreateMachineInput,
   MachineKind,
   MachineStatus,
+  ManagedMachine,
+  ManagedParc,
   OnboardingResult,
   PublicMachine,
   SetAtelierStatusInput,
+  UpdateMachineInput,
 }
 
 export const ATELIER_STATUSES: ReadonlyArray<AtelierStatus> = ['DRAFT', 'PUBLISHED', 'CLOSED']
@@ -36,6 +44,11 @@ export const ATELIER_STATUS_LABELS: Readonly<Record<AtelierStatus, string>> = {
 
 export const isAtelierStatus = (value: string): value is AtelierStatus =>
   (ATELIER_STATUSES as ReadonlyArray<string>).includes(value)
+
+export const MACHINE_STATUSES: ReadonlyArray<MachineStatus> = ['AVAILABLE', 'MAINTENANCE', 'RETIRED']
+
+export const isMachineStatus = (value: string): value is MachineStatus =>
+  (MACHINE_STATUSES as ReadonlyArray<string>).includes(value)
 
 export const AtelierFailureCode = {
   INVALID_FILTER: 'INVALID_FILTER',

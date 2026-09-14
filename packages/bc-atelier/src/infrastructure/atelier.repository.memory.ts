@@ -1,10 +1,18 @@
 import type { RepoError } from '@etabli/shared/errors'
-import type { AtelierId, UserId } from '@etabli/shared/schema'
+import type { AtelierId, MachineId, UserId } from '@etabli/shared/schema'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 
 import { AtelierStatus, EARTH_RADIUS_KM, MachineStatus } from '../domain/atelier.constants'
-import type { Atelier, AtelierSummary, ListAteliersParams, Machine, Membership, Slug } from '../domain/atelier.schema'
+import type {
+  Atelier,
+  AtelierSummary,
+  ListAteliersParams,
+  Machine,
+  Membership,
+  Slug,
+  UpdateMachine,
+} from '../domain/atelier.schema'
 import { toAdminAtelier } from '../domain/atelier.schema'
 import type { AtelierRepositoryService } from './atelier.repository'
 import { AtelierRepository } from './atelier.repository'
@@ -132,6 +140,15 @@ export const makeAtelierRepositoryMemory = (): AtelierRepositoryMemory => {
       Effect.sync(() => {
         ateliers.set(atelier.id, atelier)
         return atelier
+      }),
+    findMachineById: (id: MachineId) => Effect.sync(() => machines.get(id) ?? null),
+    updateMachine: (id: MachineId, patch: UpdateMachine, at: Machine['updatedAt']) =>
+      Effect.sync(() => {
+        const machine = machines.get(id)
+        if (machine === undefined) return null
+        const updated = { ...machine, ...patch, updatedAt: at }
+        machines.set(id, updated)
+        return updated
       }),
     insertMachine: (machine) =>
       Effect.sync(() => {

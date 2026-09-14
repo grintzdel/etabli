@@ -26,3 +26,7 @@ export const DIRECTORY_PAGE_SIZE = 20
 export const DIRECTORY_MAX_PAGE_SIZE = 100
 export const EARTH_RADIUS_KM = 6371
 export const MAX_PRACTICES = 12
+
+export const DEFAULT_SLOT_MINUTES = 60
+export const MIN_SLOT_MINUTES = 15
+export const MAX_SLOT_MINUTES = 480

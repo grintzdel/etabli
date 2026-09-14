@@ -91,3 +91,45 @@ export type CreateAtelierInput = {
 export type SetAtelierStatusInput = {
   readonly status: AtelierStatus
 }
+
+export type ManagedMachine = {
+  readonly id: string
+  readonly atelierId: string
+  readonly name: string
+  readonly description: string
+  readonly kind: MachineKind
+  readonly requiresCertification: boolean
+  readonly slotDurationMinutes: number
+  readonly status: MachineStatus
+  readonly nfcTagId: string | null
+  readonly createdAt: string
+  readonly updatedAt: string
+}
+
+export type ManagedParc = {
+  readonly atelier: {
+    readonly id: string
+    readonly slug: string
+    readonly name: string
+    readonly status: AtelierStatus
+  }
+  readonly machines: ReadonlyArray<ManagedMachine>
+}
+
+export type CreateMachineInput = {
+  readonly atelierId: string
+  readonly name: string
+  readonly description?: string
+  readonly kind: MachineKind
+  readonly requiresCertification?: boolean
+  readonly slotDurationMinutes?: number
+  readonly nfcTagId?: string | null
+}
+
+export type UpdateMachineInput = {
+  readonly name?: string
+  readonly description?: string
+  readonly status?: MachineStatus
+  readonly requiresCertification?: boolean
+  readonly slotDurationMinutes?: number
+}

@@ -4,11 +4,14 @@ import * as Schema from 'effect/Schema'
 
 import {
   AtelierStatus,
+  DEFAULT_SLOT_MINUTES,
   DIRECTORY_MAX_PAGE_SIZE,
   DIRECTORY_PAGE_SIZE,
   MachineKind,
   MachineStatus,
   MAX_PRACTICES,
+  MAX_SLOT_MINUTES,
+  MIN_SLOT_MINUTES,
 } from './atelier.constants'
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -230,4 +233,44 @@ export const toAdminAtelier = (atelier: Atelier, machineCount: number): AdminAte
   status: atelier.status,
   machineCount,
   createdAt: atelier.createdAt,
+})
+
+export const CreateMachineSchema = Schema.Struct({
+  atelierId: AtelierId,
+  name: Schema.Trim.pipe(Schema.minLength(1)).annotations({ message: () => 'Le nom de la machine est obligatoire' }),
+  description: Schema.optionalWith(Schema.Trim, { default: () => '' }),
+  kind: MachineKindSchema,
+  requiresCertification: Schema.optionalWith(Schema.Boolean, { default: () => true }),
+  slotDurationMinutes: Schema.optionalWith(Schema.Int.pipe(Schema.between(MIN_SLOT_MINUTES, MAX_SLOT_MINUTES)), {
+    default: () => DEFAULT_SLOT_MINUTES,
+  }),
+  nfcTagId: Schema.optionalWith(Schema.NullOr(Schema.Trim.pipe(Schema.minLength(1))), { default: () => null }),
+})
+export type CreateMachine = Schema.Schema.Type<typeof CreateMachineSchema>
+
+export const UpdateMachineSchema = Schema.Struct({
+  name: Schema.optional(Schema.Trim.pipe(Schema.minLength(1))),
+  description: Schema.optional(Schema.Trim),
+  status: Schema.optional(MachineStatusSchema),
+  requiresCertification: Schema.optional(Schema.Boolean),
+  slotDurationMinutes: Schema.optional(Schema.Int.pipe(Schema.between(MIN_SLOT_MINUTES, MAX_SLOT_MINUTES))),
+})
+export type UpdateMachine = Schema.Schema.Type<typeof UpdateMachineSchema>
+
+export const ManagedAtelierSchema = Schema.Struct({
+  id: AtelierId,
+  slug: Slug,
+  name: Schema.String,
+  status: AtelierStatusSchema,
+})
+
+export const ManagedParcSchema = Schema.Struct({
+  atelier: ManagedAtelierSchema,
+  machines: Schema.Array(MachineSchema),
+})
+export type ManagedParc = Schema.Schema.Type<typeof ManagedParcSchema>
+
+export const toManagedParc = (atelier: Atelier, machines: ReadonlyArray<Machine>): ManagedParc => ({
+  atelier: { id: atelier.id, slug: atelier.slug, name: atelier.name, status: atelier.status },
+  machines,
 })
