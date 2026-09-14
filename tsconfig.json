@@ -1,4 +1,9 @@
 {
   "files": [],
-  "references": [{ "path": "./tsconfig.root.json" }, { "path": "./packages/contract" }, { "path": "./packages/shared" }]
+  "references": [
+    { "path": "./tsconfig.root.json" },
+    { "path": "./packages/contract" },
+    { "path": "./packages/shared" },
+    { "path": "./packages/test-utils" }
+  ]
 }
