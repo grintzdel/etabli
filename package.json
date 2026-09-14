@@ -22,7 +22,8 @@
     "verify": "pnpm run check && pnpm --filter @etabli/web run build",
     "db:test:up": "docker compose up -d --wait postgres && ([ -f .env.test ] || cp .env.test.example .env.test)",
     "db:test:down": "docker compose down",
-    "db:migrate:test": "pnpm --filter @etabli/server run db:migrate:test"
+    "db:migrate:test": "pnpm --filter @etabli/server run db:migrate:test",
+    "db:seed:test": "pnpm --filter @etabli/server run db:seed:test"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

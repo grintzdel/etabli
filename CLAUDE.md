@@ -43,14 +43,26 @@ côté web `modules/identity`, `src/server/` et les pages `(auth)` et `(app)`.
 s'arrête à `check` + `next build`. Pour les lancer : `pnpm db:test:up` puis
 `pnpm test:e2e`.
 
-Le jalon 2 est commencé côté serveur : `packages/bc-atelier` porte le domaine
-(atelier, adhésion, machine), la migration `0003_create_ateliers`, le
+Le jalon 2 est aux deux tiers. Côté serveur, `packages/bc-atelier` porte le
+domaine (atelier, adhésion, machine), la migration `0003_create_ateliers`, le
 repository SQL et mémoire, et les deux lectures publiques `GET /ateliers` et
 `GET /ateliers/:slug` montées sur `etabliApi`. La recherche par proximité est
-une haversine en SQL nu — pas de PostGIS, pglite n'en a pas besoin. Restent à
-faire pour clore le jalon : les pages publiques `/ateliers` et
-`/ateliers/[slug]` avec cache balisé et métadonnées, puis l'onboarding qui
-produit une adhésion.
+une haversine en SQL nu — pas de PostGIS, pglite n'en a pas besoin.
+
+Côté web, `modules/atelier` (modèle, port, adapters HTTP et mémoire,
+composants) alimente `/ateliers` et `/ateliers/[slug]`. Les deux lectures
+passent par `use cache` avec `cacheTag('ateliers')` et
+`cacheTag('atelier-<slug>')`, sur un `cacheLife('minutes')` : quand les routes
+d'administration arriveront, c'est `revalidateTag` qui rendra une publication
+visible tout de suite. `app/not-found.tsx` remplace le 404 anglais de Next.
+
+`pnpm db:seed:test` insère trois ateliers de démonstration (deux publiés, un
+brouillon) de façon idempotente ; le `globalSetup` de Playwright l'appelle, si
+bien que `pnpm test:e2e` se suffit à lui-même après `pnpm db:test:up`.
+`E2E_SKIP_SEED=1` le désactive.
+
+Reste à faire pour clore le jalon : l'onboarding qui produit une adhésion, et
+les routes d'administration qui créent un atelier autrement qu'en SQL.
 
 `compose.yaml` lance un `postgres:18-alpine` sur `:5433` — Neon est en 18.6.
 `db:test:up` crée `.env.test` depuis `.env.test.example` s'il manque.

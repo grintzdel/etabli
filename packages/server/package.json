@@ -5,14 +5,15 @@
   "type": "module",
   "scripts": {
     "build": "tsdown",
-    "dev": "tsx --env-file-if-exists=../../.env --watch src/main.ts",
     "db:migrate": "tsx --env-file-if-exists=../../.env src/db/migrate.ts",
     "db:migrate:test": "tsx --env-file=../../.env.test src/db/migrate.ts",
+    "db:seed:test": "tsx --env-file=../../.env.test src/db/seed.ts",
+    "dev": "tsx --env-file-if-exists=../../.env --watch src/main.ts",
+    "dev:test": "tsx --env-file=../../.env.test src/main.ts",
     "start": "node dist/src/main.mjs",
     "start:test": "node --env-file=../../.env.test dist/src/main.mjs",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
-    "dev:test": "tsx --env-file=../../.env.test src/main.ts"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@effect/experimental": "^0.61.1",

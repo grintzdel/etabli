@@ -12,6 +12,7 @@ const apiPort = process.env.PORT ?? '3001'
 
 export default defineConfig({
   testDir: './src',
+  globalSetup: './src/e2e/global-setup.ts',
   testMatch: '**/*.test.e2e.ts',
   timeout: 30_000,
   fullyParallel: true,
