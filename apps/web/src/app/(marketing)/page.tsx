@@ -1,3 +1,5 @@
-const MarketingHome = () => <main className="font-display p-8 text-3xl">Établi</main>
+import { HomePage, metadata } from '@/features/marketing/home/home.page'
 
-export default MarketingHome
+export { metadata }
+
+export default HomePage
