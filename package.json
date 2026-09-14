@@ -16,6 +16,7 @@
     "check": "pnpm run build:packages && pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test",
     "dev:server": "pnpm --filter @etabli/server run dev",
     "db:migrate": "pnpm --filter @etabli/server run db:migrate",
+    "db:seed": "pnpm --filter @etabli/server run db:seed",
     "dev": "concurrently -k -n api,web -c yellow,cyan \"pnpm run dev:server\" \"pnpm run dev:web\"",
     "dev:web": "pnpm --filter @etabli/web run dev",
     "test:e2e": "pnpm --filter @etabli/web run test:e2e",
