@@ -10,5 +10,6 @@ export const IdentityLive = HttpApiBuilder.group(etabliApi, 'identity', (handler
     .handle('me', identityHandlers.me)
     .handle('preferences', identityHandlers.preferences)
     .handle('myAteliers', identityHandlers.myAteliers)
+    .handle('updateProfile', identityHandlers.updateProfile)
     .handle('updatePreferences', identityHandlers.updatePreferences)
 )

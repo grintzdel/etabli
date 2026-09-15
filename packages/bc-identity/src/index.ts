@@ -1,6 +1,7 @@
 export * from './application/commands/login-user/login-user.command'
 export * from './application/commands/register-user/register-user.command'
 export * from './application/commands/update-preferences/update-preferences.command'
+export * from './application/commands/update-profile/update-profile.command'
 export * from './application/ports/member-ateliers'
 export * from './application/ports/membership-lookup'
 export * from './application/ports/password-hasher'

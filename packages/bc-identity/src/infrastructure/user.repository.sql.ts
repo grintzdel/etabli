@@ -55,6 +55,22 @@ export const makeUserRepositorySql = (sql: SqlClient.SqlClient) =>
         Effect.mapError(fail('users.findById'))
       ),
 
+    updateProfile: (id, patch, at) => {
+      const practice = patch.practice === undefined ? null : toPgTextArray(patch.practice)
+
+      return sql<UserRow>`
+        UPDATE users
+        SET display_name = COALESCE(${patch.displayName ?? null}::text, display_name),
+            practice = COALESCE(${practice}::text[], practice),
+            updated_at = ${DateTime.toDate(at)}
+        WHERE id = ${id}
+        RETURNING *
+      `.pipe(
+        Effect.map((rows) => (rows[0] === undefined ? null : toUser(rows[0]))),
+        Effect.mapError(fail('users.updateProfile'))
+      )
+    },
+
     markOnboarded: (id, practice, at) =>
       sql<UserRow>`
         UPDATE users

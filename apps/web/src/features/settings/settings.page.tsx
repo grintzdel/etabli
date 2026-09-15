@@ -2,11 +2,15 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 
+import { PRACTICES } from '@/modules/atelier/core/model/atelier'
 import { DEFAULT_THEME } from '@/modules/identity/core/model/preferences'
 import { idleSettings } from '@/modules/identity/core/model/settings'
 import { PreferencesForm } from '@/modules/identity/react/components/PreferencesForm'
+import { ProfileForm } from '@/modules/identity/react/components/ProfileForm'
+import { identityPort } from '@/server/container'
 import { readMyAteliers, readPreferences } from '@/server/preferences'
 import { savePreferencesAction } from '@/server/preferences.actions'
+import { saveProfileAction } from '@/server/profile.actions'
 import { readSessionToken } from '@/server/session'
 import { Surface } from '@/ui/Surface'
 
@@ -32,9 +36,27 @@ const PreferencesSection = async () => {
   )
 }
 
-const PreferencesFallback = () => (
+const ProfileSection = async () => {
+  const token = await readSessionToken()
+  if (token === null) redirect('/connexion?next=/parametres')
+
+  const session = await identityPort.me(token)
+  if (!session.ok) redirect('/connexion?next=/parametres')
+
+  return (
+    <ProfileForm
+      action={saveProfileAction}
+      initialState={idleSettings}
+      displayName={session.value.displayName}
+      practice={session.value.practice}
+      practices={PRACTICES}
+    />
+  )
+}
+
+const Loading = ({ what }: { readonly what: string }) => (
   <output className="text-graphite-400" aria-busy="true">
-    Chargement de vos préférences…
+    Chargement de {what}…
   </output>
 )
 
@@ -46,9 +68,18 @@ export const SettingsPage = () => (
     </header>
 
     <section className="flex flex-col gap-4">
+      <h2 className="font-display text-2xl font-semibold tracking-wide uppercase">Profil</h2>
+      <Surface>
+        <Suspense fallback={<Loading what="votre profil" />}>
+          <ProfileSection />
+        </Suspense>
+      </Surface>
+    </section>
+
+    <section className="flex flex-col gap-4">
       <h2 className="font-display text-2xl font-semibold tracking-wide uppercase">Préférences</h2>
       <Surface>
-        <Suspense fallback={<PreferencesFallback />}>
+        <Suspense fallback={<Loading what="vos préférences" />}>
           <PreferencesSection />
         </Suspense>
       </Surface>
