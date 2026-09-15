@@ -42,6 +42,23 @@
         "no-unused-vars": "off",
         "typescript/no-unused-vars": "off"
       }
+    },
+    {
+      "files": ["apps/api/**/*.ts"],
+      "rules": {
+        "typescript/no-extraneous-class": [
+          "warn",
+          {
+            "allowWithDecorator": true
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/api/src/infrastructure/database/seed.ts"],
+      "rules": {
+        "no-await-in-loop": "off"
+      }
     }
   ]
 }

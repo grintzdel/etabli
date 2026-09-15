@@ -52,6 +52,48 @@ Ce qui existe, package par package :
   tient le pointage, le no-show et l'annulation de la journée, et `/manage/stats`
   comme `/admin/stats` mesurent l'occupation.
 
+## API v2 — `apps/api` (NestJS)
+
+Seconde implémentation du back, sur la branche `feat/api-nestjs`, décrite par
+`docs/superpowers/specs/2026-09-15-etabli-api-nestjs-design.md`. Elle remplace
+fonctionnellement `packages/server` et les quatre `packages/bc-*`, qui restent
+en place et inertes. NestJS 12, Drizzle, Zod, clean architecture port & adapter,
+sans Effect.ts ni bounded contexts. Sept modules — `auth`, `user`, `atelier`,
+`membership`, `machine`, `certification`, `booking` — plus `health`, pour les
+38 routes du §4 de la spec.
+
+`pnpm --filter @etabli/api test` : 255 tests, trois étages (unitaires sur stubs
+et `FixedClock`, intégration des repositories sur PGlite, bout en bout HTTP via
+supertest). Pas de Docker : chaque suite monte sa propre base en mémoire, ce qui
+supprime structurellement le défaut d'isolation des 95 E2E de la v1.
+
+**NestJS 12 est ESM-only.** `apps/api` est donc en `"type": "module"`, en
+`module: NodeNext`, et les imports relatifs portent leur extension. On les écrit
+en `.ts` — `rewriteRelativeImportExtensions` les réécrit en `.js` à l'émission.
+`unplugin-swc` est requis pour Vitest : esbuild n'émet pas
+`emitDecoratorMetadata`, sans quoi l'injection Nest ne résout rien.
+
+**Zod est le seul langage de schéma**, entrée comme sortie — écart assumé au
+§3.2 de la spec, qui demandait des classes `@ApiProperty` pour les réponses.
+Les DTO de requête sont validés par `ZodValidationPipe` via `@ZodBody`,
+`@ZodQuery` et `@UuidParam` ; les DTO de réponse sont des schémas Zod plus un
+mapper, et Swagger est alimenté par `z.toJSONSchema()`. `response-contract.e2e.spec.ts`
+parse la réponse de chaque route contre son schéma, clés en trop comprises.
+
+Deux écarts de plus : `PATCH /auth/me` devient `PATCH /me/profile` (§4.1), et
+`POST /certifications` devient `POST /certifications/request` — la table du §4 de
+la spec l'écrit ainsi, là où son §1 annonce une seule URL changée. La colonne
+`email` est en `text` et non en `citext` : l'adresse est normalisée en minuscules
+par le schema Zod, donc l'extension ne sert plus.
+
+La contrainte d'exclusion `bookings_no_overlap` et `btree_gist` vivent dans une
+migration écrite à la main, `0001`, que `drizzle-kit generate --custom` a
+ordonnée après les sept tables. `domain_events` n'est pas reprise.
+
+Scripts : `pnpm dev:api`, `pnpm db:migrate:api`, `pnpm db:seed:api`,
+`pnpm db:generate:api` (et leurs variantes `:test:api`). Le seed v1 est porté à
+l'identique — neuf ateliers, sept comptes, mot de passe `etabli-2026`.
+
 Neon est branché et à jour des six migrations. Sur une machine neuve : copier
 `.env.example` en `.env` et y mettre l'URL *pooled* du projet Neon. `pg` émet un
 avertissement sur `sslmode=require` traité comme `verify-full` — comportement

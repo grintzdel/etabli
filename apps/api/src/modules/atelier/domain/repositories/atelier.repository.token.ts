@@ -1,0 +1,1 @@
+export const ATELIER_REPOSITORY = Symbol('ATELIER_REPOSITORY')
