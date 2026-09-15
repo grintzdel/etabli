@@ -4,7 +4,14 @@ import type { CertificationRequest, CertificationResult, MyCertification } from 
 import { CertificationFailureCode, failure } from '../model/certification'
 import type { ICertificationPort } from '../ports/certification.port'
 
-const codeOf = (status: number): CertificationFailureCode => {
+const tagOf = (body: unknown): string | undefined => {
+  if (typeof body !== 'object' || body === null) return undefined
+  const tag = (body as { readonly _tag?: unknown })._tag
+  return typeof tag === 'string' ? tag : undefined
+}
+
+export const codeOf = (status: number, body: unknown): CertificationFailureCode => {
+  if (tagOf(body) === 'CertificationUnknownError') return CertificationFailureCode.CERTIFICATION_UNKNOWN
   if (status === 401) return CertificationFailureCode.UNAUTHORIZED
   if (status === 404) return CertificationFailureCode.NOT_CERTIFIABLE
   if (status === 409) return CertificationFailureCode.ALREADY_REQUESTED
@@ -26,13 +33,11 @@ export class CertificationHttpAdapter implements ICertificationPort {
       return failure(CertificationFailureCode.UNREACHABLE)
     }
 
-    if (!response.ok) return failure(codeOf(response.status))
+    const body: unknown = await response.json().catch(() => null)
+    if (!response.ok) return failure(codeOf(response.status, body))
+    if (body === null) return failure(CertificationFailureCode.UNREACHABLE)
 
-    try {
-      return { ok: true, value: (await response.json()) as A }
-    } catch {
-      return failure(CertificationFailureCode.UNREACHABLE)
-    }
+    return { ok: true, value: body as A }
   }
 
   private async send(path: string, token: string): Promise<CertificationResult<void>> {

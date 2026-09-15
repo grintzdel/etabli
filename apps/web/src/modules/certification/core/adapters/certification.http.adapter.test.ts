@@ -80,3 +80,22 @@ describe('CertificationHttpAdapter', () => {
     expect(result.error.code).toBe(CertificationFailureCode.UNREACHABLE)
   })
 })
+
+describe('CertificationHttpAdapter · refus de la file', () => {
+  it('names a request that is not the caller’s to review, rather than an uncertifiable machine', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(JSON.stringify({ _tag: 'CertificationUnknownError', certificationId: 'c-1' }), { status: 404 })
+        )
+    )
+
+    const result = await new CertificationHttpAdapter(BASE).grant(TOKEN, 'c-1')
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.error.code).toBe(CertificationFailureCode.CERTIFICATION_UNKNOWN)
+  })
+})

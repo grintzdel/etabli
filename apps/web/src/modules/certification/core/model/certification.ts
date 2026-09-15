@@ -10,6 +10,7 @@ export type { CertificationRequest, CertificationStatus, MyCertification, MyCert
 export const CertificationFailureCode = {
   NOT_CERTIFIABLE: 'NOT_CERTIFIABLE',
   ALREADY_REQUESTED: 'ALREADY_REQUESTED',
+  CERTIFICATION_UNKNOWN: 'CERTIFICATION_UNKNOWN',
   UNAUTHORIZED: 'UNAUTHORIZED',
   UNREACHABLE: 'UNREACHABLE',
 } as const
@@ -27,6 +28,7 @@ export type CertificationResult<A> =
 export const FAILURE_MESSAGES: Readonly<Record<CertificationFailureCode, string>> = {
   NOT_CERTIFIABLE: 'Cette machine ne peut pas recevoir de demande d’habilitation.',
   ALREADY_REQUESTED: 'Vous avez déjà une demande en cours sur cette machine.',
+  CERTIFICATION_UNKNOWN: 'Cette demande n’existe pas, ou ne porte pas sur un de vos ateliers.',
   UNAUTHORIZED: 'Votre session a expiré.',
   UNREACHABLE: 'Les habilitations sont momentanément indisponibles.',
 }

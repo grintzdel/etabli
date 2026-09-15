@@ -12,29 +12,32 @@ plages avec le paramètre `pages`).
 
 ## État
 
-Jalons 0 à 5 terminés et sur `main`. Le parcours membre est complet de bout en
-bout, de l'atelier au créneau réservé ; le fabmanager tient le pointage de
-secours et le no-show depuis `/manage/bookings` ; et `/parametres` porte le
-profil, les préférences et le mot de passe. Prochaine étape : le jalon 6, le
-back-office.
+Jalons 0 à 6 terminés et sur `main`. Le parcours membre est complet de bout en
+bout, de l'atelier au créneau réservé ; le fabmanager tient le pointage, le
+no-show, l'annulation, le tag NFC et les statistiques de ses ateliers ;
+l'administrateur plateforme tient les ateliers, les comptes, les rôles et le
+tableau réseau. Prochaine étape : le jalon 7, la production.
 
-`pnpm check` est vert : 616 tests unitaires, `next build`. Les 75 E2E
+`pnpm check` est vert : 813 tests unitaires, `next build`. Les 95 E2E
 Playwright passent mais **ne tournent plus dans `pnpm verify`, sur décision de
-l'auteur** — `pnpm db:test:up` puis `pnpm test:e2e` pour les lancer. La base de
-test **accumule** d'un run à l'autre : après plusieurs passes, des tests sans
+l'auteur** — `pnpm db:test:up` puis `pnpm test:e2e` pour les lancer. Le
+conteneur de test tourne sur un `tmpfs` : `pnpm db:test:down` puis `db:test:up`
+suffit à repartir d'une base vierge, il n'y a pas de volume à supprimer. Sans
+cette remise à zéro la base **accumule** d'un run à l'autre, et des tests sans
 rapport tombent sur des créneaux épuisés ou un annuaire saturé d'« Atelier
-E2E ». `pnpm db:test:down`, supprimer le volume, puis `db:test:up` les remet au
-vert. Défaut d'isolation connu, non corrigé.
+E2E ». Défaut d'isolation connu, non corrigé.
 
 Ce qui existe, package par package :
 
 - `bc-identity` — inscription, connexion, `GET /auth/me`, bcrypt, jose,
   `AuthMiddleware`, cookie httpOnly posé par Next, `proxy.ts`. Et les paramètres :
   `PATCH /auth/me` (nom affiché, pratiques), `POST /auth/password`,
-  `GET`/`PATCH /me/preferences`, `GET /me/ateliers`, migration `0006`
+  `GET`/`PATCH /me/preferences`, `GET /me/ateliers`, migration `0006`, et le
+  back-office plateforme : `GET /admin/users`, `PATCH /admin/users/:id`
 - `bc-atelier` — ateliers, adhésions, machines ; annuaire public et fiche avec
   `use cache` / `cacheTag` ; onboarding persisté ; routes `/admin/ateliers` et
-  `/manage/machines`
+  `/manage/machines` ; `PATCH /admin/ateliers/:atelierId/members/:userId` pour
+  nommer un fabmanager
 - `bc-certification` — demander, accorder, révoquer ; file de validation
   fabmanager ; l'habilitation porte sur **une machine**, pas sur un type — écart
   assumé au §9 de la spec
@@ -43,9 +46,11 @@ Ce qui existe, package par package :
   `GET /bookings/:id`, `POST /bookings/:id/cancel`, `POST /bookings/:id/check-in`.
   Côté fabmanager, `GET /manage/bookings`, `POST /manage/bookings/:id/check-in`
   et `POST /manage/bookings/:id/no-show`.
+  `POST /manage/bookings/:id/cancel`, `GET /manage/stats` et `GET /admin/stats`.
   Côté web, `/machines/:id` ouvre la semaine et réserve, `/reservations` et
-  `/reservations/:id` listent, détaillent et annulent, et `/manage/bookings`
-  tient le pointage et le no-show de la journée.
+  `/reservations/:id` listent, détaillent et annulent, `/manage/bookings`
+  tient le pointage, le no-show et l'annulation de la journée, et `/manage/stats`
+  comme `/admin/stats` mesurent l'occupation.
 
 Neon est branché et à jour des six migrations. Sur une machine neuve : copier
 `.env.example` en `.env` et y mettre l'URL *pooled* du projet Neon. `pg` émet un
@@ -114,6 +119,57 @@ des retours de succès autant que de refus.
 
 Après une action, React 19 **réinitialise le formulaire**. Un test qui enchaîne
 deux tentatives doit resaisir tous les champs, pas seulement celui qu'il change.
+
+### Back-office — ce qui est tranché
+
+`COMPLETED` est **dérivé, jamais écrit**. `isCompleted` est le quatrième
+prédicat pur de la famille : pointée, et sa fin passée. `effectiveStatus` le
+projette dans les read models, la colonne garde le fait brut, et le filtre par
+état de `/manage/bookings` tourne sur la projection — sinon `COMPLETED` serait
+le seul choix du select à ne jamais rien trouver. Aucune migration, aucun
+ordonnanceur, aucun `GET` qui écrit.
+
+La fenêtre des statistiques porte sur des **journées entières d'ouverture** —
+du premier minuit local au minuit suivant — et non sur `[now − N jours, now]`.
+Deux raisons : un créneau réservé pour plus tard aujourd'hui compte dans
+l'occupation, ce qu'un fabmanager attend du mot ; et les heures d'ouverture
+d'une période valent exactement `jours × 14`, au lieu de dériver à la
+milliseconde entre deux chargements. Les heures **consommées** restent passées
+par construction : seul un créneau `COMPLETED` y entre, et `COMPLETED` regarde
+le vrai `now`, pas la borne de la fenêtre.
+
+Un créneau annulé rend la machine et ne compte aucune heure ; un no-show l'a
+tenue et compte comme réservé, jamais comme consommé ; une machine retirée sort
+des deux côtés du ratio ; un atelier sans machine n'a pas de dénominateur, donc
+pas de bloc. L'agrégation tourne en mémoire sur les lignes que
+`listForAteliersBetween` rend déjà : un `GROUP BY` SQL aurait dupliqué la règle
+de complétion dans un dialecte où rien ne peut la confronter au prédicat.
+
+`FABMANAGER` est un `MembershipRole` : il n'existe qu'attaché à un atelier.
+D'où deux routes là où le §10 n'en listait qu'une — `PATCH /admin/users/:id`
+pour le rôle plateforme et la suspension, `PATCH /admin/ateliers/:atelierId/members/:userId`
+pour la gestion d'un atelier. Un administrateur ne peut ni se retirer son rôle
+ni se suspendre : c'est le seul geste qu'aucun autre administrateur n'est
+garanti d'être là pour défaire.
+
+L'annulation par l'atelier (règle 11) est **plus large** que celle du membre :
+elle court jusqu'à la fin du créneau, là où celle du membre ferme à son départ.
+Annuler est une rétractation pour celui qui a réservé, une intervention pour
+celui qui tient la machine. Un créneau déjà pointé reste hors d'atteinte des
+deux côtés.
+
+Le cloisonnement est balayé route par route par
+`packages/server/src/http/tenancy.test.ts` : **404** sur une ressource d'un
+autre atelier, collection vide sur une liste, **403** sur les routes `/admin/*`.
+Le §7 disait « 403 » partout ; la lettre a été corrigée, pas l'intention — 403
+sur une ressource avouerait qu'elle existe.
+
+Trois adapters web rendaient un refus comme une panne, faute d'un code
+d'échec : le 403 côté réservation, le 409 d'un tag NFC déjà porté, le 404 d'une
+demande d'habilitation qui n'est pas la sienne. Tous trois lisent maintenant le
+`_tag` du corps avant le statut. **Quand une route gagne une erreur typée,
+l'adapter qui l'appelle doit gagner son code** — sans quoi le message affiché
+parle d'indisponibilité.
 
 ### Réservation — ce qui est tranché
 

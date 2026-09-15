@@ -180,6 +180,7 @@ Le cœur. Ce sont des règles de **refus** : le système dit non, avec une erreu
 | 8 | Un créneau déjà passé n'est pas réservable | `SlotInThePastError` | 409 |
 | 9 | Une réservation déjà pointée, annulée ou close ne se pointe pas | `BookingNotCheckInableError` | 409 |
 | 10 | Un no-show ne se marque que sur une réservation confirmée dont la fenêtre de pointage est close | `BookingNotMarkableAsNoShowError` | 409 |
+| 11 | L'atelier annule un créneau tant qu'il n'est ni terminé ni pointé — plus large que la règle 7, qui ferme au départ | `BookingNotCancellableError` | 409 |
 
 Reportées en v1.1 : le créneau doit tomber dans les horaires d'ouverture de l'atelier ; un membre ne peut dépasser un quota d'heures sur une fenêtre glissante de sept jours.
 
@@ -196,6 +197,8 @@ La règle 10 ne figurait pas non plus dans le brief, qui posait seulement qu'un 
 La règle 3 distingue deux états que le brief confondait. `MAINTENANCE` est transitoire : la machine existe, elle reste visible, elle reviendra — un 409 dit exactement cela. `RETIRED` est définitif : la machine sort du parc réservable, et `GET /machines/:id/availability` comme `POST /bookings` répondent 404, du même mot qu'une machine qui n'a jamais existé.
 
 Une réservation qui n'appartient pas à l'appelant répond `404`, jamais `403` : le statut ne doit pas révéler son existence.
+
+La règle 11 ne figurait pas dans le brief, qui ne donnait l'annulation qu'au membre. Le §4.7 la range pourtant sous les gestes du fabmanager, et elle ne peut pas être la règle 7 recopiée : annuler est une **rétractation** pour celui qui a réservé, et une **intervention** pour celui qui tient la machine. Un moteur qui lâche en plein créneau n'attend pas la fin de l'heure. La fenêtre de l'atelier court donc jusqu'à la fin du créneau, là où celle du membre ferme à son départ. Un créneau déjà pointé reste hors d'atteinte des deux côtés, pour la même raison qu'en règles 9 et 10 : son empreinte est ce qu'on oppose à un no-show.
 
 ### La règle 2 est garantie deux fois
 
@@ -280,7 +283,9 @@ Profil, préférences persistantes, changement de mot de passe, retours de succ�
 
 Espace fabmanager et espace administrateur plateforme, avec filtres et statistiques simples. Cloisonnement par atelier vérifié côté serveur.
 
-*Terminé quand* : un fabmanager authentifié qui forge une requête vers un autre atelier reçoit 403, et non des données.
+*Terminé quand* : un fabmanager authentifié qui forge une requête vers un autre atelier ne reçoit **aucune donnée** — 403 sur les routes d'administration plateforme, 404 sur les ressources d'un autre atelier, et une collection vide sur les routes de liste.
+
+Le critère disait d'abord « reçoit 403 ». La lettre a été corrigée, pas l'intention. Une ressource d'un autre atelier répond **404** et non 403 : le §5 pose depuis le jalon 4 qu'un statut ne doit pas révéler l'existence de ce qu'on n'a pas le droit de voir, et 403 avoue qu'il y a quelque chose. Le 403 reste la réponse des routes `/admin/*`, où le refus porte sur le rôle et non sur une ressource dont l'existence serait un secret. Les deux formes sont balayées route par route par `packages/server/src/http/tenancy.test.ts`.
 
 ### Jalon 7 · Production
 
@@ -682,7 +687,8 @@ Toutes les routes sont décrites en `HttpApiEndpoint`, avec leurs schémas d'ent
 | `GET` | `/manage/bookings` | Réservations de l'atelier, filtrables par jour et par état |
 | `POST` | `/manage/bookings/:id/check-in` | Pointage de secours, quand le tag NFC ne se laisse pas lire |
 | `POST` | `/manage/bookings/:id/no-show` | Marquer un no-show |
-| `GET` | `/manage/stats` | Occupation, no-shows, heures |
+| `POST` | `/manage/bookings/:id/cancel` | Annuler un créneau de l'atelier — règle 11 |
+| `GET` | `/manage/stats` | Occupation, no-shows, heures — période `7d`, `30d` ou `90d` |
 
 Sur `PATCH /manage/machines/:id`, `nfcTagId` absent laisse le tag en place,
 `null` le décolle et une chaîne le pose. Un tag ne peut habiller qu'une machine
@@ -693,10 +699,25 @@ la création comme à la modification.
 
 | Méthode | Route | Rôle |
 |---|---|---|
-| `POST` · `PATCH` | `/admin/ateliers` · `/admin/ateliers/:id` | Créer, publier, fermer |
-| `GET` | `/admin/users` | Consulter, filtrer |
-| `POST` | `/admin/users/:id/role` | Nommer un fabmanager, suspendre |
-| `GET` | `/admin/stats` | Statistiques réseau |
+| `GET` · `POST` · `PATCH` | `/admin/ateliers` · `/admin/ateliers/:id` | Lister, créer, publier, fermer |
+| `PATCH` | `/admin/ateliers/:atelierId/members/:userId` | Nommer un fabmanager, le redescendre membre |
+| `GET` | `/admin/users` | Consulter, filtrer par nom, adresse, rôle et état |
+| `PATCH` | `/admin/users/:id` | Nommer un administrateur plateforme, suspendre, réactiver |
+| `GET` | `/admin/stats` | Statistiques réseau — même période que `/manage/stats` |
+
+`POST /admin/users/:id/role` a été remplacée par deux routes, chacune posée sur
+la ressource qu'elle modifie. Suspendre n'est pas un rôle, et `FABMANAGER` n'est
+pas un rôle plateforme : c'est un `MembershipRole`, qui n'existe qu'attaché à un
+atelier. Une seule route ne pouvait pas porter les deux sans inventer un atelier
+implicite. `PATCH /admin/users/:id` est un vrai patch — clé absente, valeur
+inchangée — et refuse à un administrateur de retirer son propre rôle ou de
+suspendre son propre compte (`AdminSelfLockoutError`, 409) : c'est le seul geste
+qu'aucun autre administrateur n'est garanti d'être là pour défaire.
+
+Les routes `/manage/*` répondent **404** sur une ressource d'un autre atelier et
+une collection vide sur une liste ; les routes `/admin/*` répondent **403** à qui
+n'est pas administrateur plateforme. Le balayage est dans
+`packages/server/src/http/tenancy.test.ts`.
 
 ---
 
