@@ -113,6 +113,17 @@ export const makeAtelierRepositoryMemory = (): AtelierRepositoryMemory => {
       ),
     listMembershipsForUser: (userId: UserId) =>
       Effect.sync(() => [...memberships.values()].filter((membership) => membership.userId === userId)),
+    listMemberAteliersForUser: (userId: UserId) =>
+      Effect.sync(() =>
+        [...memberships.values()]
+          .filter((membership) => membership.userId === userId)
+          .flatMap((membership) => {
+            const atelier = ateliers.get(membership.atelierId)
+            return atelier === undefined
+              ? []
+              : [{ id: atelier.id, slug: atelier.slug, name: atelier.name, role: membership.role }]
+          })
+      ),
     listMachines: (atelierId) =>
       Effect.sync(() =>
         [...machines.values()]

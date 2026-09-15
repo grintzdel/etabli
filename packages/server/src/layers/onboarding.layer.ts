@@ -1,5 +1,5 @@
 import { AtelierRepository, MemberProfile } from '@etabli/bc-atelier'
-import { MembershipLookup, UserRepository } from '@etabli/bc-identity'
+import { MemberAteliers, MembershipLookup, UserRepository } from '@etabli/bc-identity'
 import { RepoError } from '@etabli/shared/errors'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
@@ -12,6 +12,15 @@ export const MembershipLookupLive = Layer.effect(
         Effect.map(repository.listMembershipsForUser(userId), (memberships) =>
           memberships.map((membership) => ({ atelierId: membership.atelierId, role: membership.role }))
         ),
+    })
+  )
+)
+
+export const MemberAteliersLive = Layer.effect(
+  MemberAteliers,
+  Effect.map(AtelierRepository, (repository) =>
+    MemberAteliers.of({
+      forUser: (userId) => repository.listMemberAteliersForUser(userId),
     })
   )
 )

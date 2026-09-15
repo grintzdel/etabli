@@ -12,6 +12,7 @@ import type {
   AtelierSummary,
   ListAteliersParams,
   Machine,
+  MemberAtelier,
   Membership,
   Slug,
   UpdateMachine,
@@ -61,6 +62,13 @@ interface MachineRow {
   readonly nfc_tag_id: string | null
   readonly created_at: Date
   readonly updated_at: Date
+}
+
+interface MemberAtelierRow {
+  readonly id: string
+  readonly slug: string
+  readonly name: string
+  readonly role: string
 }
 
 interface MembershipRow {
@@ -224,6 +232,25 @@ export const makeAtelierRepositorySql = (sql: SqlClient.SqlClient) =>
       sql<MembershipRow>`SELECT * FROM memberships WHERE user_id = ${userId} ORDER BY joined_at ASC`.pipe(
         Effect.map((rows) => rows.map(toMembership)),
         Effect.mapError(fail('memberships.listForUser'))
+      ),
+
+    listMemberAteliersForUser: (userId: UserId) =>
+      sql<MemberAtelierRow>`
+        SELECT a.id, a.slug, a.name, m.role
+        FROM memberships m
+        JOIN ateliers a ON a.id = m.atelier_id
+        WHERE m.user_id = ${userId}
+        ORDER BY m.joined_at ASC
+      `.pipe(
+        Effect.map((rows) =>
+          rows.map((row) => ({
+            id: row.id as MemberAtelier['id'],
+            slug: row.slug as MemberAtelier['slug'],
+            name: row.name,
+            role: row.role as MemberAtelier['role'],
+          }))
+        ),
+        Effect.mapError(fail('memberships.listMemberAteliersForUser'))
       ),
 
     listMachines: (atelierId: AtelierId) =>

@@ -34,3 +34,24 @@ export type LoginInput = {
   readonly email: string
   readonly password: string
 }
+
+export type Theme = 'dark' | 'light' | 'system'
+
+export type UserPreferences = {
+  readonly userId: string
+  readonly theme: Theme
+  readonly defaultAtelierId: string | null
+  readonly updatedAt: string | null
+}
+
+export type UpdatePreferencesInput = {
+  readonly theme?: Theme
+  readonly defaultAtelierId?: string | null
+}
+
+export type MemberAtelier = {
+  readonly id: string
+  readonly slug: string
+  readonly name: string
+  readonly role: MembershipRole
+}

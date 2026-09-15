@@ -2,15 +2,35 @@ import Link from 'next/link'
 
 import { buttonVariants } from '@/ui/Button'
 
+export type DefaultAtelier = {
+  readonly slug: string
+  readonly name: string
+}
+
 export type SessionNavProps = {
   readonly displayName: string
   readonly isPlatformAdmin: boolean
   readonly isFabmanager: boolean
+  readonly defaultAtelier: DefaultAtelier | null
   readonly signOut: () => Promise<void>
 }
 
-export const SessionNav = ({ displayName, isPlatformAdmin, isFabmanager, signOut }: SessionNavProps) => (
+export const SessionNav = ({
+  displayName,
+  isPlatformAdmin,
+  isFabmanager,
+  defaultAtelier,
+  signOut,
+}: SessionNavProps) => (
   <>
+    {defaultAtelier === null ? null : (
+      <Link
+        href={`/ateliers/${defaultAtelier.slug}`}
+        className="font-display text-signal-500 hover:text-signal-400 text-sm"
+      >
+        {defaultAtelier.name}
+      </Link>
+    )}
     <Link href="/reservations" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
       Réservations
     </Link>
@@ -35,6 +55,9 @@ export const SessionNav = ({ displayName, isPlatformAdmin, isFabmanager, signOut
         Administration
       </Link>
     ) : null}
+    <Link href="/parametres" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
+      Paramètres
+    </Link>
     <Link href="/compte" className="font-display text-graphite-200 hover:text-graphite-50 text-sm">
       {displayName}
     </Link>

@@ -1,12 +1,21 @@
 import { HttpApiEndpoint, HttpApiGroup } from '@effect/platform'
-import type { CurrentUser, RegisterInput, Session } from '@etabli/contract'
+import type {
+  CurrentUser,
+  MemberAtelier,
+  RegisterInput,
+  Session,
+  UpdatePreferencesInput,
+  UserPreferences,
+} from '@etabli/contract'
 import { routes } from '@etabli/contract'
 import { AuthMiddleware } from '@etabli/shared/auth-context'
 import { AccountSuspendedError } from '@etabli/shared/errors'
 import type { AssertEquals } from '@etabli/shared/type-level'
 import * as Schema from 'effect/Schema'
 
-import { EmailAlreadyTakenError, InvalidCredentialsError } from '../domain/errors'
+import { EmailAlreadyTakenError, InvalidCredentialsError, PreferredAtelierNotJoinedError } from '../domain/errors'
+import { MemberAtelierSchema } from '../domain/member-atelier.schema'
+import { UpdatePreferencesSchema, UserPreferencesSchema } from '../domain/preferences.schema'
 import { CurrentUserSchema, LoginPayloadSchema, RegisterPayloadSchema, SessionSchema } from '../domain/user.schema'
 
 export const identityContractParity: AssertEquals<Schema.Schema.Encoded<typeof SessionSchema>, Session> = true
@@ -17,6 +26,18 @@ export const currentUserContractParity: AssertEquals<
 export const registerContractParity: AssertEquals<
   Schema.Schema.Encoded<typeof RegisterPayloadSchema>,
   RegisterInput
+> = true
+export const preferencesContractParity: AssertEquals<
+  Schema.Schema.Encoded<typeof UserPreferencesSchema>,
+  UserPreferences
+> = true
+export const updatePreferencesContractParity: AssertEquals<
+  Schema.Schema.Encoded<typeof UpdatePreferencesSchema>,
+  UpdatePreferencesInput
+> = true
+export const memberAtelierContractParity: AssertEquals<
+  Schema.Schema.Encoded<typeof MemberAtelierSchema>,
+  MemberAtelier
 > = true
 
 export const identityApiGroup = HttpApiGroup.make('identity')
@@ -34,3 +55,20 @@ export const identityApiGroup = HttpApiGroup.make('identity')
       .addError(AccountSuspendedError)
   )
   .add(HttpApiEndpoint.get('me', routes.auth.me).addSuccess(CurrentUserSchema).middleware(AuthMiddleware))
+  .add(
+    HttpApiEndpoint.get('preferences', routes.me.preferences)
+      .addSuccess(UserPreferencesSchema)
+      .middleware(AuthMiddleware)
+  )
+  .add(
+    HttpApiEndpoint.get('myAteliers', routes.me.ateliers)
+      .addSuccess(Schema.Array(MemberAtelierSchema))
+      .middleware(AuthMiddleware)
+  )
+  .add(
+    HttpApiEndpoint.patch('updatePreferences', routes.me.preferences)
+      .setPayload(UpdatePreferencesSchema)
+      .addSuccess(UserPreferencesSchema)
+      .addError(PreferredAtelierNotJoinedError)
+      .middleware(AuthMiddleware)
+  )

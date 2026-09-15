@@ -17,6 +17,7 @@ export const routes = {
   },
   me: {
     preferences: '/me/preferences',
+    ateliers: '/me/ateliers',
   },
   machines: {
     list: '/machines',
