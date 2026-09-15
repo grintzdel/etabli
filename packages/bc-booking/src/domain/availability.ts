@@ -18,6 +18,8 @@ export const availabilityWindow = (from: DateTime.Utc, days: number = AVAILABILI
   to: DateTime.toUtc(localDay(from, days)),
 })
 
+export const localDayWindow = (at: DateTime.Utc): AvailabilityWindow => availabilityWindow(at, 1)
+
 export interface BookedRange {
   readonly startAt: DateTime.Utc
   readonly endAt: DateTime.Utc

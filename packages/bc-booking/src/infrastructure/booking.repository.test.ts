@@ -19,6 +19,8 @@ const repository = makeBookingRepositorySql(sql)
 const MEMBER = '00000000-0000-4000-8000-000000000001'
 const MACHINE = '20000000-0000-4000-8000-000000000001'
 const OTHER_MACHINE = '20000000-0000-4000-8000-000000000002'
+const LYON = '10000000-0000-4000-8000-000000000002'
+const LYON_MACHINE = '20000000-0000-4000-8000-000000000003'
 
 await runtime.runPromise(
   Effect.gen(function* () {
@@ -28,11 +30,14 @@ await runtime.runPromise(
     `
     yield* sql`
       INSERT INTO ateliers (id, slug, name, city, latitude, longitude, status)
-      VALUES (${FORGE}, 'la-forge', 'La Forge', 'Montreuil', 48.8638, 2.4485, 'PUBLISHED')
+      VALUES (${FORGE}, 'la-forge', 'La Forge', 'Montreuil', 48.8638, 2.4485, 'PUBLISHED'),
+             (${LYON}, 'lyon-fabrique', 'Lyon Fabrique', 'Lyon', 45.7640, 4.8357, 'PUBLISHED')
     `
     yield* sql`
       INSERT INTO machines (id, atelier_id, name, kind)
-      VALUES (${MACHINE}, ${FORGE}, 'Trotec', 'LASER_CUTTER'), (${OTHER_MACHINE}, ${FORGE}, 'Prusa', 'PRINTER_3D')
+      VALUES (${MACHINE}, ${FORGE}, 'Trotec', 'LASER_CUTTER'),
+             (${OTHER_MACHINE}, ${FORGE}, 'Prusa', 'PRINTER_3D'),
+             (${LYON_MACHINE}, ${LYON}, 'Shaper', 'CNC_MILL')
     `
   })
 )
@@ -123,6 +128,44 @@ describe('BookingRepository on Postgres', () => {
     expect(found.map((item) => item.startAt)).toStrictEqual([at('2026-03-05T09:00:00Z'), at('2026-03-02T09:00:00Z')])
   })
 
+  it('lists an atelier’s bookings in the window, cancelled ones included', async () => {
+    await insert(booking())
+    await insert(
+      booking({
+        status: BookingStatus.CANCELLED,
+        startAt: at('2026-03-02T14:00:00Z'),
+        endAt: at('2026-03-02T15:00:00Z'),
+      })
+    )
+    await insert(booking({ startAt: at('2026-03-05T09:00:00Z'), endAt: at('2026-03-05T10:00:00Z') }))
+    await insert(
+      booking({
+        atelierId: LYON as Booking['atelierId'],
+        machineId: LYON_MACHINE as Booking['machineId'],
+      })
+    )
+
+    const found = await runtime.runPromise(
+      repository.listForAteliersBetween(
+        [FORGE as Booking['atelierId']],
+        at('2026-03-01T23:00:00Z'),
+        at('2026-03-02T23:00:00Z')
+      )
+    )
+
+    expect(found.map((item) => item.startAt)).toStrictEqual([at('2026-03-02T09:00:00Z'), at('2026-03-02T14:00:00Z')])
+  })
+
+  it('answers nothing when no atelier is asked for', async () => {
+    await insert(booking())
+
+    const found = await runtime.runPromise(
+      repository.listForAteliersBetween([], at('2026-03-01T23:00:00Z'), at('2026-03-02T23:00:00Z'))
+    )
+
+    expect(found).toStrictEqual([])
+  })
+
   it('marks a booking cancelled and stamps who did it', async () => {
     const written = booking()
     await insert(written)
@@ -206,6 +249,24 @@ describe('BookingRepository in memory', () => {
       )
 
       expect(Exit.isSuccess(exit)).toBe(true)
+    })
+
+    it('lists an atelier’s bookings in the window like Postgres does', async () => {
+      const memory = make()
+      await Effect.runPromise(memory.insert(booking()))
+      await Effect.runPromise(
+        memory.insert(booking({ startAt: at('2026-03-05T09:00:00Z'), endAt: at('2026-03-05T10:00:00Z') }))
+      )
+
+      const found = await Effect.runPromise(
+        memory.listForAteliersBetween(
+          [FORGE as Booking['atelierId']],
+          at('2026-03-01T23:00:00Z'),
+          at('2026-03-02T23:00:00Z')
+        )
+      )
+
+      expect(found.map((item) => item.startAt)).toStrictEqual([at('2026-03-02T09:00:00Z')])
     })
 
     it('marks a booking cancelled like Postgres does', async () => {

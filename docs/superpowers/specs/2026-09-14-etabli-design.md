@@ -676,7 +676,8 @@ Toutes les routes sont décrites en `HttpApiEndpoint`, avec leurs schémas d'ent
 | `POST` | `/manage/certifications/:id/grant` | Accorder |
 | `POST` | `/manage/certifications/:id/revoke` | Révoquer, avec motif |
 | `POST` · `PATCH` | `/manage/machines` · `/manage/machines/:id` | Créer, modifier, changer de statut, associer un tag NFC |
-| `GET` | `/manage/bookings` | Réservations de l'atelier, filtrables |
+| `GET` | `/manage/bookings` | Réservations de l'atelier, filtrables par jour et par état |
+| `POST` | `/manage/bookings/:id/check-in` | Pointage de secours, quand le tag NFC ne se laisse pas lire |
 | `POST` | `/manage/bookings/:id/no-show` | Marquer un no-show |
 | `GET` | `/manage/stats` | Occupation, no-shows, heures |
 
@@ -735,7 +736,7 @@ Le live coding se fait **sans agent IA**. Les zones à connaître par cœur, par
 5. **Pas d'envoi d'e-mail.** Aucune confirmation ni relance en v1 ; le journal d'événements est en place pour les brancher.
 6. **Le no-show n'est pas automatique.** Une réservation non honorée est marquée par le fabmanager. La bascule automatique demande un travail planifié, incompatible avec un déploiement sans processus long.
 7. **Français uniquement.** Aucune internationalisation ; les messages de validation sont en français dans les schémas.
-8. **Le NFC n'existe pas encore.** L'API l'accepte et le vérifie, l'application qui le lit arrive en v2. Sur le web, le check-in est manuel — et c'est précisément ce que le mobile viendra corriger.
+8. **Le NFC n'existe pas encore.** L'API l'accepte et le vérifie, l'application qui le lit arrive en v2. Un membre ne peut donc pas pointer depuis le web : c'est le fabmanager qui le fait pour lui depuis `/manage/bookings`, dans la même fenêtre de quinze minutes avant et trente après. Le pointage porte alors la méthode `MANUAL`, et le mobile viendra rendre au membre le geste qui lui revient.
 
 ---
 

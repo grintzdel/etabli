@@ -1,5 +1,5 @@
 import type { RepoError } from '@etabli/shared/errors'
-import type { BookingId, MachineId, UserId } from '@etabli/shared/schema'
+import type { AtelierId, BookingId, MachineId, UserId } from '@etabli/shared/schema'
 import * as Context from 'effect/Context'
 import type * as DateTime from 'effect/DateTime'
 import type * as Effect from 'effect/Effect'
@@ -16,6 +16,11 @@ export interface BookingRepositoryService {
     to: DateTime.Utc
   ) => Effect.Effect<ReadonlyArray<Booking>, RepoError>
   readonly listForUser: (userId: UserId) => Effect.Effect<ReadonlyArray<Booking>, RepoError>
+  readonly listForAteliersBetween: (
+    atelierIds: ReadonlyArray<AtelierId>,
+    from: DateTime.Utc,
+    to: DateTime.Utc
+  ) => Effect.Effect<ReadonlyArray<Booking>, RepoError>
   readonly insert: (booking: Booking) => Effect.Effect<Booking, RepoError | BookingOverlapError>
   readonly cancel: (id: BookingId, at: DateTime.Utc, by: UserId) => Effect.Effect<Booking | null, RepoError>
   readonly checkIn: (id: BookingId, at: DateTime.Utc, via: CheckInMethod) => Effect.Effect<Booking | null, RepoError>

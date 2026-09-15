@@ -71,3 +71,24 @@ export type BookingDetail = {
   readonly canCancel: boolean
   readonly canCheckIn: boolean
 }
+
+export type AtelierBooking = {
+  readonly id: string
+  readonly machineId: string
+  readonly machineName: string
+  readonly atelierId: string
+  readonly atelierName: string
+  readonly userId: string
+  readonly memberName: string
+  readonly startAt: string
+  readonly endAt: string
+  readonly status: BookingStatus
+  readonly checkedInAt: string | null
+  readonly checkedInVia: CheckInMethod | null
+  readonly canCheckIn: boolean
+}
+
+export type AtelierBookingsQuery = {
+  readonly date?: string
+  readonly status?: BookingStatus
+}

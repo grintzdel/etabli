@@ -1,4 +1,4 @@
-import type { BookingId, MachineId, UserId } from '@etabli/shared/schema'
+import type { AtelierId, BookingId, MachineId, UserId } from '@etabli/shared/schema'
 import * as DateTime from 'effect/DateTime'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
@@ -43,6 +43,17 @@ export const makeBookingRepositoryMemory = (): BookingRepositoryMemory => {
         [...bookings.values()]
           .filter((booking) => booking.userId === userId)
           .toSorted((a, b) => DateTime.toEpochMillis(b.startAt) - DateTime.toEpochMillis(a.startAt))
+      ),
+    listForAteliersBetween: (atelierIds: ReadonlyArray<AtelierId>, from, to) =>
+      Effect.sync(() =>
+        [...bookings.values()]
+          .filter(
+            (booking) =>
+              atelierIds.includes(booking.atelierId) &&
+              DateTime.toEpochMillis(booking.startAt) < DateTime.toEpochMillis(to) &&
+              DateTime.toEpochMillis(booking.endAt) > DateTime.toEpochMillis(from)
+          )
+          .toSorted((a, b) => DateTime.toEpochMillis(a.startAt) - DateTime.toEpochMillis(b.startAt))
       ),
     insert: (booking) =>
       Effect.suspend(() => {

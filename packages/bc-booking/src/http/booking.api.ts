@@ -1,5 +1,6 @@
 import { HttpApiEndpoint, HttpApiGroup } from '@effect/platform'
 import type {
+  AtelierBooking as AtelierBookingContract,
   BookingDetail as BookingDetailContract,
   CheckInBooking as CheckInBookingContract,
   MachineAvailability as MachineAvailabilityContract,
@@ -11,6 +12,8 @@ import type { AssertEquals } from '@etabli/shared/type-level'
 import * as Schema from 'effect/Schema'
 
 import {
+  AtelierBookingSchema,
+  AtelierBookingsParamsSchema,
   AvailabilityParamsSchema,
   BookingDetailSchema,
   CheckInBookingSchema,
@@ -33,6 +36,11 @@ import {
 export const machineAvailabilityContractParity: AssertEquals<
   Schema.Schema.Encoded<typeof MachineAvailabilitySchema>,
   MachineAvailabilityContract
+> = true
+
+export const atelierBookingContractParity: AssertEquals<
+  Schema.Schema.Encoded<typeof AtelierBookingSchema>,
+  AtelierBookingContract
 > = true
 
 export const bookingDetailContractParity: AssertEquals<
@@ -86,5 +94,21 @@ export const bookingApiGroup = HttpApiGroup.make('booking')
       .addError(BookingNotCheckInableError)
       .addError(CheckInWindowClosedError)
       .addError(NfcTagMismatchError)
+  )
+  .middleware(AuthMiddleware)
+
+export const bookingManagementApiGroup = HttpApiGroup.make('bookingManagement')
+  .add(
+    HttpApiEndpoint.get('list', routes.manage.bookings)
+      .setUrlParams(AtelierBookingsParamsSchema)
+      .addSuccess(Schema.Array(AtelierBookingSchema))
+  )
+  .add(
+    HttpApiEndpoint.post('checkIn', routes.manage.checkInBooking)
+      .setPath(Schema.Struct({ id: BookingId }))
+      .addSuccess(AtelierBookingSchema)
+      .addError(BookingUnknownError)
+      .addError(BookingNotCheckInableError)
+      .addError(CheckInWindowClosedError)
   )
   .middleware(AuthMiddleware)

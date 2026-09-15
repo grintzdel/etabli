@@ -4,10 +4,12 @@ import * as Effect from 'effect/Effect'
 import { cancelBooking } from '../application/commands/cancel-booking/cancel-booking.command'
 import { checkInBooking } from '../application/commands/check-in-booking/check-in-booking.command'
 import { createBooking } from '../application/commands/create-booking/create-booking.command'
+import { manualCheckInBooking } from '../application/commands/manual-check-in-booking/manual-check-in-booking.command'
 import { getBookingDetail } from '../application/queries/get-booking-detail/get-booking-detail.query'
 import { getMachineAvailability } from '../application/queries/get-machine-availability/get-machine-availability.query'
+import { listAtelierBookings } from '../application/queries/list-atelier-bookings/list-atelier-bookings.query'
 import { listMyBookings } from '../application/queries/list-my-bookings/list-my-bookings.query'
-import type { AvailabilityParams, CheckInBooking, CreateBooking } from '../domain/booking.schema'
+import type { AtelierBookingsParams, AvailabilityParams, CheckInBooking, CreateBooking } from '../domain/booking.schema'
 
 export const bookingHandlers = {
   availability: ({
@@ -26,4 +28,11 @@ export const bookingHandlers = {
     cancelBooking(path.id).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
   checkIn: ({ path, payload }: { readonly path: { readonly id: BookingId }; readonly payload: CheckInBooking }) =>
     checkInBooking(path.id, payload).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
+}
+
+export const bookingManagementHandlers = {
+  list: ({ urlParams }: { readonly urlParams: AtelierBookingsParams }) =>
+    listAtelierBookings(urlParams).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
+  checkIn: ({ path }: { readonly path: { readonly id: BookingId } }) =>
+    manualCheckInBooking(path.id).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
 }

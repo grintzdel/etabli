@@ -1,7 +1,7 @@
 import * as SqlClient from '@effect/sql/SqlClient'
 import type { SqlError } from '@effect/sql/SqlError'
 import { RepoError } from '@etabli/shared/errors'
-import type { BookingId, MachineId, UserId } from '@etabli/shared/schema'
+import type { AtelierId, BookingId, MachineId, UserId } from '@etabli/shared/schema'
 import * as DateTime from 'effect/DateTime'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
@@ -81,6 +81,20 @@ export const makeBookingRepositorySql = (sql: SqlClient.SqlClient) =>
         Effect.map((rows) => rows.map(toBooking)),
         Effect.mapError(fail('bookings.listForUser'))
       ),
+
+    listForAteliersBetween: (atelierIds: ReadonlyArray<AtelierId>, from, to) =>
+      atelierIds.length === 0
+        ? Effect.succeed([])
+        : sql<BookingRow>`
+            SELECT * FROM bookings
+            WHERE atelier_id IN ${sql.in(atelierIds)}
+              AND start_at < ${DateTime.toDate(to)}
+              AND end_at > ${DateTime.toDate(from)}
+            ORDER BY start_at ASC
+          `.pipe(
+            Effect.map((rows) => rows.map(toBooking)),
+            Effect.mapError(fail('bookings.listForAteliersBetween'))
+          ),
 
     insert: (booking) =>
       sql<BookingRow>`

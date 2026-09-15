@@ -98,3 +98,26 @@ export const BookingDetailSchema = Schema.Struct({
   canCheckIn: Schema.Boolean,
 })
 export type BookingDetail = Schema.Schema.Type<typeof BookingDetailSchema>
+
+export const AtelierBookingSchema = Schema.Struct({
+  id: BookingId,
+  machineId: MachineId,
+  machineName: Schema.String,
+  atelierId: AtelierId,
+  atelierName: Schema.String,
+  userId: UserId,
+  memberName: Schema.String,
+  startAt: Schema.DateTimeUtc,
+  endAt: Schema.DateTimeUtc,
+  status: BookingStatusSchema,
+  checkedInAt: Schema.NullOr(Schema.DateTimeUtc),
+  checkedInVia: Schema.NullOr(CheckInMethodSchema),
+  canCheckIn: Schema.Boolean,
+})
+export type AtelierBooking = Schema.Schema.Type<typeof AtelierBookingSchema>
+
+export const AtelierBookingsParamsSchema = Schema.Struct({
+  date: Schema.optional(Schema.DateTimeUtc),
+  status: Schema.optional(BookingStatusSchema),
+})
+export type AtelierBookingsParams = Schema.Schema.Type<typeof AtelierBookingsParamsSchema>

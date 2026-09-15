@@ -13,10 +13,11 @@ plages avec le paramètre `pages`).
 ## État
 
 Jalons 0 à 3 terminés et sur `main`. Jalon 4 : le parcours membre est complet
-de bout en bout, de l'atelier au créneau réservé. Restent le pointage de secours
-fabmanager et le no-show — `/manage/bookings` est au contrat, pas encore écrit.
+de bout en bout, de l'atelier au créneau réservé, et le fabmanager tient le
+pointage de secours depuis `/manage/bookings`. Reste le no-show —
+`/manage/bookings/:id/no-show` est au contrat, pas encore écrit.
 
-`pnpm check` est vert : 474 tests unitaires, `next build`. Les 62 E2E
+`pnpm check` est vert : 516 tests unitaires, `next build`. Les 66 E2E
 Playwright passent mais **ne tournent plus dans `pnpm verify`, sur décision de
 l'auteur** — `pnpm db:test:up` puis `pnpm test:e2e` pour les lancer.
 
@@ -33,8 +34,10 @@ Ce qui existe, package par package :
 - `bc-booking` — domaine, migration `0005`, repository, et le parcours membre
   complet : `GET /machines/:id/availability`, `POST /bookings`, `GET /bookings`,
   `GET /bookings/:id`, `POST /bookings/:id/cancel`, `POST /bookings/:id/check-in`.
+  Côté fabmanager, `GET /manage/bookings` et `POST /manage/bookings/:id/check-in`.
   Côté web, `/machines/:id` ouvre la semaine et réserve, `/reservations` et
-  `/reservations/:id` listent, détaillent et annulent.
+  `/reservations/:id` listent, détaillent et annulent, et `/manage/bookings`
+  tient le pointage de la journée.
 
 Neon est branché et à jour des cinq migrations. Sur une machine neuve : copier
 `.env.example` en `.env` et y mettre l'URL *pooled* du projet Neon. `pg` émet un
@@ -85,11 +88,15 @@ Une machine `RETIRED` répond 404 partout — availability comme `POST /bookings
 Elle est sortie du parc, donc indiscernable d'une machine inconnue. Seul
 `MAINTENANCE` vaut un 409 : la machine existe et reviendra.
 
-Le check-in est NFC et rien d'autre : la charge ne porte qu'un `nfcTagId`, et
-une machine sans tag ne peut pas être pointée. `CheckInMethod.MANUAL` reste dans
-le modèle pour un pointage de secours fabmanager, pas encore écrit. Le check-in
-n'est pas idempotent — `BookingNotCheckInableError` (409, règle 9 du §5) refuse
-le second, pour que la première empreinte reste opposable à un no-show.
+Le check-in d'un membre est NFC et rien d'autre : la charge ne porte qu'un
+`nfcTagId`, et une machine sans tag ne peut pas être pointée. Le pointage de
+secours vit ailleurs — `POST /manage/bookings/:id/check-in`, réservé au
+fabmanager de l'atelier, sans charge utile, `CheckInMethod.MANUAL`. Il obéit à
+la même fenêtre et au même prédicat `isCheckInOpen` ; ce qui change, c'est qui
+pointe, pas quand. Une réservation qu'un fabmanager ne tient pas répond 404,
+comme pour un membre qui n'est pas le sien. Le check-in n'est pas idempotent —
+`BookingNotCheckInableError` (409, règle 9 du §5) refuse le second, pour que la
+première empreinte reste opposable à un no-show.
 
 `isCheckInOpen(booking, now)` est un prédicat pur, jumeau d'`isCancellable` :
 la command et la projection du read model le partagent, et le front lit
@@ -111,8 +118,19 @@ L'annulation passe par `useActionState` et non par le `refresh()` aveugle des
 jalons 2 et 3 : un créneau qui vient de commencer répond 409, et le membre doit
 lire pourquoi. C'est aussi le patron que réclame le §8.9.
 
-Le détail dit que le pointage est ouvert, sans l'offrir : le check-in demande un
-tag NFC que le navigateur ne sait pas lire — §12.8.
+Le détail dit au membre que le pointage est ouvert, sans le lui offrir : le
+check-in demande un tag NFC que le navigateur ne sait pas lire — §12.8. C'est le
+fabmanager qui pointe à sa place, depuis `/manage/bookings`.
+
+Le pointage se filtre par jour et par état. Le jour voyage en `YYYY-MM-DD` dans
+l'URL et part à l'API en midi UTC : quel que soit le décalage de Paris, midi
+tombe toujours dans le bon jour local. La query, elle, recalcule la journée
+locale de l'atelier à partir de cet instant.
+
+`/manage/bookings` est le seul écran où une ligne porte un `id` HTML — l'id de
+la réservation. Le fabmanager n'a pas de lien vers `/reservations/:id`, qui ne
+lui appartient pas ; sans cet ancrage, deux membres sur le même créneau d'une
+machine rendent deux lignes indiscernables.
 
 Le calendrier est la seule zone client du produit, et le seul Route Handler :
 `/api/machines/:id/availability` est le BFF qui détient le cookie httpOnly, et
