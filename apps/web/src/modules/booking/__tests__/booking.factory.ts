@@ -1,4 +1,5 @@
 import type { BookingDetail } from '@/modules/booking/core/model/booking'
+import type { AtelierBooking } from '@/modules/booking/core/model/manage-booking'
 
 let counter = 0
 
@@ -18,6 +19,26 @@ export const bookingDetailFixture = (overrides: Partial<BookingDetail> = {}): Bo
     cancelledAt: null,
     canCancel: true,
     canCheckIn: false,
+    ...overrides,
+  }
+}
+
+export const atelierBookingFixture = (overrides: Partial<AtelierBooking> = {}): AtelierBooking => {
+  counter += 1
+  return {
+    id: `80000000-0000-4000-8000-${String(counter).padStart(12, '0')}`,
+    machineId: `50000000-0000-4000-8000-${String(counter).padStart(12, '0')}`,
+    machineName: `Machine ${counter}`,
+    atelierId: `10000000-0000-4000-8000-${String(counter).padStart(12, '0')}`,
+    atelierName: 'La Forge',
+    userId: `90000000-0000-4000-8000-${String(counter).padStart(12, '0')}`,
+    memberName: 'Camille Roux',
+    startAt: '2026-06-01T08:00:00.000Z',
+    endAt: '2026-06-01T10:00:00.000Z',
+    status: 'CONFIRMED',
+    checkedInAt: null,
+    checkedInVia: null,
+    canCheckIn: true,
     ...overrides,
   }
 }

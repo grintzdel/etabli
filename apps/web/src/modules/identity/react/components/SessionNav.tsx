@@ -25,6 +25,9 @@ export const SessionNav = ({ displayName, isPlatformAdmin, isFabmanager, signOut
         <Link href="/manage/certifications" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
           File
         </Link>
+        <Link href="/manage/bookings" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
+          Pointage
+        </Link>
       </>
     ) : null}
     {isPlatformAdmin ? (

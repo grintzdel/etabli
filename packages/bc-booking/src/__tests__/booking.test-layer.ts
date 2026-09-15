@@ -14,6 +14,7 @@ import * as Option from 'effect/Option'
 import { CertificationChecker } from '../application/ports/certification-checker'
 import type { BookableMachine } from '../application/ports/machine-catalog'
 import { MachineCatalog } from '../application/ports/machine-catalog'
+import { MemberRoster } from '../application/ports/member-roster'
 import { BookableMachineStatus, BookingStatus } from '../domain/booking.constants'
 import type { Booking } from '../domain/booking.schema'
 import { BookingRepository } from '../infrastructure/booking.repository'
@@ -69,9 +70,17 @@ export interface TestLayerOptions {
   readonly auth: Partial<AuthContextService> & { readonly userId: UserId }
   readonly now: DateTime.Utc
   readonly certifiedOn?: ReadonlyArray<MachineId>
+  readonly memberNames?: ReadonlyMap<UserId, string>
 }
 
-export const makeTestLayer = ({ repository, machines, auth, now, certifiedOn = [] }: TestLayerOptions) =>
+export const makeTestLayer = ({
+  repository,
+  machines,
+  auth,
+  now,
+  certifiedOn = [],
+  memberNames = new Map(),
+}: TestLayerOptions) =>
   Layer.mergeAll(
     Layer.succeed(BookingRepository, repository),
     Layer.succeed(
@@ -80,6 +89,8 @@ export const makeTestLayer = ({ repository, machines, auth, now, certifiedOn = [
         find: (machineId) => Effect.sync(() => machines.find((machine) => machine.machineId === machineId) ?? null),
         findMany: (machineIds) =>
           Effect.sync(() => machines.filter((machine) => machineIds.includes(machine.machineId))),
+        listForAteliers: (atelierIds) =>
+          Effect.sync(() => machines.filter((machine) => atelierIds.includes(machine.atelierId))),
       })
     ),
     Layer.succeed(
@@ -89,6 +100,7 @@ export const makeTestLayer = ({ repository, machines, auth, now, certifiedOn = [
           Effect.sync(() => userId === auth.userId && certifiedOn.includes(machineId)),
       })
     ),
+    Layer.succeed(MemberRoster, MemberRoster.of({ namesOf: () => Effect.succeed(memberNames) })),
     Layer.succeed(AuthContext, { platformRole: 'MEMBER', memberships: [], ...auth }),
     Layer.succeed(Clock, { now: Effect.succeed(now) }),
     IdGeneratorCryptoLive

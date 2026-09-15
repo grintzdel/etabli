@@ -7,19 +7,19 @@ import * as Layer from 'effect/Layer'
 import { AdminLive } from '../http/admin.handlers'
 import { etabliApi } from '../http/api'
 import { AtelierLive } from '../http/atelier.handlers'
-import { BookingLive } from '../http/booking.handlers'
+import { BookingLive, BookingManagementLive } from '../http/booking.handlers'
 import { CertificationLive, CertificationReviewLive } from '../http/certification.handlers'
 import { HealthLive } from '../http/health.handlers'
 import { IdentityLive } from '../http/identity.handlers'
 import { ManageLive } from '../http/manage.handlers'
 import { OnboardingLive } from '../http/onboarding.handlers'
 import { AtelierServicesLive } from './atelier.layer'
-import { CertificationCheckerLive, MachineCatalogLive } from './booking.layer'
+import { CertificationCheckerLive, MachineCatalogLive, MemberRosterLive } from './booking.layer'
 import { MachineDirectoryLive, MemberDirectoryLive } from './certification.layer'
 import { IdentityAuthLive, IdentityServicesLive } from './identity.layer'
 import { MemberProfileLive } from './onboarding.layer'
 
-export const ApiLive = HttpApiBuilder.api(etabliApi).pipe(
+const HandledApi = HttpApiBuilder.api(etabliApi).pipe(
   Layer.provide(HealthLive),
   Layer.provide(IdentityLive),
   Layer.provide(AtelierLive),
@@ -28,7 +28,11 @@ export const ApiLive = HttpApiBuilder.api(etabliApi).pipe(
   Layer.provide(ManageLive),
   Layer.provide(CertificationLive),
   Layer.provide(BookingLive),
-  Layer.provide(CertificationReviewLive),
+  Layer.provide(BookingManagementLive),
+  Layer.provide(CertificationReviewLive)
+)
+
+export const ApiLive = HandledApi.pipe(
   Layer.provide(IdentityServicesLive),
   Layer.provide(AtelierServicesLive),
   Layer.provide(CertificationRepositorySqlLayer),
@@ -37,6 +41,7 @@ export const ApiLive = HttpApiBuilder.api(etabliApi).pipe(
   Layer.provide(CertificationCheckerLive.pipe(Layer.provide(CertificationRepositorySqlLayer))),
   Layer.provide(MachineDirectoryLive.pipe(Layer.provide(AtelierServicesLive))),
   Layer.provide(MemberDirectoryLive.pipe(Layer.provide(UserRepositorySqlLayer))),
+  Layer.provide(MemberRosterLive.pipe(Layer.provide(UserRepositorySqlLayer))),
   Layer.provide(MemberProfileLive.pipe(Layer.provide(UserRepositorySqlLayer))),
   Layer.provide(IdentityAuthLive)
 )

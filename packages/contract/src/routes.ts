@@ -41,6 +41,7 @@ export const routes = {
     machines: '/manage/machines',
     machine: '/manage/machines/:id',
     bookings: '/manage/bookings',
+    checkInBooking: '/manage/bookings/:id/check-in',
     noShow: '/manage/bookings/:id/no-show',
     stats: '/manage/stats',
   },
