@@ -89,6 +89,14 @@ describe('createBooking', () => {
     expect(failureTag(exit)).toBe('MachineUnavailableError')
   })
 
+  it('hides a retired machine behind the same error as an unknown one', async () => {
+    const machine = machineFixture({ requiresCertification: false, status: BookableMachineStatus.RETIRED })
+
+    const exit = await run(machine.machineId, START, { machines: [machine] })
+
+    expect(failureTag(exit)).toBe('MachineNotBookableError')
+  })
+
   it('refuses a slot that already went by', async () => {
     const machine = machineFixture({ requiresCertification: false })
 

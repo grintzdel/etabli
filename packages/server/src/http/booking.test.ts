@@ -289,6 +289,17 @@ describe('POST /bookings', () => {
     expect(((await response.json()) as { _tag: string })._tag).toBe('MachineUnavailableError')
   })
 
+  it('hides a retired machine behind a 404', async () => {
+    const { id: machineId, fabmanager } = await createMachine(FORGE, 'Zund retirée', { requiresCertification: false })
+    const member = await join(FORGE, 'MEMBER')
+    const slot = await firstFreeSlot(machineId, member)
+    await send('PATCH', `/manage/machines/${machineId}`, { status: 'RETIRED' }, fabmanager)
+
+    const response = await book({ machineId, startAt: slot.startAt }, member)
+    expect(response.status).toBe(404)
+    expect(((await response.json()) as { _tag: string })._tag).toBe('MachineNotBookableError')
+  })
+
   it('refuses a slot that already went by', async () => {
     const { id: machineId } = await createMachine(FORGE, 'Prusa passée', { requiresCertification: false })
     const member = await join(FORGE, 'MEMBER')
