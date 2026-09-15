@@ -66,3 +66,53 @@ test('the browser refuses a slot outside the allowed range before it reaches the
   await expect(page.getByLabel(/créneau/i)).toHaveJSProperty('validity.valid', false)
   await expect(page.getByRole('row').filter({ hasText: 'Machine refusée' })).toHaveCount(0)
 })
+
+const nfcRow = (page: import('@playwright/test').Page, name: string) => page.getByRole('row').filter({ hasText: name })
+
+test('the fabmanager sticks a tag on a machine, then peels it off', async ({ page }) => {
+  const name = `Machine NFC ${crypto.randomUUID().slice(0, 8)}`
+  const tag = `nfc-e2e-${crypto.randomUUID().slice(0, 8)}`
+
+  await signIn(page, 'fabmanager.forge@etabli.test')
+  await page.goto('/manage/machines')
+  await addMachine(page, name)
+
+  await nfcRow(page, name)
+    .getByLabel(/tag nfc/i)
+    .fill(tag)
+  await nfcRow(page, name)
+    .getByRole('button', { name: /enregistrer/i })
+    .click()
+  await expect(nfcRow(page, name).getByText(/tag posé/i)).toBeVisible()
+
+  await page.reload()
+  await expect(nfcRow(page, name).getByLabel(/tag nfc/i)).toHaveValue(tag)
+
+  await nfcRow(page, name)
+    .getByLabel(/tag nfc/i)
+    .fill('')
+  await nfcRow(page, name)
+    .getByRole('button', { name: /enregistrer/i })
+    .click()
+  await expect(nfcRow(page, name).getByText(/tag décollé/i)).toBeVisible()
+
+  await page.reload()
+  await expect(nfcRow(page, name).getByLabel(/tag nfc/i)).toHaveValue('')
+})
+
+test('a tag already worn by another machine of the network is refused', async ({ page }) => {
+  const name = `Machine NFC prise ${crypto.randomUUID().slice(0, 8)}`
+
+  await signIn(page, 'fabmanager.forge@etabli.test')
+  await page.goto('/manage/machines')
+  await addMachine(page, name)
+
+  await nfcRow(page, name)
+    .getByLabel(/tag nfc/i)
+    .fill('nfc-forge-cnc-01')
+  await nfcRow(page, name)
+    .getByRole('button', { name: /enregistrer/i })
+    .click()
+
+  await expect(nfcRow(page, name).getByText(/déjà posé sur une autre machine/i)).toBeVisible()
+})

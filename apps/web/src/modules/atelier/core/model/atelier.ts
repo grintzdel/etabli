@@ -60,6 +60,7 @@ export const AtelierFailureCode = {
   UNAUTHORIZED: 'UNAUTHORIZED',
   FORBIDDEN: 'FORBIDDEN',
   SLUG_TAKEN: 'SLUG_TAKEN',
+  NFC_TAG_TAKEN: 'NFC_TAG_TAKEN',
   UNREACHABLE: 'UNREACHABLE',
 } as const
 export type AtelierFailureCode = (typeof AtelierFailureCode)[keyof typeof AtelierFailureCode]
@@ -79,6 +80,7 @@ export const FAILURE_MESSAGES: Readonly<Record<AtelierFailureCode, string>> = {
   UNAUTHORIZED: 'Votre session a expiré.',
   FORBIDDEN: 'Cette page est réservée à l’administration de la plateforme.',
   SLUG_TAKEN: 'Un autre atelier occupe déjà cet identifiant d’URL.',
+  NFC_TAG_TAKEN: 'Ce tag est déjà posé sur une autre machine du réseau.',
   UNREACHABLE: "L'annuaire est momentanément indisponible.",
 }
 

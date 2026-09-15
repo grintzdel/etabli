@@ -6,6 +6,7 @@ export interface IManageBookingPort {
   list(token: string, query: AtelierBookingsQuery): Promise<BookingResult<ReadonlyArray<AtelierBooking>>>
   checkIn(token: string, id: string): Promise<BookingResult<AtelierBooking>>
   markNoShow(token: string, id: string): Promise<BookingResult<AtelierBooking>>
+  cancel(token: string, id: string): Promise<BookingResult<AtelierBooking>>
   stats(token: string, query: AtelierStatsQuery): Promise<BookingResult<ReadonlyArray<AtelierStats>>>
   networkStats(token: string, query: AtelierStatsQuery): Promise<BookingResult<NetworkStats>>
 }

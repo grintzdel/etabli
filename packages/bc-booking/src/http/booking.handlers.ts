@@ -1,6 +1,7 @@
 import type { BookingId, MachineId } from '@etabli/shared/schema'
 import * as Effect from 'effect/Effect'
 
+import { cancelAtelierBooking } from '../application/commands/cancel-atelier-booking/cancel-atelier-booking.command'
 import { cancelBooking } from '../application/commands/cancel-booking/cancel-booking.command'
 import { checkInBooking } from '../application/commands/check-in-booking/check-in-booking.command'
 import { createBooking } from '../application/commands/create-booking/create-booking.command'
@@ -46,6 +47,8 @@ export const bookingManagementHandlers = {
     manualCheckInBooking(path.id).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
   markNoShow: ({ path }: { readonly path: { readonly id: BookingId } }) =>
     markNoShow(path.id).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
+  cancel: ({ path }: { readonly path: { readonly id: BookingId } }) =>
+    cancelAtelierBooking(path.id).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
   stats: ({ urlParams }: { readonly urlParams: AtelierStatsParams }) =>
     getAtelierStats(urlParams).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
 }

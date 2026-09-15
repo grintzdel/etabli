@@ -1,3 +1,4 @@
+export * from './application/commands/cancel-atelier-booking/cancel-atelier-booking.command'
 export * from './application/commands/cancel-booking/cancel-booking.command'
 export * from './application/commands/check-in-booking/check-in-booking.command'
 export * from './application/commands/create-booking/create-booking.command'

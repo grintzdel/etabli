@@ -13,9 +13,10 @@ export type BookingDeskProps = {
   readonly bookings: ReadonlyArray<AtelierBooking>
   readonly checkIn: BookingAction
   readonly markNoShow: BookingAction
+  readonly cancel: BookingAction
 }
 
-export const BookingDesk = ({ bookings, checkIn, markNoShow }: BookingDeskProps) => {
+export const BookingDesk = ({ bookings, checkIn, markNoShow, cancel }: BookingDeskProps) => {
   if (bookings.length === 0) {
     return <p className="text-graphite-300">Aucune réservation ce jour-là.</p>
   }
@@ -53,7 +54,16 @@ export const BookingDesk = ({ bookings, checkIn, markNoShow }: BookingDeskProps)
             <td className="py-3 pr-4">
               <StatusBadge tone={STATUS_TONES[booking.status]} label={STATUS_LABELS[booking.status]} />
             </td>
-            <td className="py-3">
+            <td className="flex flex-col gap-2 py-3">
+              {booking.canCancel ? (
+                <BookingRowAction
+                  bookingId={booking.id}
+                  label="Annuler"
+                  pendingLabel="Annulation…"
+                  variant="danger"
+                  action={cancel}
+                />
+              ) : null}
               {booking.checkedInVia !== null ? (
                 <span className="text-graphite-300">{CHECK_IN_METHOD_LABELS[booking.checkedInVia]}</span>
               ) : booking.canCheckIn ? (
