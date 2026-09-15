@@ -5,9 +5,11 @@ import { Suspense } from 'react'
 import { PRACTICES } from '@/modules/atelier/core/model/atelier'
 import { DEFAULT_THEME } from '@/modules/identity/core/model/preferences'
 import { idleSettings } from '@/modules/identity/core/model/settings'
+import { PasswordForm } from '@/modules/identity/react/components/PasswordForm'
 import { PreferencesForm } from '@/modules/identity/react/components/PreferencesForm'
 import { ProfileForm } from '@/modules/identity/react/components/ProfileForm'
 import { identityPort } from '@/server/container'
+import { changePasswordAction } from '@/server/password.actions'
 import { readMyAteliers, readPreferences } from '@/server/preferences'
 import { savePreferencesAction } from '@/server/preferences.actions'
 import { saveProfileAction } from '@/server/profile.actions'
@@ -82,6 +84,13 @@ export const SettingsPage = () => (
         <Suspense fallback={<Loading what="vos préférences" />}>
           <PreferencesSection />
         </Suspense>
+      </Surface>
+    </section>
+
+    <section className="flex flex-col gap-4">
+      <h2 className="font-display text-2xl font-semibold tracking-wide uppercase">Sécurité</h2>
+      <Surface>
+        <PasswordForm action={changePasswordAction} initialState={idleSettings} />
       </Surface>
     </section>
   </main>

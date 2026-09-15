@@ -3,6 +3,7 @@
 import { useActionState } from 'react'
 
 import type { AuthFormAction, AuthFormState } from '@/modules/identity/core/model/session'
+import { PASSWORD_MIN_LENGTH } from '@/modules/identity/core/model/session'
 import { Button } from '@/ui/Button'
 import { TextField } from '@/ui/TextField'
 
@@ -40,7 +41,7 @@ export const RegisterForm = ({ action, initialState }: RegisterFormProps) => {
         name="password"
         type="password"
         autoComplete="new-password"
-        minLength={8}
+        minLength={PASSWORD_MIN_LENGTH}
         required
         invalid={state.error !== null}
       />

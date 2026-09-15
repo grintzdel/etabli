@@ -9,6 +9,8 @@ const themeOf = (page: Page) => page.locator('[data-theme]').first().getAttribut
 
 const profileForm = (page: Page) => page.locator('form').filter({ has: page.getByLabel(/nom affiché/i) })
 
+const passwordForm = (page: Page) => page.locator('form').filter({ has: page.getByLabel(/mot de passe actuel/i) })
+
 const preferencesForm = (page: Page) =>
   page.locator('form').filter({ has: page.getByRole('radio', { name: 'Système' }) })
 
@@ -85,6 +87,46 @@ test('the profile refuses a blank name and an empty practice, each with its own 
   await form.getByRole('checkbox', { name: 'Bois' }).uncheck()
   await form.getByRole('button', { name: /enregistrer/i }).click()
   await expect(form.getByRole('alert')).toHaveText(/au moins une pratique/i)
+})
+
+test('a changed password signs the member out of nothing and works on the next sign-in', async ({ page, request }) => {
+  const email = await freshMember(page, request)
+  await page.goto('/parametres')
+
+  const form = passwordForm(page)
+  await form.getByLabel(/mot de passe actuel/i).fill('un-mot-de-passe')
+  await form.getByLabel(/^nouveau mot de passe$/i).fill('un-autre-mot-de-passe')
+  await form.getByLabel(/confirmer/i).fill('un-autre-mot-de-passe')
+  await form.getByRole('button', { name: /changer le mot de passe/i }).click()
+
+  await expect(form.getByRole('status')).toHaveText(/mot de passe changé/i)
+
+  await page.reload()
+  await expect(page.getByRole('heading', { name: /paramètres/i })).toBeVisible()
+
+  await page.getByRole('button', { name: /se déconnecter/i }).click()
+  await signIn(page, email, 'un-autre-mot-de-passe')
+  await expect(page).toHaveURL(/\/(compte|bienvenue)$/)
+})
+
+test('the password change refuses each wrong case with its own words', async ({ page, request }) => {
+  await freshMember(page, request)
+  await page.goto('/parametres')
+
+  const form = passwordForm(page)
+
+  const attempt = async (current: string, next: string, confirmation: string) => {
+    await form.getByLabel(/mot de passe actuel/i).fill(current)
+    await form.getByLabel(/^nouveau mot de passe$/i).fill(next)
+    await form.getByLabel(/confirmer/i).fill(confirmation)
+    await form.getByRole('button', { name: /changer le mot de passe/i }).click()
+  }
+
+  await attempt('un-mot-de-passe', 'un-autre-mot-de-passe', 'pas-la-meme-chose')
+  await expect(form.getByRole('alert')).toHaveText(/ne correspondent pas/i)
+
+  await attempt('pas-le-bon', 'un-autre-mot-de-passe', 'un-autre-mot-de-passe')
+  await expect(form.getByRole('alert')).toHaveText(/mot de passe actuel est incorrect/i)
 })
 
 test('a preferred atelier puts a shortcut in the header, and dropping it takes it away', async ({ page, request }) => {

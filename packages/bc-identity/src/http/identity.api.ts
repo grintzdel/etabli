@@ -1,5 +1,6 @@
 import { HttpApiEndpoint, HttpApiGroup } from '@effect/platform'
 import type {
+  ChangePasswordInput,
   CurrentUser,
   MemberAtelier,
   RegisterInput,
@@ -18,6 +19,7 @@ import { EmailAlreadyTakenError, InvalidCredentialsError, PreferredAtelierNotJoi
 import { MemberAtelierSchema } from '../domain/member-atelier.schema'
 import { UpdatePreferencesSchema, UserPreferencesSchema } from '../domain/preferences.schema'
 import {
+  ChangePasswordSchema,
   CurrentUserSchema,
   LoginPayloadSchema,
   RegisterPayloadSchema,
@@ -50,6 +52,10 @@ export const updateProfileContractParity: AssertEquals<
   Schema.Schema.Encoded<typeof UpdateProfileSchema>,
   UpdateProfileInput
 > = true
+export const changePasswordContractParity: AssertEquals<
+  Schema.Schema.Encoded<typeof ChangePasswordSchema>,
+  ChangePasswordInput
+> = true
 
 export const identityApiGroup = HttpApiGroup.make('identity')
   .add(
@@ -70,6 +76,13 @@ export const identityApiGroup = HttpApiGroup.make('identity')
     HttpApiEndpoint.patch('updateProfile', routes.auth.me)
       .setPayload(UpdateProfileSchema)
       .addSuccess(CurrentUserSchema)
+      .middleware(AuthMiddleware)
+  )
+  .add(
+    HttpApiEndpoint.post('changePassword', routes.auth.password)
+      .setPayload(ChangePasswordSchema)
+      .addSuccess(SessionSchema)
+      .addError(InvalidCredentialsError)
       .middleware(AuthMiddleware)
   )
   .add(

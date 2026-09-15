@@ -69,6 +69,12 @@ export const UpdateProfileSchema = Schema.Struct({
 })
 export type UpdateProfile = Schema.Schema.Type<typeof UpdateProfileSchema>
 
+export const ChangePasswordSchema = Schema.Struct({
+  currentPassword: Schema.String,
+  newPassword: Password,
+})
+export type ChangePassword = Schema.Schema.Type<typeof ChangePasswordSchema>
+
 export const LoginPayloadSchema = Schema.Struct({
   email: Email,
   password: Schema.String,

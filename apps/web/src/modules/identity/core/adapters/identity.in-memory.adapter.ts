@@ -1,10 +1,10 @@
-import type { UpdateProfileInput } from '../model/profile'
+import type { ChangePasswordInput, UpdateProfileInput } from '../model/profile'
 import type { CurrentUser, IdentityResult, LoginInput, RegisterInput, Session } from '../model/session'
 import { failure, IdentityFailureCode } from '../model/session'
 import type { IIdentityPort } from '../ports/identity.port'
 
 interface Account {
-  readonly password: string
+  password: string
   user: CurrentUser
 }
 
@@ -65,6 +65,15 @@ export class IdentityInMemoryAdapter implements IIdentityPort {
       practice: patch.practice ?? account.user.practice,
     }
     return { ok: true, value: account.user }
+  }
+
+  async changePassword(token: string, input: ChangePasswordInput): Promise<IdentityResult<Session>> {
+    const account = this.accountOf(token)
+    if (account === undefined) return failure(IdentityFailureCode.UNAUTHORIZED)
+    if (account.password !== input.currentPassword) return failure(IdentityFailureCode.INVALID_CREDENTIALS)
+
+    account.password = input.newPassword
+    return { ok: true, value: this.session(account) }
   }
 
   private accountOf(token: string): Account | undefined {

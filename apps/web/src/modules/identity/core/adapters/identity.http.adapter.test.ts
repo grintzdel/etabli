@@ -52,6 +52,33 @@ describe('IdentityHttpAdapter', () => {
     if (!result.ok) expect(result.error.code).toBe(IdentityFailureCode.INVALID_INPUT)
   })
 
+  it('posts the password change with the bearer token', async () => {
+    stub(200, { token: 'un-nouveau-jeton', expiresAt: '2026-10-01T00:00:00.000Z', user: USER })
+
+    const result = await new IdentityHttpAdapter(BASE).changePassword(TOKEN, {
+      currentPassword: 'ancien',
+      newPassword: 'un-nouveau-mot-de-passe',
+    })
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe(`${BASE}/auth/password`)
+    expect(init.method).toBe('POST')
+    expect((init.headers as Record<string, string>)['authorization']).toBe(`Bearer ${TOKEN}`)
+    expect(result.ok && result.value.token).toBe('un-nouveau-jeton')
+  })
+
+  it('reads a wrong current password as invalid credentials, not as an expired session', async () => {
+    stub(401, { _tag: 'InvalidCredentialsError' })
+
+    const result = await new IdentityHttpAdapter(BASE).changePassword(TOKEN, {
+      currentPassword: 'pas-le-bon',
+      newPassword: 'un-nouveau-mot-de-passe',
+    })
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error.code).toBe(IdentityFailureCode.INVALID_CREDENTIALS)
+  })
+
   it('reports an expired session on 401', async () => {
     stub(401, {})
 
