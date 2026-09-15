@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect'
 import { toAtelierBooking } from '../../../domain/atelier-booking'
 import { localDayWindow } from '../../../domain/availability'
 import type { AtelierBooking, AtelierBookingsParams } from '../../../domain/booking.schema'
+import { effectiveStatus } from '../../../domain/completion'
 import { BookingRepository } from '../../../infrastructure/booking.repository'
 import { MachineCatalog } from '../../ports/machine-catalog'
 import { MemberRoster } from '../../ports/member-roster'
@@ -33,7 +34,10 @@ export const listAtelierBookings = (
     const day = localDayWindow(params.date ?? now)
 
     const bookings = yield* repository.listForAteliersBetween(fabmanaged, day.from, day.to)
-    const kept = params.status === undefined ? bookings : bookings.filter((booking) => booking.status === params.status)
+    const kept =
+      params.status === undefined
+        ? bookings
+        : bookings.filter((booking) => effectiveStatus(booking, now) === params.status)
     if (kept.length === 0) return []
 
     const machines = yield* catalog.listForAteliers(fabmanaged)

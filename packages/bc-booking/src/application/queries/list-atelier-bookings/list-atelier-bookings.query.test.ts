@@ -101,6 +101,20 @@ describe('listAtelierBookings', () => {
     expect(cancelled[0]?.status).toBe(BookingStatus.CANCELLED)
   })
 
+  it('reads a stamped slot that has run its course as completed', async () => {
+    await store({ status: BookingStatus.CHECKED_IN })
+
+    expect((await run())[0]?.status).toBe(BookingStatus.COMPLETED)
+  })
+
+  it('narrows to the completed slots on the status nothing stores', async () => {
+    await store({ status: BookingStatus.CHECKED_IN })
+    await store({ startAt: at('2026-03-02T14:00:00Z'), endAt: at('2026-03-02T15:00:00Z') })
+
+    expect(await run({ status: BookingStatus.COMPLETED })).toHaveLength(1)
+    expect(await run({ status: BookingStatus.CHECKED_IN })).toStrictEqual([])
+  })
+
   it('names a member whose account is gone', async () => {
     await store({ userId: GHOST })
 
