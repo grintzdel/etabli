@@ -1,10 +1,11 @@
+import type { UpdateProfileInput } from '../model/profile'
 import type { CurrentUser, IdentityResult, LoginInput, RegisterInput, Session } from '../model/session'
 import { failure, IdentityFailureCode } from '../model/session'
 import type { IIdentityPort } from '../ports/identity.port'
 
 interface Account {
   readonly password: string
-  readonly user: CurrentUser
+  user: CurrentUser
 }
 
 export class IdentityInMemoryAdapter implements IIdentityPort {
@@ -49,9 +50,25 @@ export class IdentityInMemoryAdapter implements IIdentityPort {
   }
 
   async me(token: string): Promise<IdentityResult<CurrentUser>> {
-    const email = this.tokens.get(token)
-    const account = email === undefined ? undefined : this.accounts.get(email)
+    const account = this.accountOf(token)
     if (account === undefined) return failure(IdentityFailureCode.UNAUTHORIZED)
     return { ok: true, value: account.user }
+  }
+
+  async updateProfile(token: string, patch: UpdateProfileInput): Promise<IdentityResult<CurrentUser>> {
+    const account = this.accountOf(token)
+    if (account === undefined) return failure(IdentityFailureCode.UNAUTHORIZED)
+
+    account.user = {
+      ...account.user,
+      displayName: patch.displayName ?? account.user.displayName,
+      practice: patch.practice ?? account.user.practice,
+    }
+    return { ok: true, value: account.user }
+  }
+
+  private accountOf(token: string): Account | undefined {
+    const email = this.tokens.get(token)
+    return email === undefined ? undefined : this.accounts.get(email)
   }
 }

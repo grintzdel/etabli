@@ -16,6 +16,19 @@ export const makeUserRepositoryMemory = (seed: ReadonlyArray<User> = []) => {
         byId.set(user.id, user)
         return user
       }),
+    updateProfile: (id, patch, at) =>
+      Effect.sync(() => {
+        const user = byId.get(id)
+        if (user === undefined) return null
+        const updated = {
+          ...user,
+          displayName: patch.displayName ?? user.displayName,
+          practice: patch.practice ?? user.practice,
+          updatedAt: at,
+        }
+        byId.set(id, updated)
+        return updated
+      }),
     markOnboarded: (id, practice, at) =>
       Effect.sync(() => {
         const user = byId.get(id)

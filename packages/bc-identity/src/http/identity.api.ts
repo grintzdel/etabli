@@ -5,6 +5,7 @@ import type {
   RegisterInput,
   Session,
   UpdatePreferencesInput,
+  UpdateProfileInput,
   UserPreferences,
 } from '@etabli/contract'
 import { routes } from '@etabli/contract'
@@ -16,7 +17,13 @@ import * as Schema from 'effect/Schema'
 import { EmailAlreadyTakenError, InvalidCredentialsError, PreferredAtelierNotJoinedError } from '../domain/errors'
 import { MemberAtelierSchema } from '../domain/member-atelier.schema'
 import { UpdatePreferencesSchema, UserPreferencesSchema } from '../domain/preferences.schema'
-import { CurrentUserSchema, LoginPayloadSchema, RegisterPayloadSchema, SessionSchema } from '../domain/user.schema'
+import {
+  CurrentUserSchema,
+  LoginPayloadSchema,
+  RegisterPayloadSchema,
+  SessionSchema,
+  UpdateProfileSchema,
+} from '../domain/user.schema'
 
 export const identityContractParity: AssertEquals<Schema.Schema.Encoded<typeof SessionSchema>, Session> = true
 export const currentUserContractParity: AssertEquals<
@@ -39,6 +46,10 @@ export const memberAtelierContractParity: AssertEquals<
   Schema.Schema.Encoded<typeof MemberAtelierSchema>,
   MemberAtelier
 > = true
+export const updateProfileContractParity: AssertEquals<
+  Schema.Schema.Encoded<typeof UpdateProfileSchema>,
+  UpdateProfileInput
+> = true
 
 export const identityApiGroup = HttpApiGroup.make('identity')
   .add(
@@ -55,6 +66,12 @@ export const identityApiGroup = HttpApiGroup.make('identity')
       .addError(AccountSuspendedError)
   )
   .add(HttpApiEndpoint.get('me', routes.auth.me).addSuccess(CurrentUserSchema).middleware(AuthMiddleware))
+  .add(
+    HttpApiEndpoint.patch('updateProfile', routes.auth.me)
+      .setPayload(UpdateProfileSchema)
+      .addSuccess(CurrentUserSchema)
+      .middleware(AuthMiddleware)
+  )
   .add(
     HttpApiEndpoint.get('preferences', routes.me.preferences)
       .addSuccess(UserPreferencesSchema)

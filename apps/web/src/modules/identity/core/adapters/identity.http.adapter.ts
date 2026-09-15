@@ -1,6 +1,7 @@
 import { routes } from '@etabli/contract'
 
 import { requestIdentity } from '../lib/identity-http'
+import type { UpdateProfileInput } from '../model/profile'
 import type { CurrentUser, IdentityResult, LoginInput, RegisterInput, Session } from '../model/session'
 import type { IIdentityPort } from '../ports/identity.port'
 
@@ -27,6 +28,14 @@ export class IdentityHttpAdapter implements IIdentityPort {
     return requestIdentity<CurrentUser>(this.baseUrl, routes.auth.me, {
       method: 'GET',
       headers: { authorization: `Bearer ${token}` },
+    })
+  }
+
+  updateProfile(token: string, patch: UpdateProfileInput): Promise<IdentityResult<CurrentUser>> {
+    return requestIdentity<CurrentUser>(this.baseUrl, routes.auth.me, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+      body: JSON.stringify(patch),
     })
   }
 }

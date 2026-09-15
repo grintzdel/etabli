@@ -3,7 +3,7 @@ import { AuthMembershipSchema, PlatformRoleSchema } from '@etabli/shared/auth-co
 import { UserId } from '@etabli/shared/schema'
 import * as Schema from 'effect/Schema'
 
-import { PASSWORD_MIN_LENGTH, UserStatus } from './user.constants'
+import { MAX_PRACTICES, PASSWORD_MIN_LENGTH, UserStatus } from './user.constants'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -23,6 +23,10 @@ export const Password = Schema.String.pipe(Schema.minLength(PASSWORD_MIN_LENGTH)
 export const DisplayName = Schema.Trim.pipe(Schema.minLength(1)).annotations({
   message: () => 'Le nom affiché est obligatoire',
 })
+
+export const Practice = Schema.Array(Schema.Trim.pipe(Schema.minLength(1)))
+  .pipe(Schema.minItems(1), Schema.maxItems(MAX_PRACTICES))
+  .annotations({ message: () => 'Déclarez au moins une pratique' })
 
 export const UserStatusSchema = Schema.Literal(UserStatus.ACTIVE, UserStatus.SUSPENDED)
 
@@ -58,6 +62,12 @@ export const RegisterPayloadSchema = Schema.Struct({
   displayName: DisplayName,
 })
 export type RegisterPayload = Schema.Schema.Type<typeof RegisterPayloadSchema>
+
+export const UpdateProfileSchema = Schema.Struct({
+  displayName: Schema.optional(DisplayName),
+  practice: Schema.optional(Practice),
+})
+export type UpdateProfile = Schema.Schema.Type<typeof UpdateProfileSchema>
 
 export const LoginPayloadSchema = Schema.Struct({
   email: Email,

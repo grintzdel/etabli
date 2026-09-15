@@ -55,3 +55,8 @@ export type MemberAtelier = {
   readonly name: string
   readonly role: MembershipRole
 }
+
+export type UpdateProfileInput = {
+  readonly displayName?: string
+  readonly practice?: ReadonlyArray<string>
+}
