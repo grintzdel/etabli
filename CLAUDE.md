@@ -29,9 +29,9 @@ Ce qui existe, package par package :
   fabmanager ; l'habilitation porte sur **une machine**, pas sur un type — écart
   assumé au §9 de la spec
 - `bc-booking` — domaine, migration `0005`, repository, et le parcours membre
-  complet hors check-in : `GET /machines/:id/availability`, `POST /bookings`,
-  `GET /bookings`, `GET /bookings/:id`, `POST /bookings/:id/cancel`. Le check-in
-  NFC (règles 5 et 6) et les écrans Next viennent ensuite.
+  complet : `GET /machines/:id/availability`, `POST /bookings`, `GET /bookings`,
+  `GET /bookings/:id`, `POST /bookings/:id/cancel`, `POST /bookings/:id/check-in`.
+  Les écrans Next viennent ensuite.
 
 Neon est branché et à jour des cinq migrations. Sur une machine neuve : copier
 `.env.example` en `.env` et y mettre l'URL *pooled* du projet Neon. `pg` émet un
@@ -81,6 +81,20 @@ statut ne doit pas révéler qu'elle existe.
 Une machine `RETIRED` répond 404 partout — availability comme `POST /bookings`.
 Elle est sortie du parc, donc indiscernable d'une machine inconnue. Seul
 `MAINTENANCE` vaut un 409 : la machine existe et reviendra.
+
+Le check-in est NFC et rien d'autre : la charge ne porte qu'un `nfcTagId`, et
+une machine sans tag ne peut pas être pointée. `CheckInMethod.MANUAL` reste dans
+le modèle pour un pointage de secours fabmanager, pas encore écrit. Le check-in
+n'est pas idempotent — `BookingNotCheckInableError` (409, règle 9 du §5) refuse
+le second, pour que la première empreinte reste opposable à un no-show.
+
+`isCheckInOpen(booking, now)` est un prédicat pur, jumeau d'`isCancellable` :
+la command et la projection du read model le partagent, et le front lit
+`canCheckIn` au lieu de redériver la fenêtre de 15 min avant / 30 min après.
+
+`UpdateMachineSchema` ne porte pas `nfcTagId` : un fabmanager ne peut associer
+un tag qu'à la création de la machine. Le §8 de la spec promet le PATCH — à
+écrire dans `bc-atelier` quand l'écran de gestion en aura besoin.
 
 ## Repos de référence
 

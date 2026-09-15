@@ -52,6 +52,10 @@ export type CreateBooking = {
   readonly startAt: string
 }
 
+export type CheckInBooking = {
+  readonly nfcTagId: string
+}
+
 export type BookingDetail = {
   readonly id: string
   readonly machineId: string
@@ -65,4 +69,5 @@ export type BookingDetail = {
   readonly checkedInAt: string | null
   readonly cancelledAt: string | null
   readonly canCancel: boolean
+  readonly canCheckIn: boolean
 }

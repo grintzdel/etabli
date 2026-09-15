@@ -30,6 +30,9 @@ export const SlotReason = {
 } as const
 export type SlotReason = (typeof SlotReason)[keyof typeof SlotReason]
 
+export const CHECK_IN_OPENS_MINUTES_BEFORE = 15
+export const CHECK_IN_CLOSES_MINUTES_AFTER = 30
+
 export const ATELIER_TIME_ZONE = 'Europe/Paris'
 export const OPENING_HOUR = 8
 export const CLOSING_HOUR = 22

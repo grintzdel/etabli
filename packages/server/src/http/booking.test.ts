@@ -81,6 +81,7 @@ const join = async (atelierId: string, role: 'MEMBER' | 'FABMANAGER'): Promise<s
 interface MachineOptions {
   readonly slotDurationMinutes?: number
   readonly requiresCertification?: boolean
+  readonly nfcTagId?: string
 }
 
 const createMachine = async (
@@ -186,7 +187,9 @@ interface BookingDetail {
   readonly startAt: string
   readonly endAt: string
   readonly status: string
+  readonly checkedInAt: string | null
   readonly canCancel: boolean
+  readonly canCheckIn: boolean
 }
 
 const firstFreeSlot = async (machineId: string, token: string): Promise<Slot> => {
@@ -200,6 +203,8 @@ const book = (payload: unknown, token?: string) => send('POST', '/bookings', pay
 const listBookings = (token: string) => send('GET', '/bookings', undefined, token)
 const readBooking = (id: string, token: string) => send('GET', `/bookings/${id}`, undefined, token)
 const cancelBooking = (id: string, token: string) => send('POST', `/bookings/${id}/cancel`, undefined, token)
+const checkIn = (id: string, payload: unknown, token?: string) =>
+  send('POST', `/bookings/${id}/check-in`, payload, token)
 
 const grantCertification = async (machineId: string, member: string, fabmanager: string): Promise<void> => {
   const requested = await send('POST', '/certifications', { machineId }, member)
@@ -411,5 +416,98 @@ describe('POST /bookings/:id/cancel', () => {
     const { booking } = await bookFirstFreeSlot(machineId, owner)
 
     expect((await cancelBooking(booking.id, stranger)).status).toBe(404)
+  })
+})
+
+const IN_A_MINUTE = (): string => new Date(Date.now() + 60_000).toISOString()
+const IN_THREE_DAYS = (): string => new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+
+const bookAt = async (machineId: string, startAt: string, token: string): Promise<BookingDetail> => {
+  const response = await book({ machineId, startAt }, token)
+  expect(response.status).toBe(201)
+  return (await response.json()) as BookingDetail
+}
+
+describe('POST /bookings/:id/check-in', () => {
+  it('stamps the presence when the tag of the reserved machine is presented in time', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Trotec pointée', {
+      requiresCertification: false,
+      nfcTagId: 'nfc-trotec-pointee',
+    })
+    const member = await join(FORGE, 'MEMBER')
+    const booking = await bookAt(machineId, IN_A_MINUTE(), member)
+    expect(booking.canCheckIn).toBe(true)
+
+    const response = await checkIn(booking.id, { nfcTagId: 'nfc-trotec-pointee' }, member)
+    expect(response.status).toBe(200)
+
+    const body = (await response.json()) as BookingDetail
+    expect(body.status).toBe('CHECKED_IN')
+    expect(body.checkedInAt).not.toBeNull()
+    expect(body.canCheckIn).toBe(false)
+    expect(body.canCancel).toBe(false)
+  })
+
+  it('refuses a tap outside the window', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Trotec trop tôt', {
+      requiresCertification: false,
+      nfcTagId: 'nfc-trotec-trop-tot',
+    })
+    const member = await join(FORGE, 'MEMBER')
+    const booking = await bookAt(machineId, IN_THREE_DAYS(), member)
+    expect(booking.canCheckIn).toBe(false)
+
+    const response = await checkIn(booking.id, { nfcTagId: 'nfc-trotec-trop-tot' }, member)
+    expect(response.status).toBe(409)
+    expect(((await response.json()) as { _tag: string })._tag).toBe('CheckInWindowClosedError')
+  })
+
+  it('refuses the tag of another machine', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Trotec bon tag', {
+      requiresCertification: false,
+      nfcTagId: 'nfc-trotec-bon-tag',
+    })
+    const member = await join(FORGE, 'MEMBER')
+    const booking = await bookAt(machineId, IN_A_MINUTE(), member)
+
+    const response = await checkIn(booking.id, { nfcTagId: 'nfc-une-autre-machine' }, member)
+    expect(response.status).toBe(409)
+    expect(((await response.json()) as { _tag: string })._tag).toBe('NfcTagMismatchError')
+  })
+
+  it('refuses to check in twice', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Trotec têtue', {
+      requiresCertification: false,
+      nfcTagId: 'nfc-trotec-tetue',
+    })
+    const member = await join(FORGE, 'MEMBER')
+    const booking = await bookAt(machineId, IN_A_MINUTE(), member)
+    await checkIn(booking.id, { nfcTagId: 'nfc-trotec-tetue' }, member)
+
+    const response = await checkIn(booking.id, { nfcTagId: 'nfc-trotec-tetue' }, member)
+    expect(response.status).toBe(409)
+    expect(((await response.json()) as { _tag: string })._tag).toBe('BookingNotCheckInableError')
+  })
+
+  it('answers 404 when the booking belongs to someone else', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Trotec gardée', {
+      requiresCertification: false,
+      nfcTagId: 'nfc-trotec-gardee',
+    })
+    const owner = await join(FORGE, 'MEMBER')
+    const stranger = await join(FORGE, 'MEMBER')
+    const booking = await bookAt(machineId, IN_A_MINUTE(), owner)
+
+    expect((await checkIn(booking.id, { nfcTagId: 'nfc-trotec-gardee' }, stranger)).status).toBe(404)
+  })
+
+  it('answers 404 on a booking that does not exist', async () => {
+    const member = await join(FORGE, 'MEMBER')
+
+    expect((await checkIn(UNKNOWN, { nfcTagId: 'nfc-peu-importe' }, member)).status).toBe(404)
+  })
+
+  it('turns an anonymous tap away', async () => {
+    expect((await checkIn(UNKNOWN, { nfcTagId: 'nfc-peu-importe' })).status).toBe(401)
   })
 })

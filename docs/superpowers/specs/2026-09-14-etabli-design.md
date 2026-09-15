@@ -178,12 +178,17 @@ Le cœur. Ce sont des règles de **refus** : le système dit non, avec une erreu
 | 6 | Le tag NFC présenté doit être celui de la machine réservée | `NfcTagMismatchError` | 409 |
 | 7 | Seul le propriétaire d'une réservation peut l'annuler, et pas après le début | `BookingNotCancellableError` | 409 |
 | 8 | Un créneau déjà passé n'est pas réservable | `SlotInThePastError` | 409 |
+| 9 | Une réservation déjà pointée, annulée ou close ne se pointe pas | `BookingNotCheckInableError` | 409 |
 
 Reportées en v1.1 : le créneau doit tomber dans les horaires d'ouverture de l'atelier ; un membre ne peut dépasser un quota d'heures sur une fenêtre glissante de sept jours.
 
 La règle 1 disait d'abord « pour ce type de machine, dans cet atelier », et parlait d'une habilitation « non expirée ». Le jalon 3 a posé l'habilitation sur une machine, sans date d'expiration, et toute l'interface de validation nomme une machine ; la règle a été resserrée pour dire ce que le code garantit. Élargir au type plus tard n'invalide aucune habilitation déjà accordée — l'inverse retirerait des accès.
 
 La règle 8 ne figurait pas dans le brief. Aucune des sept autres n'interdisait de réserver un créneau révolu.
+
+La règle 9 non plus. La règle 5 ne parle que de l'heure : sans elle, un membre pointerait deux fois dans la fenêtre, et le second pointage écraserait la preuve de présence du premier. Le check-in n'est donc pas idempotent — la première empreinte est la bonne, et c'est celle qu'un fabmanager opposera à un no-show.
+
+Le check-in est NFC et rien d'autre en v1 : la charge ne porte qu'un `nfcTagId`, et une machine sans tag ne peut pas être pointée — la règle 6 tombe, personne n'y est. `CheckInMethod.MANUAL` reste dans le modèle pour un pointage de secours ouvert au fabmanager, hors périmètre ici. Une réservation qui n'appartient pas à l'appelant répond 404, comme partout ailleurs dans ce contexte.
 
 La règle 3 distingue deux états que le brief confondait. `MAINTENANCE` est transitoire : la machine existe, elle reste visible, elle reviendra — un 409 dit exactement cela. `RETIRED` est définitif : la machine sort du parc réservable, et `GET /machines/:id/availability` comme `POST /bookings` répondent 404, du même mot qu'une machine qui n'a jamais existé.
 
