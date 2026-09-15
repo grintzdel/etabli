@@ -60,3 +60,9 @@ export class NfcTagMismatchError extends Schema.TaggedError<NfcTagMismatchError>
   { bookingId: Schema.String, machineId: Schema.String },
   HttpApiSchema.annotations({ status: 409 })
 ) {}
+
+export class BookingNotMarkableAsNoShowError extends Schema.TaggedError<BookingNotMarkableAsNoShowError>()(
+  'BookingNotMarkableAsNoShowError',
+  { bookingId: Schema.String, status: Schema.String },
+  HttpApiSchema.annotations({ status: 409 })
+) {}

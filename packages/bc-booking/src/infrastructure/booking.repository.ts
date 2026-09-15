@@ -24,6 +24,7 @@ export interface BookingRepositoryService {
   readonly insert: (booking: Booking) => Effect.Effect<Booking, RepoError | BookingOverlapError>
   readonly cancel: (id: BookingId, at: DateTime.Utc, by: UserId) => Effect.Effect<Booking | null, RepoError>
   readonly checkIn: (id: BookingId, at: DateTime.Utc, via: CheckInMethod) => Effect.Effect<Booking | null, RepoError>
+  readonly markNoShow: (id: BookingId, at: DateTime.Utc) => Effect.Effect<Booking | null, RepoError>
 }
 
 export class BookingRepository extends Context.Tag('@etabli/BookingRepository')<

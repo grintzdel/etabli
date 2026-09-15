@@ -5,14 +5,17 @@ import type { AtelierBooking } from '@/modules/booking/core/model/manage-booking
 import { CHECK_IN_METHOD_LABELS } from '@/modules/booking/core/model/manage-booking'
 import { StatusBadge } from '@/ui/StatusBadge'
 
-import { ManualCheckInForm } from './ManualCheckInForm'
+import { BookingRowAction } from './BookingRowAction'
+
+type BookingAction = (state: BookingActionState, formData: FormData) => Promise<BookingActionState>
 
 export type BookingDeskProps = {
   readonly bookings: ReadonlyArray<AtelierBooking>
-  readonly checkIn: (state: BookingActionState, formData: FormData) => Promise<BookingActionState>
+  readonly checkIn: BookingAction
+  readonly markNoShow: BookingAction
 }
 
-export const BookingDesk = ({ bookings, checkIn }: BookingDeskProps) => {
+export const BookingDesk = ({ bookings, checkIn, markNoShow }: BookingDeskProps) => {
   if (bookings.length === 0) {
     return <p className="text-graphite-300">Aucune réservation ce jour-là.</p>
   }
@@ -51,14 +54,20 @@ export const BookingDesk = ({ bookings, checkIn }: BookingDeskProps) => {
               <StatusBadge tone={STATUS_TONES[booking.status]} label={STATUS_LABELS[booking.status]} />
             </td>
             <td className="py-3">
-              {booking.checkedInVia === null ? (
-                booking.canCheckIn ? (
-                  <ManualCheckInForm bookingId={booking.id} action={checkIn} />
-                ) : (
-                  <span className="text-graphite-500">—</span>
-                )
-              ) : (
+              {booking.checkedInVia !== null ? (
                 <span className="text-graphite-300">{CHECK_IN_METHOD_LABELS[booking.checkedInVia]}</span>
+              ) : booking.canCheckIn ? (
+                <BookingRowAction bookingId={booking.id} label="Pointer" pendingLabel="Pointage…" action={checkIn} />
+              ) : booking.canMarkNoShow ? (
+                <BookingRowAction
+                  bookingId={booking.id}
+                  label="Marquer non honorée"
+                  pendingLabel="Marquage…"
+                  variant="danger"
+                  action={markNoShow}
+                />
+              ) : (
+                <span className="text-graphite-500">—</span>
               )}
             </td>
           </tr>

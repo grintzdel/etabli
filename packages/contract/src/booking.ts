@@ -86,6 +86,7 @@ export type AtelierBooking = {
   readonly checkedInAt: string | null
   readonly checkedInVia: CheckInMethod | null
   readonly canCheckIn: boolean
+  readonly canMarkNoShow: boolean
 }
 
 export type AtelierBookingsQuery = {

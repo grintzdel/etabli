@@ -66,6 +66,27 @@ describe('ManageBookingHttpAdapter', () => {
     expect(closed.error.code).toBe(BookingFailureCode.CHECK_IN_WINDOW_CLOSED)
   })
 
+  it('posts the no-show of one booking', async () => {
+    stub(200, atelierBookingFixture({ status: 'NO_SHOW' }))
+
+    const result = await new ManageBookingHttpAdapter(BASE).markNoShow(TOKEN, 'booking-1')
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe(`${BASE}/manage/bookings/booking-1/no-show`)
+    expect(init.method).toBe('POST')
+    expect(result.ok).toBe(true)
+  })
+
+  it('tells a no-show that came too early from the rest', async () => {
+    stub(409, { _tag: 'BookingNotMarkableAsNoShowError' })
+
+    const result = await new ManageBookingHttpAdapter(BASE).markNoShow(TOKEN, 'booking-1')
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.error.code).toBe(BookingFailureCode.NOT_MARKABLE_AS_NO_SHOW)
+  })
+
   it('reads a booking it may not touch as unknown', async () => {
     stub(404, { _tag: 'BookingUnknownError' })
 

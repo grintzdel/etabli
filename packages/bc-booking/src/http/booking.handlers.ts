@@ -5,6 +5,7 @@ import { cancelBooking } from '../application/commands/cancel-booking/cancel-boo
 import { checkInBooking } from '../application/commands/check-in-booking/check-in-booking.command'
 import { createBooking } from '../application/commands/create-booking/create-booking.command'
 import { manualCheckInBooking } from '../application/commands/manual-check-in-booking/manual-check-in-booking.command'
+import { markNoShow } from '../application/commands/mark-no-show/mark-no-show.command'
 import { getBookingDetail } from '../application/queries/get-booking-detail/get-booking-detail.query'
 import { getMachineAvailability } from '../application/queries/get-machine-availability/get-machine-availability.query'
 import { listAtelierBookings } from '../application/queries/list-atelier-bookings/list-atelier-bookings.query'
@@ -35,4 +36,6 @@ export const bookingManagementHandlers = {
     listAtelierBookings(urlParams).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
   checkIn: ({ path }: { readonly path: { readonly id: BookingId } }) =>
     manualCheckInBooking(path.id).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
+  markNoShow: ({ path }: { readonly path: { readonly id: BookingId } }) =>
+    markNoShow(path.id).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
 }

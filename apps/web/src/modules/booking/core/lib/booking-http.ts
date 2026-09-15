@@ -11,6 +11,7 @@ const BY_TAG: Readonly<Record<string, BookingFailureCode>> = {
   BookingNotCancellableError: BookingFailureCode.NOT_CANCELLABLE,
   BookingNotCheckInableError: BookingFailureCode.NOT_CHECK_INABLE,
   CheckInWindowClosedError: BookingFailureCode.CHECK_IN_WINDOW_CLOSED,
+  BookingNotMarkableAsNoShowError: BookingFailureCode.NOT_MARKABLE_AS_NO_SHOW,
   NfcTagMismatchError: BookingFailureCode.NFC_TAG_MISMATCH,
 }
 

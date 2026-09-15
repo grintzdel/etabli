@@ -23,6 +23,7 @@ import {
 import {
   BookingNotCancellableError,
   BookingNotCheckInableError,
+  BookingNotMarkableAsNoShowError,
   BookingOverlapError,
   BookingUnknownError,
   CheckInWindowClosedError,
@@ -110,5 +111,12 @@ export const bookingManagementApiGroup = HttpApiGroup.make('bookingManagement')
       .addError(BookingUnknownError)
       .addError(BookingNotCheckInableError)
       .addError(CheckInWindowClosedError)
+  )
+  .add(
+    HttpApiEndpoint.post('markNoShow', routes.manage.noShow)
+      .setPath(Schema.Struct({ id: BookingId }))
+      .addSuccess(AtelierBookingSchema)
+      .addError(BookingUnknownError)
+      .addError(BookingNotMarkableAsNoShowError)
   )
   .middleware(AuthMiddleware)

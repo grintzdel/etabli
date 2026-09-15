@@ -137,6 +137,18 @@ export const makeBookingRepositorySql = (sql: SqlClient.SqlClient) =>
         Effect.mapError(fail('bookings.checkIn'))
       ),
 
+    markNoShow: (id: BookingId, at) =>
+      sql<BookingRow>`
+        UPDATE bookings
+        SET status = ${BookingStatus.NO_SHOW},
+            updated_at = ${DateTime.toDate(at)}
+        WHERE id = ${id}
+        RETURNING *
+      `.pipe(
+        Effect.map((rows) => (rows[0] === undefined ? null : toBooking(rows[0]))),
+        Effect.mapError(fail('bookings.markNoShow'))
+      ),
+
     cancel: (id: BookingId, at, by: UserId) =>
       sql<BookingRow>`
         UPDATE bookings

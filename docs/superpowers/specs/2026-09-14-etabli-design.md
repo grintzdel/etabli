@@ -179,6 +179,7 @@ Le cœur. Ce sont des règles de **refus** : le système dit non, avec une erreu
 | 7 | Seul le propriétaire d'une réservation peut l'annuler, et pas après le début | `BookingNotCancellableError` | 409 |
 | 8 | Un créneau déjà passé n'est pas réservable | `SlotInThePastError` | 409 |
 | 9 | Une réservation déjà pointée, annulée ou close ne se pointe pas | `BookingNotCheckInableError` | 409 |
+| 10 | Un no-show ne se marque que sur une réservation confirmée dont la fenêtre de pointage est close | `BookingNotMarkableAsNoShowError` | 409 |
 
 Reportées en v1.1 : le créneau doit tomber dans les horaires d'ouverture de l'atelier ; un membre ne peut dépasser un quota d'heures sur une fenêtre glissante de sept jours.
 
@@ -188,7 +189,9 @@ La règle 8 ne figurait pas dans le brief. Aucune des sept autres n'interdisait 
 
 La règle 9 non plus. La règle 5 ne parle que de l'heure : sans elle, un membre pointerait deux fois dans la fenêtre, et le second pointage écraserait la preuve de présence du premier. Le check-in n'est donc pas idempotent — la première empreinte est la bonne, et c'est celle qu'un fabmanager opposera à un no-show.
 
-Le check-in est NFC et rien d'autre en v1 : la charge ne porte qu'un `nfcTagId`, et une machine sans tag ne peut pas être pointée — la règle 6 tombe, personne n'y est. `CheckInMethod.MANUAL` reste dans le modèle pour un pointage de secours ouvert au fabmanager, hors périmètre ici. Une réservation qui n'appartient pas à l'appelant répond 404, comme partout ailleurs dans ce contexte.
+Le check-in d'un membre est NFC et rien d'autre en v1 : la charge ne porte qu'un `nfcTagId`, et une machine sans tag ne peut pas être pointée — la règle 6 tombe, personne n'y est. Le pointage de secours du fabmanager passe par `POST /manage/bookings/:id/check-in`, sans charge utile, en `CheckInMethod.MANUAL` ; il obéit aux mêmes règles 5 et 9, seul l'auteur du geste change. Une réservation qui n'appartient pas à l'appelant répond 404, comme partout ailleurs dans ce contexte.
+
+La règle 10 ne figurait pas non plus dans le brief, qui posait seulement qu'un no-show est marqué à la main. Restait à dire *quand* : avant la fermeture de la fenêtre de pointage, le membre peut encore arriver, et marquer serait un mensonge ; après, l'absence est acquise. La règle s'aligne donc sur la règle 5 plutôt que sur la fin du créneau, et un créneau déjà pointé, annulé ou marqué n'est pas marquable — le second marquage effacerait la trace du premier, exactement comme en règle 9.
 
 La règle 3 distingue deux états que le brief confondait. `MAINTENANCE` est transitoire : la machine existe, elle reste visible, elle reviendra — un 409 dit exactement cela. `RETIRED` est définitif : la machine sort du parc réservable, et `GET /machines/:id/availability` comme `POST /bookings` répondent 404, du même mot qu'une machine qui n'a jamais existé.
 
@@ -734,7 +737,7 @@ Le live coding se fait **sans agent IA**. Les zones à connaître par cœur, par
 3. **Recherche par proximité approchée.** Le calcul de distance se fait en SQL sur latitude et longitude, sans PostGIS. Suffisant à l'échelle d'un réseau de quelques dizaines d'ateliers, à revoir au-delà.
 4. **Horaires d'ouverture et quotas absents de la v1.** Deux règles de refus identifiées mais reportées ; le modèle de données les accueille sans migration destructrice.
 5. **Pas d'envoi d'e-mail.** Aucune confirmation ni relance en v1 ; le journal d'événements est en place pour les brancher.
-6. **Le no-show n'est pas automatique.** Une réservation non honorée est marquée par le fabmanager. La bascule automatique demande un travail planifié, incompatible avec un déploiement sans processus long.
+6. **Le no-show n'est pas automatique.** Une réservation non honorée est marquée par le fabmanager, depuis `/manage/bookings`, une fois la fenêtre de pointage close — règle 10. La bascule automatique demande un travail planifié, incompatible avec un déploiement sans processus long ; le jour où il existe, la règle 10 est déjà le prédicat qu'il appliquera.
 7. **Français uniquement.** Aucune internationalisation ; les messages de validation sont en français dans les schémas.
 8. **Le NFC n'existe pas encore.** L'API l'accepte et le vérifie, l'application qui le lit arrive en v2. Un membre ne peut donc pas pointer depuis le web : c'est le fabmanager qui le fait pour lui depuis `/manage/bookings`, dans la même fenêtre de quinze minutes avant et trente après. Le pointage porte alors la méthode `MANUAL`, et le mobile viendra rendre au membre le geste qui lui revient.
 

@@ -525,16 +525,20 @@ interface AtelierBooking {
   readonly status: string
   readonly checkedInVia: string | null
   readonly canCheckIn: boolean
+  readonly canMarkNoShow: boolean
 }
 
 const atelierBookings = (token?: string, query = '') => send('GET', `/manage/bookings${query}`, undefined, token)
 const manualCheckIn = (id: string, token?: string) => send('POST', `/manage/bookings/${id}/check-in`, undefined, token)
 
-const seedBookingUnderWay = async (machineId: string, atelierId: string, userId: string): Promise<string> => {
+const seedBooking = async (machineId: string, atelierId: string, userId: string, startsIn: string): Promise<string> => {
   const rows = await runtime.runPromise(
     sql<{ id: string }>`
       INSERT INTO bookings (id, machine_id, atelier_id, user_id, start_at, end_at)
-      VALUES (${globalThis.crypto.randomUUID()}, ${machineId}, ${atelierId}, ${userId}, now(), now() + interval '1 hour')
+      VALUES (
+        ${globalThis.crypto.randomUUID()}, ${machineId}, ${atelierId}, ${userId},
+        now() + ${startsIn}::interval, now() + ${startsIn}::interval + interval '1 hour'
+      )
       RETURNING id
     `
   )
@@ -542,6 +546,12 @@ const seedBookingUnderWay = async (machineId: string, atelierId: string, userId:
   if (row === undefined) throw new Error('the booking was not written')
   return row.id
 }
+
+const seedBookingUnderWay = (machineId: string, atelierId: string, userId: string): Promise<string> =>
+  seedBooking(machineId, atelierId, userId, '0 hours')
+
+const seedBookingMissed = (machineId: string, atelierId: string, userId: string): Promise<string> =>
+  seedBooking(machineId, atelierId, userId, '-3 hours')
 
 describe('GET /manage/bookings', () => {
   it('lists the day of the atelier the caller runs, member named', async () => {
@@ -627,7 +637,7 @@ describe('POST /manage/bookings/:id/check-in', () => {
     const { id: machineId, fabmanager } = await createMachine(FORGE, 'Prusa à venir', { requiresCertification: false })
     const member = await join(FORGE, 'MEMBER')
     const week = (await (await availability(machineId, member)).json()) as Availability
-    const distant = week.slots.filter((slot) => slot.available).at(-1)
+    const distant = week.slots.findLast((slot) => slot.available)
     if (distant === undefined) throw new Error('the machine offers no free slot')
     const created = await book({ machineId, startAt: distant.startAt }, member)
     const booking = (await created.json()) as BookingDetail
@@ -662,5 +672,75 @@ describe('POST /manage/bookings/:id/check-in', () => {
 
   it('answers 401 without a token', async () => {
     expect((await manualCheckIn(UNKNOWN)).status).toBe(401)
+  })
+})
+
+const markNoShow = (id: string, token?: string) => send('POST', `/manage/bookings/${id}/no-show`, undefined, token)
+
+describe('POST /manage/bookings/:id/no-show', () => {
+  it('marks a slot nobody came to', async () => {
+    const { id: machineId, fabmanager } = await createMachine(FORGE, 'Prusa désertée', { requiresCertification: false })
+    const member = await enrol(FORGE, 'MEMBER')
+    const bookingId = await seedBookingMissed(machineId, FORGE, member.userId)
+
+    const response = await markNoShow(bookingId, fabmanager)
+    expect(response.status).toBe(200)
+
+    const body = (await response.json()) as AtelierBooking
+    expect(body.status).toBe('NO_SHOW')
+    expect(body.canMarkNoShow).toBe(false)
+  })
+
+  it('refuses a second mark on the same slot', async () => {
+    const { id: machineId, fabmanager } = await createMachine(FORGE, 'Prusa remarquée', {
+      requiresCertification: false,
+    })
+    const member = await enrol(FORGE, 'MEMBER')
+    const bookingId = await seedBookingMissed(machineId, FORGE, member.userId)
+    await markNoShow(bookingId, fabmanager)
+
+    const response = await markNoShow(bookingId, fabmanager)
+    expect(response.status).toBe(409)
+    expect(((await response.json()) as { _tag: string })._tag).toBe('BookingNotMarkableAsNoShowError')
+  })
+
+  it('refuses a slot whose pointing window is still open', async () => {
+    const { id: machineId, fabmanager } = await createMachine(FORGE, 'Prusa en cours', { requiresCertification: false })
+    const member = await enrol(FORGE, 'MEMBER')
+    const bookingId = await seedBookingUnderWay(machineId, FORGE, member.userId)
+
+    const response = await markNoShow(bookingId, fabmanager)
+    expect(response.status).toBe(409)
+    expect(((await response.json()) as { _tag: string })._tag).toBe('BookingNotMarkableAsNoShowError')
+  })
+
+  it('refuses a slot the member did point', async () => {
+    const { id: machineId, fabmanager } = await createMachine(FORGE, 'Prusa honorée', { requiresCertification: false })
+    const member = await enrol(FORGE, 'MEMBER')
+    const bookingId = await seedBookingUnderWay(machineId, FORGE, member.userId)
+    await manualCheckIn(bookingId, fabmanager)
+
+    expect((await markNoShow(bookingId, fabmanager)).status).toBe(409)
+  })
+
+  it('answers 404 to the fabmanager of another atelier', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Prusa protégée', { requiresCertification: false })
+    const member = await enrol(FORGE, 'MEMBER')
+    const bookingId = await seedBookingMissed(machineId, FORGE, member.userId)
+    const elsewhere = await join(LYON, 'FABMANAGER')
+
+    expect((await markNoShow(bookingId, elsewhere)).status).toBe(404)
+  })
+
+  it('answers 404 to the member who holds the slot', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Prusa contestée', { requiresCertification: false })
+    const member = await enrol(FORGE, 'MEMBER')
+    const bookingId = await seedBookingMissed(machineId, FORGE, member.userId)
+
+    expect((await markNoShow(bookingId, member.token)).status).toBe(404)
+  })
+
+  it('answers 401 without a token', async () => {
+    expect((await markNoShow(UNKNOWN)).status).toBe(401)
   })
 })
