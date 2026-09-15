@@ -9,6 +9,26 @@ import { BookingFailureCode } from '@/modules/booking/core/model/booking'
 import { bookingPort } from './container'
 import { readSessionToken } from './session'
 
+export const createBookingAction = async (
+  _state: BookingActionState,
+  formData: FormData
+): Promise<BookingActionState> => {
+  const machineId = formData.get('machineId')
+  const startAt = formData.get('startAt')
+  if (typeof machineId !== 'string' || typeof startAt !== 'string') return { error: null }
+
+  const token = await readSessionToken()
+  if (token === null) redirect(`/connexion?next=/machines/${machineId}`)
+
+  const result = await bookingPort.create(token, { machineId, startAt })
+  if (!result.ok) {
+    if (result.error.code === BookingFailureCode.UNAUTHORIZED) redirect(`/connexion?next=/machines/${machineId}`)
+    return { error: result.error.message }
+  }
+
+  redirect(`/reservations/${result.value.id}`)
+}
+
 export const cancelBookingAction = async (
   _state: BookingActionState,
   formData: FormData

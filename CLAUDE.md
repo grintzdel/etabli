@@ -12,9 +12,11 @@ plages avec le paramètre `pages`).
 
 ## État
 
-Jalons 0 à 3 terminés et sur `main`. Jalon 4 (réservation) commencé.
+Jalons 0 à 3 terminés et sur `main`. Jalon 4 : le parcours membre est complet
+de bout en bout, de l'atelier au créneau réservé. Restent le pointage de secours
+fabmanager et le no-show — `/manage/bookings` est au contrat, pas encore écrit.
 
-`pnpm check` est vert : 455 tests unitaires, `next build`. Les 56 E2E
+`pnpm check` est vert : 474 tests unitaires, `next build`. Les 62 E2E
 Playwright passent mais **ne tournent plus dans `pnpm verify`, sur décision de
 l'auteur** — `pnpm db:test:up` puis `pnpm test:e2e` pour les lancer.
 
@@ -31,8 +33,8 @@ Ce qui existe, package par package :
 - `bc-booking` — domaine, migration `0005`, repository, et le parcours membre
   complet : `GET /machines/:id/availability`, `POST /bookings`, `GET /bookings`,
   `GET /bookings/:id`, `POST /bookings/:id/cancel`, `POST /bookings/:id/check-in`.
-  Côté web, `/reservations` et `/reservations/:id` — liste, détail, annulation.
-  La semaine d'une machine et la création viennent ensuite.
+  Côté web, `/machines/:id` ouvre la semaine et réserve, `/reservations` et
+  `/reservations/:id` listent, détaillent et annulent.
 
 Neon est branché et à jour des cinq migrations. Sur une machine neuve : copier
 `.env.example` en `.env` et y mettre l'URL *pooled* du projet Neon. `pg` émet un
@@ -111,6 +113,19 @@ lire pourquoi. C'est aussi le patron que réclame le §8.9.
 
 Le détail dit que le pointage est ouvert, sans l'offrir : le check-in demande un
 tag NFC que le navigateur ne sait pas lire — §12.8.
+
+Le calendrier est la seule zone client du produit, et le seul Route Handler :
+`/api/machines/:id/availability` est le BFF qui détient le cookie httpOnly, et
+React Query interroge lui. Le tableau du §8.8 le demandait ainsi.
+
+La navigation de semaine n'arithmétise aucune date côté client : la réponse
+porte son `to`, qui devient le `from` de la semaine suivante, empilé dans un
+`useState`. Reculer dépile. On ne peut donc pas remonter avant aujourd'hui, ce
+que l'API refuserait de toute façon, et aucun passage à l'heure d'été ne peut
+décaler la fenêtre d'un jour.
+
+Le `QueryClient` vit dans `MachineWeek`, pas dans un provider racine : un seul
+écran interroge React Query. Le jour où un deuxième arrive, il remontera.
 
 ## Repos de référence
 

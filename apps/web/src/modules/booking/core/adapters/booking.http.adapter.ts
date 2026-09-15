@@ -1,6 +1,6 @@
 import { buildPath, routes } from '@etabli/contract'
 
-import type { BookingDetail, BookingResult } from '../model/booking'
+import type { BookingDetail, BookingResult, CreateBooking, MachineAvailability } from '../model/booking'
 import { BookingFailureCode, failure } from '../model/booking'
 import type { IBookingPort } from '../ports/booking.port'
 
@@ -52,6 +52,19 @@ export class BookingHttpAdapter implements IBookingPort {
     if (body === null) return failure(BookingFailureCode.UNREACHABLE)
 
     return { ok: true, value: body as A }
+  }
+
+  availability(token: string, machineId: string, from?: string): Promise<BookingResult<MachineAvailability>> {
+    const path = buildPath(routes.machines.availability, { id: machineId })
+    const query = from === undefined ? '' : `?from=${encodeURIComponent(from)}`
+    return this.call<MachineAvailability>(`${path}${query}`, token)
+  }
+
+  create(token: string, input: CreateBooking): Promise<BookingResult<BookingDetail>> {
+    return this.call<BookingDetail>(routes.bookings.create, token, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    })
   }
 
   list(token: string): Promise<BookingResult<ReadonlyArray<BookingDetail>>> {
