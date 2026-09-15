@@ -528,7 +528,29 @@ interface AtelierBooking {
   readonly canMarkNoShow: boolean
 }
 
+interface MachineUsage {
+  readonly machineName: string
+  readonly bookings: number
+  readonly bookedHours: number
+  readonly occupancyRate: number
+  readonly noShows: number
+}
+
+interface AtelierStats {
+  readonly atelierName: string
+  readonly period: string
+  readonly openHours: number
+  readonly bookings: number
+  readonly bookedHours: number
+  readonly consumedHours: number
+  readonly noShows: number
+  readonly cancellations: number
+  readonly occupancyRate: number
+  readonly machines: ReadonlyArray<MachineUsage>
+}
+
 const atelierBookings = (token?: string, query = '') => send('GET', `/manage/bookings${query}`, undefined, token)
+const atelierStats = (token?: string, query = '') => send('GET', `/manage/stats${query}`, undefined, token)
 const manualCheckIn = (id: string, token?: string) => send('POST', `/manage/bookings/${id}/check-in`, undefined, token)
 
 const seedBooking = async (machineId: string, atelierId: string, userId: string, startsIn: string): Promise<string> => {
@@ -637,6 +659,61 @@ describe('GET /manage/bookings', () => {
 
   it('answers 401 without a token', async () => {
     expect((await atelierBookings()).status).toBe(401)
+  })
+})
+
+describe('GET /manage/stats', () => {
+  it('measures the park of the atelier the caller runs', async () => {
+    const { id: machineId, fabmanager } = await createMachine(FORGE, 'Prusa comptée', { requiresCertification: false })
+    const member = await enrol(FORGE, 'MEMBER')
+    await seedBookingDone(machineId, FORGE, member.userId)
+
+    const response = await atelierStats(fabmanager)
+    expect(response.status).toBe(200)
+
+    const body = (await response.json()) as ReadonlyArray<AtelierStats>
+    const forge = body.find((entry) => entry.atelierName === 'la-forge')
+    expect(forge?.period).toBe('30d')
+
+    const mine = forge?.machines.find((machine) => machine.machineName === 'Prusa comptée')
+    expect(mine?.bookings).toBe(1)
+    expect(mine?.bookedHours).toBe(1)
+    expect(mine?.noShows).toBe(0)
+  })
+
+  it('narrows the span to the period asked for', async () => {
+    const { fabmanager } = await createMachine(FORGE, 'Prusa datée', { requiresCertification: false })
+    const openHoursOver = async (period: string): Promise<number | undefined> => {
+      const body = (await (await atelierStats(fabmanager, `?period=${period}`)).json()) as ReadonlyArray<AtelierStats>
+      return body.find((entry) => entry.atelierName === 'la-forge')?.openHours
+    }
+
+    expect(await openHoursOver('7d')).toBe(7 * 14)
+    expect(await openHoursOver('30d')).toBe(30 * 14)
+  })
+
+  it('refuses a period that is not one of the three', async () => {
+    const { fabmanager } = await createMachine(FORGE, 'Prusa hors bornes', { requiresCertification: false })
+
+    expect((await atelierStats(fabmanager, '?period=1y')).status).toBe(400)
+  })
+
+  it('measures nothing for a plain member', async () => {
+    const member = await enrol(FORGE, 'MEMBER')
+
+    expect((await (await atelierStats(member.token)).json()) as ReadonlyArray<AtelierStats>).toStrictEqual([])
+  })
+
+  it('leaves out an atelier the caller does not run', async () => {
+    await createMachine(FORGE, 'Prusa d’un autre', { requiresCertification: false })
+    const { fabmanager: elsewhere } = await createMachine(LYON, 'Scie d’ailleurs', { requiresCertification: false })
+
+    const body = (await (await atelierStats(elsewhere)).json()) as ReadonlyArray<AtelierStats>
+    expect(body.map((entry) => entry.atelierName)).toStrictEqual(['lyon'])
+  })
+
+  it('answers 401 without a token', async () => {
+    expect((await atelierStats()).status).toBe(401)
   })
 })
 

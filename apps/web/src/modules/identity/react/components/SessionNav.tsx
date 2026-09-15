@@ -48,6 +48,9 @@ export const SessionNav = ({
         <Link href="/manage/bookings" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
           Pointage
         </Link>
+        <Link href="/manage/stats" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
+          Statistiques
+        </Link>
       </>
     ) : null}
     {isPlatformAdmin ? (

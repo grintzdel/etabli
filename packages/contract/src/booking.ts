@@ -93,3 +93,34 @@ export type AtelierBookingsQuery = {
   readonly date?: string
   readonly status?: BookingStatus
 }
+
+export type StatsPeriod = '7d' | '30d' | '90d'
+
+export type MachineUsage = {
+  readonly machineId: string
+  readonly machineName: string
+  readonly bookings: number
+  readonly bookedHours: number
+  readonly occupancyRate: number
+  readonly noShows: number
+}
+
+export type AtelierStats = {
+  readonly atelierId: string
+  readonly atelierName: string
+  readonly period: StatsPeriod
+  readonly from: string
+  readonly to: string
+  readonly openHours: number
+  readonly bookings: number
+  readonly bookedHours: number
+  readonly consumedHours: number
+  readonly noShows: number
+  readonly cancellations: number
+  readonly occupancyRate: number
+  readonly machines: ReadonlyArray<MachineUsage>
+}
+
+export type AtelierStatsQuery = {
+  readonly period?: StatsPeriod
+}

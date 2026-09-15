@@ -1,7 +1,7 @@
 import { AtelierId, BookingId, MachineId, UserId } from '@etabli/shared/schema'
 import * as Schema from 'effect/Schema'
 
-import { BookableMachineStatus, BookingStatus, CheckInMethod, SlotReason } from './booking.constants'
+import { BookableMachineStatus, BookingStatus, CheckInMethod, SlotReason, StatsPeriod } from './booking.constants'
 
 export const BookingStatusSchema = Schema.Literal(
   BookingStatus.CONFIRMED,
@@ -122,3 +122,37 @@ export const AtelierBookingsParamsSchema = Schema.Struct({
   status: Schema.optional(BookingStatusSchema),
 })
 export type AtelierBookingsParams = Schema.Schema.Type<typeof AtelierBookingsParamsSchema>
+
+export const StatsPeriodSchema = Schema.Literal(StatsPeriod.WEEK, StatsPeriod.MONTH, StatsPeriod.QUARTER)
+
+export const MachineUsageSchema = Schema.Struct({
+  machineId: MachineId,
+  machineName: Schema.String,
+  bookings: Schema.Int,
+  bookedHours: Schema.Number,
+  occupancyRate: Schema.Number,
+  noShows: Schema.Int,
+})
+export type MachineUsage = Schema.Schema.Type<typeof MachineUsageSchema>
+
+export const AtelierStatsSchema = Schema.Struct({
+  atelierId: AtelierId,
+  atelierName: Schema.String,
+  period: StatsPeriodSchema,
+  from: Schema.DateTimeUtc,
+  to: Schema.DateTimeUtc,
+  openHours: Schema.Number,
+  bookings: Schema.Int,
+  bookedHours: Schema.Number,
+  consumedHours: Schema.Number,
+  noShows: Schema.Int,
+  cancellations: Schema.Int,
+  occupancyRate: Schema.Number,
+  machines: Schema.Array(MachineUsageSchema),
+})
+export type AtelierStats = Schema.Schema.Type<typeof AtelierStatsSchema>
+
+export const AtelierStatsParamsSchema = Schema.Struct({
+  period: Schema.optional(StatsPeriodSchema),
+})
+export type AtelierStatsParams = Schema.Schema.Type<typeof AtelierStatsParamsSchema>

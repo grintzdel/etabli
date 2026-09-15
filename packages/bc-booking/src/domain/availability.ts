@@ -5,7 +5,7 @@ import type { AvailabilitySlot } from './booking.schema'
 
 const zone = DateTime.zoneUnsafeMakeNamed(ATELIER_TIME_ZONE)
 
-const localDay = (from: DateTime.Utc, offsetDays: number): DateTime.Zoned =>
+export const localMidnight = (from: DateTime.Utc, offsetDays: number): DateTime.Zoned =>
   DateTime.setZone(from, zone).pipe(DateTime.startOf('day'), DateTime.add({ days: offsetDays }))
 
 export interface AvailabilityWindow {
@@ -14,8 +14,8 @@ export interface AvailabilityWindow {
 }
 
 export const availabilityWindow = (from: DateTime.Utc, days: number = AVAILABILITY_DAYS): AvailabilityWindow => ({
-  from: DateTime.toUtc(localDay(from, 0)),
-  to: DateTime.toUtc(localDay(from, days)),
+  from: DateTime.toUtc(localMidnight(from, 0)),
+  to: DateTime.toUtc(localMidnight(from, days)),
 })
 
 export const localDayWindow = (at: DateTime.Utc): AvailabilityWindow => availabilityWindow(at, 1)
@@ -57,7 +57,7 @@ export const buildSlots = ({
   const slots: Array<AvailabilitySlot> = []
 
   for (let day = 0; day < days; day += 1) {
-    const midnight = localDay(from, day)
+    const midnight = localMidnight(from, day)
     const closingMillis = DateTime.toEpochMillis(DateTime.add(midnight, { hours: CLOSING_HOUR }))
     let startAt = DateTime.toUtc(DateTime.add(midnight, { hours: OPENING_HOUR }))
 
