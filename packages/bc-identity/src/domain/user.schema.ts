@@ -98,3 +98,39 @@ export const toCurrentUser = (user: User, memberships: ReadonlyArray<AuthMembers
   memberships,
   createdAt: user.createdAt,
 })
+
+export const AdminUserSchema = Schema.Struct({
+  id: UserId,
+  email: Schema.String,
+  displayName: Schema.String,
+  platformRole: PlatformRoleSchema,
+  status: UserStatusSchema,
+  practice: Schema.Array(Schema.String),
+  onboardingCompletedAt: Schema.NullOr(Schema.DateTimeUtc),
+  createdAt: Schema.DateTimeUtc,
+})
+export type AdminUser = Schema.Schema.Type<typeof AdminUserSchema>
+
+export const AdminUsersParamsSchema = Schema.Struct({
+  search: Schema.optional(Schema.Trim.pipe(Schema.minLength(1))),
+  platformRole: Schema.optional(PlatformRoleSchema),
+  status: Schema.optional(UserStatusSchema),
+})
+export type AdminUsersParams = Schema.Schema.Type<typeof AdminUsersParamsSchema>
+
+export const UpdateAdminUserSchema = Schema.Struct({
+  platformRole: Schema.optional(PlatformRoleSchema),
+  status: Schema.optional(UserStatusSchema),
+})
+export type UpdateAdminUser = Schema.Schema.Type<typeof UpdateAdminUserSchema>
+
+export const toAdminUser = (user: User): AdminUser => ({
+  id: user.id,
+  email: user.email,
+  displayName: user.displayName,
+  platformRole: user.platformRole,
+  status: user.status,
+  practice: user.practice,
+  onboardingCompletedAt: user.onboardingCompletedAt,
+  createdAt: user.createdAt,
+})

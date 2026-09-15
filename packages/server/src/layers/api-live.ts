@@ -4,6 +4,7 @@ import { CertificationRepositorySqlLayer } from '@etabli/bc-certification'
 import { UserRepositorySqlLayer } from '@etabli/bc-identity'
 import * as Layer from 'effect/Layer'
 
+import { AdminUsersLive } from '../http/admin-users.handlers'
 import { AdminLive } from '../http/admin.handlers'
 import { etabliApi } from '../http/api'
 import { AtelierLive } from '../http/atelier.handlers'
@@ -25,6 +26,7 @@ const HandledApi = HttpApiBuilder.api(etabliApi).pipe(
   Layer.provide(AtelierLive),
   Layer.provide(OnboardingLive),
   Layer.provide(AdminLive),
+  Layer.provide(AdminUsersLive),
   Layer.provide(ManageLive),
   Layer.provide(CertificationLive),
   Layer.provide(BookingLive),

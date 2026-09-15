@@ -54,9 +54,14 @@ export const SessionNav = ({
       </>
     ) : null}
     {isPlatformAdmin ? (
-      <Link href="/admin/ateliers" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
-        Administration
-      </Link>
+      <>
+        <Link href="/admin/ateliers" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
+          Administration
+        </Link>
+        <Link href="/admin/utilisateurs" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
+          Utilisateurs
+        </Link>
+      </>
     ) : null}
     <Link href="/parametres" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
       Paramètres
