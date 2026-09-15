@@ -12,19 +12,26 @@ plages avec le paramètre `pages`).
 
 ## État
 
-Jalons 0 à 4 terminés et sur `main`. Le parcours membre est complet de bout en
-bout, de l'atelier au créneau réservé, et le fabmanager tient le pointage de
-secours et le no-show depuis `/manage/bookings`. Prochaine étape : le jalon 5,
-les paramètres.
+Jalons 0 à 5 terminés et sur `main`. Le parcours membre est complet de bout en
+bout, de l'atelier au créneau réservé ; le fabmanager tient le pointage de
+secours et le no-show depuis `/manage/bookings` ; et `/parametres` porte le
+profil, les préférences et le mot de passe. Prochaine étape : le jalon 6, le
+back-office.
 
-`pnpm check` est vert : 540 tests unitaires, `next build`. Les 66 E2E
+`pnpm check` est vert : 616 tests unitaires, `next build`. Les 75 E2E
 Playwright passent mais **ne tournent plus dans `pnpm verify`, sur décision de
-l'auteur** — `pnpm db:test:up` puis `pnpm test:e2e` pour les lancer.
+l'auteur** — `pnpm db:test:up` puis `pnpm test:e2e` pour les lancer. La base de
+test **accumule** d'un run à l'autre : après plusieurs passes, des tests sans
+rapport tombent sur des créneaux épuisés ou un annuaire saturé d'« Atelier
+E2E ». `pnpm db:test:down`, supprimer le volume, puis `db:test:up` les remet au
+vert. Défaut d'isolation connu, non corrigé.
 
 Ce qui existe, package par package :
 
 - `bc-identity` — inscription, connexion, `GET /auth/me`, bcrypt, jose,
-  `AuthMiddleware`, cookie httpOnly posé par Next, `proxy.ts`
+  `AuthMiddleware`, cookie httpOnly posé par Next, `proxy.ts`. Et les paramètres :
+  `PATCH /auth/me` (nom affiché, pratiques), `POST /auth/password`,
+  `GET`/`PATCH /me/preferences`, `GET /me/ateliers`, migration `0006`
 - `bc-atelier` — ateliers, adhésions, machines ; annuaire public et fiche avec
   `use cache` / `cacheTag` ; onboarding persisté ; routes `/admin/ateliers` et
   `/manage/machines`
@@ -40,7 +47,7 @@ Ce qui existe, package par package :
   `/reservations/:id` listent, détaillent et annulent, et `/manage/bookings`
   tient le pointage et le no-show de la journée.
 
-Neon est branché et à jour des cinq migrations. Sur une machine neuve : copier
+Neon est branché et à jour des six migrations. Sur une machine neuve : copier
 `.env.example` en `.env` et y mettre l'URL *pooled* du projet Neon. `pg` émet un
 avertissement sur `sslmode=require` traité comme `verify-full` — comportement
 voulu, à ignorer.
@@ -52,9 +59,61 @@ jamais un serveur déjà sur `:3001` : un `pnpm dev` qui traîne est branché su
 Neon, et le réutiliser ferait tourner les E2E contre la base de développement.
 
 Les contextes ne se dépendent pas. Chacun déclare un port pour ce qu'il attend
-d'un autre — `MembershipLookup`, `MemberProfile`, `MachineDirectory`,
-`MemberDirectory`, `MachineCatalog` — et `packages/server/src/layers/` les
-branche. Le Tag `AuthMiddleware` et `AccountSuspendedError` vivent dans `shared`.
+d'un autre — `MembershipLookup`, `MemberProfile`, `MemberAteliers`,
+`MachineDirectory`, `MemberDirectory`, `MachineCatalog` — et
+`packages/server/src/layers/` les branche. Le Tag `AuthMiddleware` et `AccountSuspendedError` vivent dans `shared`.
+
+### Paramètres — ce qui est tranché
+
+Deux préférences, pas trois. La colonne `email_notifications` du §9 n'existe
+pas : rien n'envoie d'e-mail, la relance est datée v1.1 au §7, et le §4.6
+condamne le réglage qui ne modifie rien. Elle reviendra avec le premier envoi.
+
+La rampe `graphite` est **sémantique** — 950 est le fond, 50 est l'encre — donc
+le mode clair inverse les onze barreaux sous `[data-theme="light"]` au lieu de
+recolorer les utilitaires. `[data-theme="system"]` reprend la même rampe sous
+`prefers-color-scheme`. Les teintes `signal` et `status` descendent pour un fond
+clair : `#ff6a00` tient 2,9:1 sur blanc et ne peut pas porter de texte.
+
+Le thème vit en base, donc le serveur rend l'attribut : pas de flash, pas de
+`localStorage`, pas de script client. **Le prix est le prerender.** Avec
+`cacheComponents: true`, un `cookies()` non suspendu dans un layout n'est pas
+« dynamique », il casse la build. Le thème étant porté par le chrome, le chrome
+est par-membre et ne peut appartenir à une coquille prérendue. D'où le
+découpage : `<html>` et `<body>` dans un layout racine **sans session**,
+en-tête et pied descendus dans trois layouts de groupe (`SiteShell`), et
+`(app)/layout.tsx` qui enveloppe dans `<div data-theme>` et déclare
+`instant = false`. Huit routes `(app)` sont passées de `◐` à `ƒ` ;
+`(marketing)` et `(auth)` gardent leur coquille, ce qui était l'enjeu du §8.
+`color-scheme` est sur l'enveloppe et non sur la racine : la barre de
+défilement du document reste sombre.
+
+L'annuaire public **ne peut pas** nommer les ateliers d'un membre : il est
+filtré et plafonné, et rien ne garantit qu'un atelier du membre y figure. D'où
+`GET /me/ateliers`. Un E2E contre une base chargée l'a prouvé en rendant un
+select vide.
+
+Les `PATCH` sont de vrais patch : clé absente = valeur stockée intacte, `null`
+explicite sur `defaultAtelierId` = effacement. Porté de bout en bout, jusqu'au
+`COALESCE` / `CASE` d'un seul upsert SQL.
+
+Les refus de formulaire sont **écrits côté action**, pas remontés de l'API : un
+échec de schema répond `HttpApiDecodeError`, dont le corps porte des messages
+internes en anglais et perd le `Schema.annotations({ message })` du domaine. Le
+serveur reste l'autorité — les tests HTTP assertent les 400 — mais la phrase
+que lit le membre est écrite en français là où elle s'affiche, comme le §11 le
+demande.
+
+Changer de mot de passe réémet un jeton et réécrit le cookie, pour ne pas
+déconnecter l'auteur du changement. **Les jetons des autres appareils restent
+valides** jusqu'à expiration : pas de liste de révocation. C'est dit à l'écran
+et figé par un test.
+
+L'état d'action est `{ status, message }` et non `{ error }` : le jalon demande
+des retours de succès autant que de refus.
+
+Après une action, React 19 **réinitialise le formulaire**. Un test qui enchaîne
+deux tentatives doit resaisir tous les champs, pas seulement celui qu'il change.
 
 ### Réservation — ce qui est tranché
 
