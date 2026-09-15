@@ -11,6 +11,11 @@ export interface UserRepositoryService {
   readonly findById: (id: UserId) => Effect.Effect<User | null, RepoError>
   readonly insert: (user: User) => Effect.Effect<User, RepoError>
   readonly updateProfile: (id: UserId, patch: UpdateProfile, at: DateTime.Utc) => Effect.Effect<User | null, RepoError>
+  readonly updatePasswordHash: (
+    id: UserId,
+    passwordHash: string,
+    at: DateTime.Utc
+  ) => Effect.Effect<User | null, RepoError>
   readonly markOnboarded: (
     id: UserId,
     practice: ReadonlyArray<string>,

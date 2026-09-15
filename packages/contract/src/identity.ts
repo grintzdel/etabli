@@ -60,3 +60,8 @@ export type UpdateProfileInput = {
   readonly displayName?: string
   readonly practice?: ReadonlyArray<string>
 }
+
+export type ChangePasswordInput = {
+  readonly currentPassword: string
+  readonly newPassword: string
+}

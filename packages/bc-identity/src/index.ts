@@ -1,3 +1,4 @@
+export * from './application/commands/change-password/change-password.command'
 export * from './application/commands/login-user/login-user.command'
 export * from './application/commands/register-user/register-user.command'
 export * from './application/commands/update-preferences/update-preferences.command'

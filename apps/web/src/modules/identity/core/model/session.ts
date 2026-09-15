@@ -1,5 +1,7 @@
 export const SESSION_COOKIE = 'etabli_session'
 
+export const PASSWORD_MIN_LENGTH = 8
+
 import type { CurrentUser, LoginInput, RegisterInput, Session } from '@etabli/contract'
 
 export type { CurrentUser, LoginInput, RegisterInput, Session }

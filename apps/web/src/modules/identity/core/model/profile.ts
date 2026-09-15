@@ -1,3 +1,3 @@
-import type { UpdateProfileInput } from '@etabli/contract'
+import type { ChangePasswordInput, UpdateProfileInput } from '@etabli/contract'
 
-export type { UpdateProfileInput }
+export type { ChangePasswordInput, UpdateProfileInput }

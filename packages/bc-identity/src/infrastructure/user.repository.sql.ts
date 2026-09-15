@@ -71,6 +71,18 @@ export const makeUserRepositorySql = (sql: SqlClient.SqlClient) =>
       )
     },
 
+    updatePasswordHash: (id, passwordHash, at) =>
+      sql<UserRow>`
+        UPDATE users
+        SET password_hash = ${passwordHash},
+            updated_at = ${DateTime.toDate(at)}
+        WHERE id = ${id}
+        RETURNING *
+      `.pipe(
+        Effect.map((rows) => (rows[0] === undefined ? null : toUser(rows[0]))),
+        Effect.mapError(fail('users.updatePasswordHash'))
+      ),
+
     markOnboarded: (id, practice, at) =>
       sql<UserRow>`
         UPDATE users
