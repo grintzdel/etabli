@@ -16,6 +16,11 @@ describe('SessionNav', () => {
     expect(screen.queryByRole('link', { name: /administration/i })).not.toBeInTheDocument()
   })
 
+  it('offers the bookings to every signed-in member', () => {
+    render(<SessionNav displayName="Camille Roux" isPlatformAdmin={false} isFabmanager={false} signOut={signOut} />)
+    expect(screen.getByRole('link', { name: /réservations/i })).toHaveAttribute('href', '/reservations')
+  })
+
   it('offers the habilitations to every signed-in member', () => {
     render(<SessionNav displayName="Camille Roux" isPlatformAdmin={false} isFabmanager={false} signOut={signOut} />)
     expect(screen.getByRole('link', { name: /habilitations/i })).toHaveAttribute('href', '/habilitations')

@@ -11,6 +11,9 @@ export type SessionNavProps = {
 
 export const SessionNav = ({ displayName, isPlatformAdmin, isFabmanager, signOut }: SessionNavProps) => (
   <>
+    <Link href="/reservations" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
+      Réservations
+    </Link>
     <Link href="/habilitations" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
       Habilitations
     </Link>

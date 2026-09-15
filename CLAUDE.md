@@ -14,7 +14,7 @@ plages avec le paramètre `pages`).
 
 Jalons 0 à 3 terminés et sur `main`. Jalon 4 (réservation) commencé.
 
-`pnpm check` est vert : 381 tests unitaires, `next build`. Les 51 E2E
+`pnpm check` est vert : 455 tests unitaires, `next build`. Les 56 E2E
 Playwright passent mais **ne tournent plus dans `pnpm verify`, sur décision de
 l'auteur** — `pnpm db:test:up` puis `pnpm test:e2e` pour les lancer.
 
@@ -31,7 +31,8 @@ Ce qui existe, package par package :
 - `bc-booking` — domaine, migration `0005`, repository, et le parcours membre
   complet : `GET /machines/:id/availability`, `POST /bookings`, `GET /bookings`,
   `GET /bookings/:id`, `POST /bookings/:id/cancel`, `POST /bookings/:id/check-in`.
-  Les écrans Next viennent ensuite.
+  Côté web, `/reservations` et `/reservations/:id` — liste, détail, annulation.
+  La semaine d'une machine et la création viennent ensuite.
 
 Neon est branché et à jour des cinq migrations. Sur une machine neuve : copier
 `.env.example` en `.env` et y mettre l'URL *pooled* du projet Neon. `pg` émet un
@@ -99,6 +100,17 @@ depuis la migration `0003`, et `MachineNfcTagTakenError` (409) la double à la
 création comme à la modification, pour ne pas rendre un 500 sur un doublon.
 Reposer sur une machine le tag qu'elle porte déjà passe. Aucun écran ne s'en
 sert encore : le formulaire de `/manage/machines` ne crée que.
+
+Le `BookingHttpAdapter` lit le `_tag` du corps d'erreur, pas seulement le
+status : cinq refus se partagent le 409, et le §11 demande que chaque règle
+porte son propre message. Le status ne sert plus que de repli.
+
+L'annulation passe par `useActionState` et non par le `refresh()` aveugle des
+jalons 2 et 3 : un créneau qui vient de commencer répond 409, et le membre doit
+lire pourquoi. C'est aussi le patron que réclame le §8.9.
+
+Le détail dit que le pointage est ouvert, sans l'offrir : le check-in demande un
+tag NFC que le navigateur ne sait pas lire — §12.8.
 
 ## Repos de référence
 

@@ -1,0 +1,23 @@
+import type { BookingDetail } from '@/modules/booking/core/model/booking'
+
+let counter = 0
+
+export const bookingDetailFixture = (overrides: Partial<BookingDetail> = {}): BookingDetail => {
+  counter += 1
+  return {
+    id: `80000000-0000-4000-8000-${String(counter).padStart(12, '0')}`,
+    machineId: `50000000-0000-4000-8000-${String(counter).padStart(12, '0')}`,
+    machineName: `Machine ${counter}`,
+    atelierId: `10000000-0000-4000-8000-${String(counter).padStart(12, '0')}`,
+    atelierName: 'La Forge',
+    atelierSlug: 'la-forge',
+    startAt: '2026-06-01T08:00:00.000Z',
+    endAt: '2026-06-01T10:00:00.000Z',
+    status: 'CONFIRMED',
+    checkedInAt: null,
+    cancelledAt: null,
+    canCancel: true,
+    canCheckIn: false,
+    ...overrides,
+  }
+}

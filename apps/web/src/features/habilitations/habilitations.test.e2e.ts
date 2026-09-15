@@ -1,12 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const signIn = async (page: import('@playwright/test').Page, email: string) => {
-  await page.goto('/connexion')
-  await page.getByLabel(/adresse e-mail/i).fill(email)
-  await page.getByLabel(/mot de passe/i).fill('etabli-2026')
-  await page.getByRole('button', { name: /se connecter/i }).click()
-  await expect(page).toHaveURL(/\/(compte|bienvenue)$/)
-}
+import { signIn } from '@/e2e/fixtures/auth.fixture'
 
 test('the habilitations page is private', async ({ page }) => {
   await page.goto('/habilitations')
