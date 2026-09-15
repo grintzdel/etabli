@@ -46,3 +46,23 @@ export type MachineAvailability = {
 export type AvailabilityQuery = {
   readonly from?: string
 }
+
+export type CreateBooking = {
+  readonly machineId: string
+  readonly startAt: string
+}
+
+export type BookingDetail = {
+  readonly id: string
+  readonly machineId: string
+  readonly machineName: string
+  readonly atelierId: string
+  readonly atelierName: string
+  readonly atelierSlug: string
+  readonly startAt: string
+  readonly endAt: string
+  readonly status: BookingStatus
+  readonly checkedInAt: string | null
+  readonly cancelledAt: string | null
+  readonly canCancel: boolean
+}

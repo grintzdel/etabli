@@ -14,7 +14,7 @@ import { IdentityLive } from '../http/identity.handlers'
 import { ManageLive } from '../http/manage.handlers'
 import { OnboardingLive } from '../http/onboarding.handlers'
 import { AtelierServicesLive } from './atelier.layer'
-import { MachineCatalogLive } from './booking.layer'
+import { CertificationCheckerLive, MachineCatalogLive } from './booking.layer'
 import { MachineDirectoryLive, MemberDirectoryLive } from './certification.layer'
 import { IdentityAuthLive, IdentityServicesLive } from './identity.layer'
 import { MemberProfileLive } from './onboarding.layer'
@@ -34,6 +34,7 @@ export const ApiLive = HttpApiBuilder.api(etabliApi).pipe(
   Layer.provide(CertificationRepositorySqlLayer),
   Layer.provide(BookingRepositorySqlLayer),
   Layer.provide(MachineCatalogLive.pipe(Layer.provide(AtelierServicesLive))),
+  Layer.provide(CertificationCheckerLive.pipe(Layer.provide(CertificationRepositorySqlLayer))),
   Layer.provide(MachineDirectoryLive.pipe(Layer.provide(AtelierServicesLive))),
   Layer.provide(MemberDirectoryLive.pipe(Layer.provide(UserRepositorySqlLayer))),
   Layer.provide(MemberProfileLive.pipe(Layer.provide(UserRepositorySqlLayer))),

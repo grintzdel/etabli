@@ -3,7 +3,7 @@ import * as DateTime from 'effect/DateTime'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 
-import { ACTIVE_BOOKING_STATUSES } from '../domain/booking.constants'
+import { ACTIVE_BOOKING_STATUSES, BookingStatus } from '../domain/booking.constants'
 import type { Booking } from '../domain/booking.schema'
 import { BookingOverlapError } from '../domain/errors'
 import type { BookingRepositoryService } from './booking.repository'
@@ -55,6 +55,20 @@ export const makeBookingRepositoryMemory = (): BookingRepositoryMemory => {
         if (conflict) return Effect.fail(new BookingOverlapError({ machineId: booking.machineId }))
         bookings.set(booking.id, booking)
         return Effect.succeed(booking)
+      }),
+    cancel: (id: BookingId, at, by: UserId) =>
+      Effect.sync(() => {
+        const existing = bookings.get(id)
+        if (existing === undefined) return null
+        const cancelled = {
+          ...existing,
+          status: BookingStatus.CANCELLED,
+          cancelledAt: at,
+          cancelledBy: by,
+          updatedAt: at,
+        }
+        bookings.set(id, cancelled)
+        return cancelled
       }),
   }
 }
