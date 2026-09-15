@@ -37,6 +37,12 @@ export class ManageBookingHttpAdapter implements IManageBookingPort {
     })
   }
 
+  cancel(token: string, id: string): Promise<BookingResult<AtelierBooking>> {
+    return requestBooking<AtelierBooking>(this.baseUrl, buildPath(routes.manage.cancelBooking, { id }), token, {
+      method: 'POST',
+    })
+  }
+
   stats(token: string, query: AtelierStatsQuery): Promise<BookingResult<ReadonlyArray<AtelierStats>>> {
     const period = query.period === undefined ? '' : `?period=${query.period}`
     return requestBooking<ReadonlyArray<AtelierStats>>(this.baseUrl, `${routes.manage.stats}${period}`, token)

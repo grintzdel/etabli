@@ -44,6 +44,7 @@ export const routes = {
     bookings: '/manage/bookings',
     checkInBooking: '/manage/bookings/:id/check-in',
     noShow: '/manage/bookings/:id/no-show',
+    cancelBooking: '/manage/bookings/:id/cancel',
     stats: '/manage/stats',
   },
   admin: {

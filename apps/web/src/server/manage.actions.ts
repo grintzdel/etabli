@@ -3,9 +3,11 @@
 import { updateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-import { FAILURE_MESSAGES, isMachineStatus } from '@/modules/atelier/core/model/atelier'
+import { AtelierFailureCode, FAILURE_MESSAGES, isMachineStatus } from '@/modules/atelier/core/model/atelier'
 import type { MachineFormState } from '@/modules/atelier/core/model/machine-form'
 import { emptyMachineFormValues, machineFormValues, parseMachineForm } from '@/modules/atelier/core/model/machine-form'
+import type { NfcTagFormState } from '@/modules/atelier/core/model/nfc-tag-form'
+import { nfcTagRefused, nfcTagSaved, parseNfcTag } from '@/modules/atelier/core/model/nfc-tag-form'
 
 import { manageMachinePort } from './container'
 import { readSessionToken } from './session'
@@ -39,4 +41,20 @@ export const setMachineStatusAction = async (formData: FormData): Promise<void> 
 
   const result = await manageMachinePort.update(await requireToken(), machineId, { status })
   if (result.ok) updateTag('ateliers')
+}
+
+export const setMachineNfcTagAction = async (_state: NfcTagFormState, formData: FormData): Promise<NfcTagFormState> => {
+  const machineId = formData.get('machineId')
+  if (typeof machineId !== 'string') return nfcTagRefused('Cette machine n’existe pas.')
+
+  const nfcTagId = parseNfcTag(formData)
+
+  const result = await manageMachinePort.update(await requireToken(), machineId, { nfcTagId })
+  if (!result.ok) {
+    if (result.error.code === AtelierFailureCode.NOT_FOUND) return nfcTagRefused('Cette machine n’existe pas.')
+    return nfcTagRefused(result.error.message)
+  }
+
+  updateTag('ateliers')
+  return nfcTagSaved(nfcTagId === null ? 'Tag décollé.' : 'Tag posé.')
 }

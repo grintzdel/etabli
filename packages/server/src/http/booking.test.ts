@@ -526,6 +526,7 @@ interface AtelierBooking {
   readonly checkedInVia: string | null
   readonly canCheckIn: boolean
   readonly canMarkNoShow: boolean
+  readonly canCancel: boolean
 }
 
 interface MachineUsage {
@@ -569,6 +570,7 @@ const promoteToAdmin = async (token: string): Promise<string> => {
   return token
 }
 const manualCheckIn = (id: string, token?: string) => send('POST', `/manage/bookings/${id}/check-in`, undefined, token)
+const atelierCancel = (id: string, token?: string) => send('POST', `/manage/bookings/${id}/cancel`, undefined, token)
 
 const seedBooking = async (machineId: string, atelierId: string, userId: string, startsIn: string): Promise<string> => {
   const rows = await runtime.runPromise(
@@ -731,6 +733,65 @@ describe('GET /manage/stats', () => {
 
   it('answers 401 without a token', async () => {
     expect((await atelierStats()).status).toBe(401)
+  })
+})
+
+describe('POST /manage/bookings/:id/cancel', () => {
+  it('calls off a slot of the atelier the caller runs', async () => {
+    const { id: machineId, fabmanager } = await createMachine(FORGE, 'Prusa annulée', { requiresCertification: false })
+    const member = await enrol(FORGE, 'MEMBER')
+    const bookingId = await seedBookingUnderWay(machineId, FORGE, member.userId)
+
+    const response = await atelierCancel(bookingId, fabmanager)
+    expect(response.status).toBe(200)
+
+    const body = (await response.json()) as AtelierBooking
+    expect(body.status).toBe('CANCELLED')
+    expect(body.canCancel).toBe(false)
+  })
+
+  it('refuses a slot whose hour is gone', async () => {
+    const { id: machineId, fabmanager } = await createMachine(FORGE, 'Prusa trop tard', {
+      requiresCertification: false,
+    })
+    const member = await enrol(FORGE, 'MEMBER')
+    const bookingId = await seedBookingMissed(machineId, FORGE, member.userId)
+
+    const response = await atelierCancel(bookingId, fabmanager)
+    expect(response.status).toBe(409)
+    expect(((await response.json()) as { _tag: string })._tag).toBe('BookingNotCancellableError')
+  })
+
+  it('refuses a slot already stamped', async () => {
+    const { id: machineId, fabmanager } = await createMachine(FORGE, 'Prusa pointée deux fois', {
+      requiresCertification: false,
+    })
+    const member = await enrol(FORGE, 'MEMBER')
+    const bookingId = await seedBookingUnderWay(machineId, FORGE, member.userId)
+    await manualCheckIn(bookingId, fabmanager)
+
+    expect((await atelierCancel(bookingId, fabmanager)).status).toBe(409)
+  })
+
+  it('answers 404 to the fabmanager of another atelier', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Prusa d’un tiers', { requiresCertification: false })
+    const member = await enrol(FORGE, 'MEMBER')
+    const bookingId = await seedBookingUnderWay(machineId, FORGE, member.userId)
+    const elsewhere = await join(LYON, 'FABMANAGER')
+
+    expect((await atelierCancel(bookingId, elsewhere)).status).toBe(404)
+  })
+
+  it('answers 404 to the member who holds the slot', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Prusa du membre', { requiresCertification: false })
+    const member = await enrol(FORGE, 'MEMBER')
+    const bookingId = await seedBookingUnderWay(machineId, FORGE, member.userId)
+
+    expect((await atelierCancel(bookingId, member.token)).status).toBe(404)
+  })
+
+  it('answers 401 without a token', async () => {
+    expect((await atelierCancel(UNKNOWN)).status).toBe(401)
   })
 })
 

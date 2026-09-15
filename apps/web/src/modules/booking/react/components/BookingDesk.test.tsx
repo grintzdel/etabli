@@ -8,7 +8,7 @@ import { BookingDesk } from './BookingDesk'
 const noop = vi.fn().mockResolvedValue({ error: null })
 
 const desk = (bookings: Parameters<typeof BookingDesk>[0]['bookings']) => (
-  <BookingDesk bookings={bookings} checkIn={noop} markNoShow={noop} />
+  <BookingDesk bookings={bookings} checkIn={noop} markNoShow={noop} cancel={noop} />
 )
 
 describe('BookingDesk', () => {
@@ -49,5 +49,19 @@ describe('BookingDesk', () => {
     render(desk([]))
 
     expect(screen.getByText(/aucune réservation ce jour-là/i)).toBeVisible()
+  })
+})
+
+describe('BookingDesk · annulation par l’atelier', () => {
+  it('offers to call off a slot the atelier may still call off', () => {
+    render(desk([atelierBookingFixture({ canCancel: true })]))
+
+    expect(screen.getByRole('button', { name: /^annuler$/i })).toBeVisible()
+  })
+
+  it('stays quiet once the slot is beyond the atelier’s reach', () => {
+    render(desk([atelierBookingFixture({ canCancel: false })]))
+
+    expect(screen.queryByRole('button', { name: /^annuler$/i })).toBeNull()
   })
 })

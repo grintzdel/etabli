@@ -10,11 +10,19 @@ import type {
 import { AtelierFailureCode, failure } from '../model/atelier'
 import type { IManageMachinePort } from '../ports/manage-machine.port'
 
-const codeOf = (status: number): AtelierFailureCode => {
+const tagOf = (body: unknown): string | undefined => {
+  if (typeof body !== 'object' || body === null) return undefined
+  const tag = (body as { readonly _tag?: unknown })._tag
+  return typeof tag === 'string' ? tag : undefined
+}
+
+export const codeOf = (status: number, body: unknown): AtelierFailureCode => {
+  if (tagOf(body) === 'MachineNfcTagTakenError') return AtelierFailureCode.NFC_TAG_TAKEN
   if (status === 400) return AtelierFailureCode.INVALID_FILTER
   if (status === 401) return AtelierFailureCode.UNAUTHORIZED
   if (status === 403) return AtelierFailureCode.FORBIDDEN
   if (status === 404) return AtelierFailureCode.NOT_FOUND
+  if (status === 409) return AtelierFailureCode.NFC_TAG_TAKEN
   return AtelierFailureCode.UNREACHABLE
 }
 
@@ -33,13 +41,11 @@ export class ManageMachineHttpAdapter implements IManageMachinePort {
       return failure(AtelierFailureCode.UNREACHABLE)
     }
 
-    if (!response.ok) return failure(codeOf(response.status))
+    const body: unknown = await response.json().catch(() => null)
+    if (!response.ok) return failure(codeOf(response.status, body))
+    if (body === null) return failure(AtelierFailureCode.UNREACHABLE)
 
-    try {
-      return { ok: true, value: (await response.json()) as A }
-    } catch {
-      return failure(AtelierFailureCode.UNREACHABLE)
-    }
+    return { ok: true, value: body as A }
   }
 
   listParcs(token: string): Promise<AtelierResult<ReadonlyArray<ManagedParc>>> {

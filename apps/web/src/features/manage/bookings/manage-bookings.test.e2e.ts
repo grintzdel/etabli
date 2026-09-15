@@ -44,3 +44,16 @@ test('the fabmanager of another atelier sees nothing of that slot', async ({ pag
 
   await expect(page.locator(`tr[id="${booking.id}"]`)).toHaveCount(0)
 })
+
+test('the fabmanager calls off a slot a member took', async ({ page, request }) => {
+  const booking = await bookAFreeSlot(request, await tokenOf(request, 'membre@etabli.test'))
+
+  await signIn(page, 'fabmanager.copeaux@etabli.test')
+  await page.goto(`/manage/bookings?day=${dayOf(booking.startAt)}`)
+
+  const row = page.locator(`tr[id="${booking.id}"]`)
+  await row.getByRole('button', { name: /^annuler$/i }).click()
+
+  await expect(page.locator(`tr[id="${booking.id}"]`)).toContainText('Annulée')
+  await expect(page.locator(`tr[id="${booking.id}"]`).getByRole('button', { name: /^annuler$/i })).toHaveCount(0)
+})

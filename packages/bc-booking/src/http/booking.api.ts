@@ -134,6 +134,13 @@ export const bookingManagementApiGroup = HttpApiGroup.make('bookingManagement')
       .addSuccess(Schema.Array(AtelierStatsSchema))
   )
   .add(
+    HttpApiEndpoint.post('cancel', routes.manage.cancelBooking)
+      .setPath(Schema.Struct({ id: BookingId }))
+      .addSuccess(AtelierBookingSchema)
+      .addError(BookingUnknownError)
+      .addError(BookingNotCancellableError)
+  )
+  .add(
     HttpApiEndpoint.post('markNoShow', routes.manage.noShow)
       .setPath(Schema.Struct({ id: BookingId }))
       .addSuccess(AtelierBookingSchema)

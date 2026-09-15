@@ -85,3 +85,25 @@ describe('ManageMachineHttpAdapter', () => {
     expect(result.error.code).toBe(AtelierFailureCode.UNREACHABLE)
   })
 })
+
+describe('ManageMachineHttpAdapter · conflits', () => {
+  it('names a tag already worn by another machine, rather than a service outage', async () => {
+    vi.stubGlobal('fetch', respond(409, { _tag: 'MachineNfcTagTakenError', nfcTagId: 'nfc-01' }))
+
+    const result = await new ManageMachineHttpAdapter(BASE).update(TOKEN, 'm-1', { nfcTagId: 'nfc-01' })
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.error.code).toBe(AtelierFailureCode.NFC_TAG_TAKEN)
+  })
+
+  it('falls back on the status when the body carries no tag', async () => {
+    vi.stubGlobal('fetch', respond(409, {}))
+
+    const result = await new ManageMachineHttpAdapter(BASE).update(TOKEN, 'm-1', { nfcTagId: 'nfc-01' })
+
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.error.code).toBe(AtelierFailureCode.NFC_TAG_TAKEN)
+  })
+})

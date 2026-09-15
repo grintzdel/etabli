@@ -1,6 +1,7 @@
 import type * as DateTime from 'effect/DateTime'
 
 import type { AtelierBooking, Booking } from './booking.schema'
+import { isCancellableByAtelier } from './cancellation'
 import { isCheckInOpen } from './check-in'
 import { effectiveStatus } from './completion'
 import { isNoShowMarkable } from './no-show'
@@ -32,4 +33,5 @@ export const toAtelierBooking = (
   checkedInVia: booking.checkedInVia,
   canCheckIn: isCheckInOpen(booking, now),
   canMarkNoShow: isNoShowMarkable(booking, now),
+  canCancel: isCancellableByAtelier(booking, now),
 })
