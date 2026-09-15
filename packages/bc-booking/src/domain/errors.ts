@@ -42,3 +42,21 @@ export class BookingNotCancellableError extends Schema.TaggedError<BookingNotCan
   { bookingId: Schema.String },
   HttpApiSchema.annotations({ status: 409 })
 ) {}
+
+export class BookingNotCheckInableError extends Schema.TaggedError<BookingNotCheckInableError>()(
+  'BookingNotCheckInableError',
+  { bookingId: Schema.String, status: Schema.String },
+  HttpApiSchema.annotations({ status: 409 })
+) {}
+
+export class CheckInWindowClosedError extends Schema.TaggedError<CheckInWindowClosedError>()(
+  'CheckInWindowClosedError',
+  { bookingId: Schema.String, opensAt: Schema.String, closesAt: Schema.String },
+  HttpApiSchema.annotations({ status: 409 })
+) {}
+
+export class NfcTagMismatchError extends Schema.TaggedError<NfcTagMismatchError>()(
+  'NfcTagMismatchError',
+  { bookingId: Schema.String, machineId: Schema.String },
+  HttpApiSchema.annotations({ status: 409 })
+) {}

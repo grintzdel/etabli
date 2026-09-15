@@ -6,6 +6,7 @@ import * as DateTime from 'effect/DateTime'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 
+import type { CheckInMethod } from '../domain/booking.constants'
 import { ACTIVE_BOOKING_STATUSES, BookingStatus } from '../domain/booking.constants'
 import type { Booking } from '../domain/booking.schema'
 import { BookingOverlapError } from '../domain/errors'
@@ -106,6 +107,20 @@ export const makeBookingRepositorySql = (sql: SqlClient.SqlClient) =>
             ? Effect.fail(new RepoError({ cause: 'no row returned', operation: 'bookings.insert' }))
             : Effect.succeed(toBooking(rows[0]))
         )
+      ),
+
+    checkIn: (id: BookingId, at, via: CheckInMethod) =>
+      sql<BookingRow>`
+        UPDATE bookings
+        SET status = ${BookingStatus.CHECKED_IN},
+            checked_in_at = ${DateTime.toDate(at)},
+            checked_in_via = ${via},
+            updated_at = ${DateTime.toDate(at)}
+        WHERE id = ${id}
+        RETURNING *
+      `.pipe(
+        Effect.map((rows) => (rows[0] === undefined ? null : toBooking(rows[0]))),
+        Effect.mapError(fail('bookings.checkIn'))
       ),
 
     cancel: (id: BookingId, at, by: UserId) =>

@@ -77,6 +77,11 @@ export const CreateBookingSchema = Schema.Struct({
 })
 export type CreateBooking = Schema.Schema.Type<typeof CreateBookingSchema>
 
+export const CheckInBookingSchema = Schema.Struct({
+  nfcTagId: Schema.Trim.pipe(Schema.minLength(1)),
+})
+export type CheckInBooking = Schema.Schema.Type<typeof CheckInBookingSchema>
+
 export const BookingDetailSchema = Schema.Struct({
   id: BookingId,
   machineId: MachineId,
@@ -90,5 +95,6 @@ export const BookingDetailSchema = Schema.Struct({
   checkedInAt: Schema.NullOr(Schema.DateTimeUtc),
   cancelledAt: Schema.NullOr(Schema.DateTimeUtc),
   canCancel: Schema.Boolean,
+  canCheckIn: Schema.Boolean,
 })
 export type BookingDetail = Schema.Schema.Type<typeof BookingDetailSchema>

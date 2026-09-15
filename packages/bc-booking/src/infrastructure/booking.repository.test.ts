@@ -6,7 +6,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { at, bookingFixture, FORGE } from '../__tests__/booking.test-layer'
-import { BookingStatus } from '../domain/booking.constants'
+import { BookingStatus, CheckInMethod } from '../domain/booking.constants'
 import type { Booking } from '../domain/booking.schema'
 import type { BookingRepositoryService } from './booking.repository'
 import { makeBookingRepositoryMemory } from './booking.repository.memory'
@@ -144,6 +144,37 @@ describe('BookingRepository on Postgres', () => {
     expect(cancelled).toBeNull()
   })
 
+  it('stamps the presence on a checked-in booking', async () => {
+    const written = booking()
+    await insert(written)
+
+    const checkedIn = await runtime.runPromise(
+      repository.checkIn(written.id, at('2026-03-02T08:50:00Z'), CheckInMethod.NFC)
+    )
+
+    expect(checkedIn?.status).toBe(BookingStatus.CHECKED_IN)
+    expect(checkedIn?.checkedInAt).toStrictEqual(at('2026-03-02T08:50:00Z'))
+    expect(checkedIn?.checkedInVia).toBe(CheckInMethod.NFC)
+  })
+
+  it('answers nothing when checking in a booking that is not there', async () => {
+    const checkedIn = await runtime.runPromise(
+      repository.checkIn(booking().id, at('2026-03-02T08:50:00Z'), CheckInMethod.NFC)
+    )
+
+    expect(checkedIn).toBeNull()
+  })
+
+  it('keeps holding the slot once checked in', async () => {
+    const written = booking()
+    await insert(written)
+    await runtime.runPromise(repository.checkIn(written.id, at('2026-03-02T08:50:00Z'), CheckInMethod.NFC))
+
+    const exit = await insert(booking())
+
+    expect(Exit.isFailure(exit)).toBe(true)
+  })
+
   it('reopens the slot a cancelled booking held', async () => {
     const written = booking()
     await insert(written)
@@ -188,6 +219,30 @@ describe('BookingRepository in memory', () => {
 
       expect(cancelled?.status).toBe(BookingStatus.CANCELLED)
       expect(cancelled?.cancelledBy).toBe(MEMBER)
+    })
+
+    it('stamps the presence like Postgres does', async () => {
+      const memory = make()
+      const written = booking()
+      await Effect.runPromise(memory.insert(written))
+
+      const checkedIn = await Effect.runPromise(
+        memory.checkIn(written.id, at('2026-03-02T08:50:00Z'), CheckInMethod.NFC)
+      )
+
+      expect(checkedIn?.status).toBe(BookingStatus.CHECKED_IN)
+      expect(checkedIn?.checkedInVia).toBe(CheckInMethod.NFC)
+    })
+
+    it('keeps holding the slot once checked in, like Postgres does', async () => {
+      const memory = make()
+      const written = booking()
+      await Effect.runPromise(memory.insert(written))
+      await Effect.runPromise(memory.checkIn(written.id, at('2026-03-02T08:50:00Z'), CheckInMethod.NFC))
+
+      const exit = await Effect.runPromiseExit(memory.insert(booking()))
+
+      expect(Exit.isFailure(exit)).toBe(true)
     })
 
     it('reopens the slot a cancelled booking held, like Postgres does', async () => {
