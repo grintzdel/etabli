@@ -18,4 +18,5 @@ export const BookingManagementLive = HttpApiBuilder.group(etabliApi, 'bookingMan
     .handle('list', bookingManagementHandlers.list)
     .handle('checkIn', bookingManagementHandlers.checkIn)
     .handle('markNoShow', bookingManagementHandlers.markNoShow)
+    .handle('stats', bookingManagementHandlers.stats)
 )

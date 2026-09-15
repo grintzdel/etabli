@@ -25,6 +25,21 @@ afterEach(() => {
 })
 
 describe('ManageBookingHttpAdapter', () => {
+  it('asks for the stats of a span', async () => {
+    await new ManageBookingHttpAdapter(BASE).stats(TOKEN, { period: '7d' })
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe(`${BASE}/manage/stats?period=7d`)
+    expect((init.headers as Record<string, string>)['authorization']).toBe(`Bearer ${TOKEN}`)
+  })
+
+  it('leaves the span to the server when none is asked for', async () => {
+    await new ManageBookingHttpAdapter(BASE).stats(TOKEN, {})
+
+    const [url] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe(`${BASE}/manage/stats`)
+  })
+
   it('asks for a day and carries the bearer token', async () => {
     await new ManageBookingHttpAdapter(BASE).list(TOKEN, { date: DAY })
 

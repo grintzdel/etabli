@@ -37,3 +37,18 @@ export const ATELIER_TIME_ZONE = 'Europe/Paris'
 export const OPENING_HOUR = 8
 export const CLOSING_HOUR = 22
 export const AVAILABILITY_DAYS = 7
+
+export const StatsPeriod = {
+  WEEK: '7d',
+  MONTH: '30d',
+  QUARTER: '90d',
+} as const
+export type StatsPeriod = (typeof StatsPeriod)[keyof typeof StatsPeriod]
+
+export const STATS_PERIOD_DAYS: Readonly<Record<StatsPeriod, number>> = {
+  [StatsPeriod.WEEK]: 7,
+  [StatsPeriod.MONTH]: 30,
+  [StatsPeriod.QUARTER]: 90,
+}
+
+export const DEFAULT_STATS_PERIOD: StatsPeriod = StatsPeriod.MONTH

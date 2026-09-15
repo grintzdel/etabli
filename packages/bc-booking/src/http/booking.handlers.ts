@@ -6,11 +6,18 @@ import { checkInBooking } from '../application/commands/check-in-booking/check-i
 import { createBooking } from '../application/commands/create-booking/create-booking.command'
 import { manualCheckInBooking } from '../application/commands/manual-check-in-booking/manual-check-in-booking.command'
 import { markNoShow } from '../application/commands/mark-no-show/mark-no-show.command'
+import { getAtelierStats } from '../application/queries/get-atelier-stats/get-atelier-stats.query'
 import { getBookingDetail } from '../application/queries/get-booking-detail/get-booking-detail.query'
 import { getMachineAvailability } from '../application/queries/get-machine-availability/get-machine-availability.query'
 import { listAtelierBookings } from '../application/queries/list-atelier-bookings/list-atelier-bookings.query'
 import { listMyBookings } from '../application/queries/list-my-bookings/list-my-bookings.query'
-import type { AtelierBookingsParams, AvailabilityParams, CheckInBooking, CreateBooking } from '../domain/booking.schema'
+import type {
+  AtelierBookingsParams,
+  AtelierStatsParams,
+  AvailabilityParams,
+  CheckInBooking,
+  CreateBooking,
+} from '../domain/booking.schema'
 
 export const bookingHandlers = {
   availability: ({
@@ -38,4 +45,6 @@ export const bookingManagementHandlers = {
     manualCheckInBooking(path.id).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
   markNoShow: ({ path }: { readonly path: { readonly id: BookingId } }) =>
     markNoShow(path.id).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
+  stats: ({ urlParams }: { readonly urlParams: AtelierStatsParams }) =>
+    getAtelierStats(urlParams).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
 }

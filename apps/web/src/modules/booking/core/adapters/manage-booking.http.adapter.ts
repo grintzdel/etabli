@@ -3,6 +3,7 @@ import { buildPath, routes } from '@etabli/contract'
 import { requestBooking } from '../lib/booking-http'
 import type { BookingResult } from '../model/booking'
 import type { AtelierBooking, AtelierBookingsQuery } from '../model/manage-booking'
+import type { AtelierStats, AtelierStatsQuery } from '../model/manage-stats'
 import type { IManageBookingPort } from '../ports/manage-booking.port'
 
 const queryString = (query: AtelierBookingsQuery): string => {
@@ -34,5 +35,10 @@ export class ManageBookingHttpAdapter implements IManageBookingPort {
     return requestBooking<AtelierBooking>(this.baseUrl, buildPath(routes.manage.noShow, { id }), token, {
       method: 'POST',
     })
+  }
+
+  stats(token: string, query: AtelierStatsQuery): Promise<BookingResult<ReadonlyArray<AtelierStats>>> {
+    const period = query.period === undefined ? '' : `?period=${query.period}`
+    return requestBooking<ReadonlyArray<AtelierStats>>(this.baseUrl, `${routes.manage.stats}${period}`, token)
   }
 }

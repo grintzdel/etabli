@@ -1,6 +1,7 @@
 import { HttpApiEndpoint, HttpApiGroup } from '@effect/platform'
 import type {
   AtelierBooking as AtelierBookingContract,
+  AtelierStats as AtelierStatsContract,
   BookingDetail as BookingDetailContract,
   CheckInBooking as CheckInBookingContract,
   MachineAvailability as MachineAvailabilityContract,
@@ -14,6 +15,8 @@ import * as Schema from 'effect/Schema'
 import {
   AtelierBookingSchema,
   AtelierBookingsParamsSchema,
+  AtelierStatsParamsSchema,
+  AtelierStatsSchema,
   AvailabilityParamsSchema,
   BookingDetailSchema,
   CheckInBookingSchema,
@@ -42,6 +45,11 @@ export const machineAvailabilityContractParity: AssertEquals<
 export const atelierBookingContractParity: AssertEquals<
   Schema.Schema.Encoded<typeof AtelierBookingSchema>,
   AtelierBookingContract
+> = true
+
+export const atelierStatsContractParity: AssertEquals<
+  Schema.Schema.Encoded<typeof AtelierStatsSchema>,
+  AtelierStatsContract
 > = true
 
 export const bookingDetailContractParity: AssertEquals<
@@ -111,6 +119,11 @@ export const bookingManagementApiGroup = HttpApiGroup.make('bookingManagement')
       .addError(BookingUnknownError)
       .addError(BookingNotCheckInableError)
       .addError(CheckInWindowClosedError)
+  )
+  .add(
+    HttpApiEndpoint.get('stats', routes.manage.stats)
+      .setUrlParams(AtelierStatsParamsSchema)
+      .addSuccess(Schema.Array(AtelierStatsSchema))
   )
   .add(
     HttpApiEndpoint.post('markNoShow', routes.manage.noShow)
