@@ -19,6 +19,7 @@ export interface BookableMachine {
 
 export interface MachineCatalogService {
   readonly find: (machineId: MachineId) => Effect.Effect<BookableMachine | null, RepoError>
+  readonly findMany: (machineIds: ReadonlyArray<MachineId>) => Effect.Effect<ReadonlyArray<BookableMachine>, RepoError>
 }
 
 export class MachineCatalog extends Context.Tag('@etabli/MachineCatalog')<MachineCatalog, MachineCatalogService>() {}

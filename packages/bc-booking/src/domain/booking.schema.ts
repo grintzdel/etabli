@@ -70,3 +70,25 @@ export const MachineAvailabilitySchema = Schema.Struct({
   slots: Schema.Array(AvailabilitySlotSchema),
 })
 export type MachineAvailability = Schema.Schema.Type<typeof MachineAvailabilitySchema>
+
+export const CreateBookingSchema = Schema.Struct({
+  machineId: MachineId,
+  startAt: Schema.DateTimeUtc,
+})
+export type CreateBooking = Schema.Schema.Type<typeof CreateBookingSchema>
+
+export const BookingDetailSchema = Schema.Struct({
+  id: BookingId,
+  machineId: MachineId,
+  machineName: Schema.String,
+  atelierId: AtelierId,
+  atelierName: Schema.String,
+  atelierSlug: Schema.String,
+  startAt: Schema.DateTimeUtc,
+  endAt: Schema.DateTimeUtc,
+  status: BookingStatusSchema,
+  checkedInAt: Schema.NullOr(Schema.DateTimeUtc),
+  cancelledAt: Schema.NullOr(Schema.DateTimeUtc),
+  canCancel: Schema.Boolean,
+})
+export type BookingDetail = Schema.Schema.Type<typeof BookingDetailSchema>

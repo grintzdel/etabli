@@ -78,17 +78,29 @@ const join = async (atelierId: string, role: 'MEMBER' | 'FABMANAGER'): Promise<s
   return token
 }
 
-const addMachine = async (atelierId: string, name: string, slotDurationMinutes = 60): Promise<string> => {
+interface MachineOptions {
+  readonly slotDurationMinutes?: number
+  readonly requiresCertification?: boolean
+}
+
+const createMachine = async (
+  atelierId: string,
+  name: string,
+  options: MachineOptions = {}
+): Promise<{ readonly id: string; readonly fabmanager: string }> => {
   const fabmanager = await join(atelierId, 'FABMANAGER')
   const response = await send(
     'POST',
     '/manage/machines',
-    { atelierId, name, kind: 'LASER_CUTTER', slotDurationMinutes },
+    { atelierId, name, kind: 'LASER_CUTTER', slotDurationMinutes: 60, ...options },
     fabmanager
   )
   const { id } = (await response.json()) as { id: string }
-  return id
+  return { id, fabmanager }
 }
+
+const addMachine = async (atelierId: string, name: string, slotDurationMinutes = 60): Promise<string> =>
+  (await createMachine(atelierId, name, { slotDurationMinutes })).id
 
 const availability = (machineId: string, token?: string, query = '') =>
   send('GET', `/machines/${machineId}/availability${query}`, undefined, token)
@@ -162,5 +174,231 @@ describe('GET /machines/:id/availability', () => {
     const machineId = await addMachine(FORGE, 'Anonyme')
 
     expect((await availability(machineId)).status).toBe(401)
+  })
+})
+
+interface BookingDetail {
+  readonly id: string
+  readonly machineId: string
+  readonly machineName: string
+  readonly atelierName: string
+  readonly atelierSlug: string
+  readonly startAt: string
+  readonly endAt: string
+  readonly status: string
+  readonly canCancel: boolean
+}
+
+const firstFreeSlot = async (machineId: string, token: string): Promise<Slot> => {
+  const body = (await (await availability(machineId, token)).json()) as Availability
+  const free = body.slots.find((slot) => slot.reason === 'FREE')
+  if (free === undefined) throw new Error('the machine offers no free slot')
+  return free
+}
+
+const book = (payload: unknown, token?: string) => send('POST', '/bookings', payload, token)
+const listBookings = (token: string) => send('GET', '/bookings', undefined, token)
+const readBooking = (id: string, token: string) => send('GET', `/bookings/${id}`, undefined, token)
+const cancelBooking = (id: string, token: string) => send('POST', `/bookings/${id}/cancel`, undefined, token)
+
+const grantCertification = async (machineId: string, member: string, fabmanager: string): Promise<void> => {
+  const requested = await send('POST', '/certifications', { machineId }, member)
+  const { id } = (await requested.json()) as { id: string }
+  await send('POST', `/manage/certifications/${id}/grant`, undefined, fabmanager)
+}
+
+const bookFirstFreeSlot = async (
+  machineId: string,
+  token: string
+): Promise<{ readonly booking: BookingDetail; readonly slot: Slot }> => {
+  const slot = await firstFreeSlot(machineId, token)
+  const response = await book({ machineId, startAt: slot.startAt }, token)
+  return { booking: (await response.json()) as BookingDetail, slot }
+}
+
+describe('POST /bookings', () => {
+  it('books a free slot on a machine open to every member', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Prusa libre', { requiresCertification: false })
+    const member = await join(FORGE, 'MEMBER')
+    const slot = await firstFreeSlot(machineId, member)
+
+    const response = await book({ machineId, startAt: slot.startAt }, member)
+    expect(response.status).toBe(201)
+
+    const body = (await response.json()) as BookingDetail
+    expect(body.machineName).toBe('Prusa libre')
+    expect(body.atelierSlug).toBe('la-forge')
+    expect(body.status).toBe('CONFIRMED')
+    expect(body.startAt).toBe(slot.startAt)
+    expect(body.endAt).toBe(slot.endAt)
+    expect(body.canCancel).toBe(true)
+  })
+
+  it('closes the slot it just took', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Prusa prise', { requiresCertification: false })
+    const member = await join(FORGE, 'MEMBER')
+    const { slot } = await bookFirstFreeSlot(machineId, member)
+
+    const after = (await (await availability(machineId, member)).json()) as Availability
+    const taken = after.slots.find((candidate) => candidate.startAt === slot.startAt)
+
+    expect(taken?.reason).toBe('BOOKED')
+    expect(taken?.available).toBe(false)
+  })
+
+  it('refuses a slot another member already holds', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Prusa disputée', { requiresCertification: false })
+    const first = await join(FORGE, 'MEMBER')
+    const second = await join(FORGE, 'MEMBER')
+    const { slot } = await bookFirstFreeSlot(machineId, first)
+
+    const response = await book({ machineId, startAt: slot.startAt }, second)
+    expect(response.status).toBe(409)
+    expect(((await response.json()) as { _tag: string })._tag).toBe('BookingOverlapError')
+  })
+
+  it('refuses a machine that requires a certification the member does not hold', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Trotec fermée')
+    const member = await join(FORGE, 'MEMBER')
+    const slot = await firstFreeSlot(machineId, member)
+
+    const response = await book({ machineId, startAt: slot.startAt }, member)
+    expect(response.status).toBe(403)
+    expect(((await response.json()) as { _tag: string })._tag).toBe('MissingCertificationError')
+  })
+
+  it('lets the same member through once the certification is granted', async () => {
+    const { id: machineId, fabmanager } = await createMachine(FORGE, 'Trotec ouverte')
+    const member = await join(FORGE, 'MEMBER')
+    const slot = await firstFreeSlot(machineId, member)
+
+    expect((await book({ machineId, startAt: slot.startAt }, member)).status).toBe(403)
+    await grantCertification(machineId, member, fabmanager)
+
+    expect((await book({ machineId, startAt: slot.startAt }, member)).status).toBe(201)
+  })
+
+  it('refuses a machine under maintenance', async () => {
+    const { id: machineId, fabmanager } = await createMachine(FORGE, 'Zund en panne', { requiresCertification: false })
+    const member = await join(FORGE, 'MEMBER')
+    const slot = await firstFreeSlot(machineId, member)
+    await send('PATCH', `/manage/machines/${machineId}`, { status: 'MAINTENANCE' }, fabmanager)
+
+    const response = await book({ machineId, startAt: slot.startAt }, member)
+    expect(response.status).toBe(409)
+    expect(((await response.json()) as { _tag: string })._tag).toBe('MachineUnavailableError')
+  })
+
+  it('refuses a slot that already went by', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Prusa passée', { requiresCertification: false })
+    const member = await join(FORGE, 'MEMBER')
+
+    const response = await book({ machineId, startAt: '2020-01-06T09:00:00.000Z' }, member)
+    expect(response.status).toBe(409)
+    expect(((await response.json()) as { _tag: string })._tag).toBe('SlotInThePastError')
+  })
+
+  it('answers 404 on a machine of an atelier the member never joined', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Prusa lointaine', { requiresCertification: false })
+    const owner = await join(FORGE, 'MEMBER')
+    const stranger = await join(LYON, 'MEMBER')
+    const slot = await firstFreeSlot(machineId, owner)
+
+    expect((await book({ machineId, startAt: slot.startAt }, stranger)).status).toBe(404)
+  })
+
+  it('answers 401 without a token', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Prusa anonyme', { requiresCertification: false })
+
+    expect((await book({ machineId, startAt: '2030-01-06T09:00:00.000Z' })).status).toBe(401)
+  })
+})
+
+describe('GET /bookings', () => {
+  it('lists the bookings of the caller and no one else', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Prusa partagée', { requiresCertification: false })
+    const mine = await join(FORGE, 'MEMBER')
+    const theirs = await join(FORGE, 'MEMBER')
+    const { booking } = await bookFirstFreeSlot(machineId, mine)
+    await bookFirstFreeSlot(machineId, theirs)
+
+    const response = await listBookings(mine)
+    expect(response.status).toBe(200)
+
+    const body = (await response.json()) as ReadonlyArray<BookingDetail>
+    expect(body.map((entry) => entry.id)).toEqual([booking.id])
+    expect(body[0]?.machineName).toBe('Prusa partagée')
+  })
+
+  it('answers 401 without a token', async () => {
+    expect((await send('GET', '/bookings')).status).toBe(401)
+  })
+})
+
+describe('GET /bookings/:id', () => {
+  it('reads a booking of the caller, machine and atelier named', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Prusa nommée', { requiresCertification: false })
+    const member = await join(FORGE, 'MEMBER')
+    const { booking } = await bookFirstFreeSlot(machineId, member)
+
+    const response = await readBooking(booking.id, member)
+    expect(response.status).toBe(200)
+
+    const body = (await response.json()) as BookingDetail
+    expect(body.machineName).toBe('Prusa nommée')
+    expect(body.atelierName).toBe('la-forge')
+  })
+
+  it('answers 404 on a booking that belongs to someone else', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Prusa privée', { requiresCertification: false })
+    const owner = await join(FORGE, 'MEMBER')
+    const stranger = await join(FORGE, 'MEMBER')
+    const { booking } = await bookFirstFreeSlot(machineId, owner)
+
+    expect((await readBooking(booking.id, stranger)).status).toBe(404)
+  })
+
+  it('answers 404 on a booking that does not exist', async () => {
+    const member = await join(FORGE, 'MEMBER')
+
+    expect((await readBooking(UNKNOWN, member)).status).toBe(404)
+  })
+})
+
+describe('POST /bookings/:id/cancel', () => {
+  it('cancels a booking of the caller and frees the slot', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Prusa annulée', { requiresCertification: false })
+    const member = await join(FORGE, 'MEMBER')
+    const { booking, slot } = await bookFirstFreeSlot(machineId, member)
+
+    const response = await cancelBooking(booking.id, member)
+    expect(response.status).toBe(200)
+
+    const body = (await response.json()) as BookingDetail
+    expect(body.status).toBe('CANCELLED')
+    expect(body.canCancel).toBe(false)
+
+    const after = (await (await availability(machineId, member)).json()) as Availability
+    expect(after.slots.find((candidate) => candidate.startAt === slot.startAt)?.reason).toBe('FREE')
+  })
+
+  it('refuses to cancel twice', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Prusa têtue', { requiresCertification: false })
+    const member = await join(FORGE, 'MEMBER')
+    const { booking } = await bookFirstFreeSlot(machineId, member)
+    await cancelBooking(booking.id, member)
+
+    const response = await cancelBooking(booking.id, member)
+    expect(response.status).toBe(409)
+    expect(((await response.json()) as { _tag: string })._tag).toBe('BookingNotCancellableError')
+  })
+
+  it('answers 404 when the booking belongs to someone else', async () => {
+    const { id: machineId } = await createMachine(FORGE, 'Prusa gardée', { requiresCertification: false })
+    const owner = await join(FORGE, 'MEMBER')
+    const stranger = await join(FORGE, 'MEMBER')
+    const { booking } = await bookFirstFreeSlot(machineId, owner)
+
+    expect((await cancelBooking(booking.id, stranger)).status).toBe(404)
   })
 })

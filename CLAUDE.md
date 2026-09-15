@@ -14,7 +14,7 @@ plages avec le paramètre `pages`).
 
 Jalons 0 à 3 terminés et sur `main`. Jalon 4 (réservation) commencé.
 
-`pnpm check` est vert : 332 tests unitaires, `next build`. Les 51 E2E
+`pnpm check` est vert : 381 tests unitaires, `next build`. Les 51 E2E
 Playwright passent mais **ne tournent plus dans `pnpm verify`, sur décision de
 l'auteur** — `pnpm db:test:up` puis `pnpm test:e2e` pour les lancer.
 
@@ -28,8 +28,10 @@ Ce qui existe, package par package :
 - `bc-certification` — demander, accorder, révoquer ; file de validation
   fabmanager ; l'habilitation porte sur **une machine**, pas sur un type — écart
   assumé au §9 de la spec
-- `bc-booking` — pour l'instant le domaine, la migration `0005`, le repository
-  et `GET /machines/:id/availability`. Les commands d'écriture viennent ensuite.
+- `bc-booking` — domaine, migration `0005`, repository, et le parcours membre
+  complet hors check-in : `GET /machines/:id/availability`, `POST /bookings`,
+  `GET /bookings`, `GET /bookings/:id`, `POST /bookings/:id/cancel`. Le check-in
+  NFC (règles 5 et 6) et les écrans Next viennent ensuite.
 
 Neon est branché et à jour des cinq migrations. Sur une machine neuve : copier
 `.env.example` en `.env` et y mettre l'URL *pooled* du projet Neon. `pg` émet un
@@ -61,6 +63,20 @@ règles Drizzle globales et ne s'applique pas ici.
 Les horaires d'ouverture sont des constantes (`8h`–`22h`, `Europe/Paris`) tant
 que le §7 les garde en v1.1. Les créneaux sont calculés en heure locale de
 l'atelier, transition d'heure d'été comprise.
+
+La règle 1 porte sur **la machine**, pas sur son type : c'est ce que le jalon 3
+a mis en base, et toute l'interface d'habilitation nomme une machine. Élargir au
+type plus tard est additif ; resserrer ne l'est pas. Le §5 de la spec a été
+corrigé en ce sens.
+
+Le payload de `POST /bookings` ne porte que `machineId` et `startAt` : la fin du
+créneau vient du `slotDurationMinutes` de la machine, jamais du client.
+
+`SlotInThePastError` (409) ne figure pas dans les sept règles du §5 — aucune
+n'interdisait de réserver dans le passé. Ajoutée, et inscrite au §5.
+
+Une réservation qui n'appartient pas à l'appelant répond 404, pas 403 : le
+statut ne doit pas révéler qu'elle existe.
 
 ## Repos de référence
 

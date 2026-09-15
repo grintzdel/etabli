@@ -4,10 +4,14 @@ import { IdGeneratorCryptoLive } from '@etabli/shared/id'
 import type { AtelierId, MachineId, UserId } from '@etabli/shared/schema'
 import { BookingId } from '@etabli/shared/schema'
 import { Clock } from '@etabli/shared/time'
+import * as Cause from 'effect/Cause'
 import * as DateTime from 'effect/DateTime'
 import * as Effect from 'effect/Effect'
+import * as Exit from 'effect/Exit'
 import * as Layer from 'effect/Layer'
+import * as Option from 'effect/Option'
 
+import { CertificationChecker } from '../application/ports/certification-checker'
 import type { BookableMachine } from '../application/ports/machine-catalog'
 import { MachineCatalog } from '../application/ports/machine-catalog'
 import { BookableMachineStatus, BookingStatus } from '../domain/booking.constants'
@@ -18,6 +22,12 @@ import type { BookingRepositoryMemory } from '../infrastructure/booking.reposito
 export const FORGE = '10000000-0000-4000-8000-000000000001' as AtelierId
 
 export const at = (iso: string): DateTime.Utc => DateTime.unsafeFromDate(new Date(iso))
+
+export const failureTag = (exit: Exit.Exit<unknown, unknown>): string => {
+  if (Exit.isSuccess(exit)) return 'success'
+  const failure = Cause.failureOption(exit.cause)
+  return Option.isSome(failure) ? ((failure.value as { readonly _tag?: string })._tag ?? 'untagged') : 'defect'
+}
 
 export const machineFixture = (overrides: Partial<BookableMachine> = {}): BookableMachine => ({
   machineId: globalThis.crypto.randomUUID() as MachineId,
@@ -58,15 +68,25 @@ export interface TestLayerOptions {
   readonly machines: ReadonlyArray<BookableMachine>
   readonly auth: Partial<AuthContextService> & { readonly userId: UserId }
   readonly now: DateTime.Utc
+  readonly certifiedOn?: ReadonlyArray<MachineId>
 }
 
-export const makeTestLayer = ({ repository, machines, auth, now }: TestLayerOptions) =>
+export const makeTestLayer = ({ repository, machines, auth, now, certifiedOn = [] }: TestLayerOptions) =>
   Layer.mergeAll(
     Layer.succeed(BookingRepository, repository),
     Layer.succeed(
       MachineCatalog,
       MachineCatalog.of({
         find: (machineId) => Effect.sync(() => machines.find((machine) => machine.machineId === machineId) ?? null),
+        findMany: (machineIds) =>
+          Effect.sync(() => machines.filter((machine) => machineIds.includes(machine.machineId))),
+      })
+    ),
+    Layer.succeed(
+      CertificationChecker,
+      CertificationChecker.of({
+        isCertified: (userId, machineId) =>
+          Effect.sync(() => userId === auth.userId && certifiedOn.includes(machineId)),
       })
     ),
     Layer.succeed(AuthContext, { platformRole: 'MEMBER', memberships: [], ...auth }),

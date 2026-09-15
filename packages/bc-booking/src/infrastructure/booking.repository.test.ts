@@ -122,6 +122,35 @@ describe('BookingRepository on Postgres', () => {
 
     expect(found.map((item) => item.startAt)).toStrictEqual([at('2026-03-05T09:00:00Z'), at('2026-03-02T09:00:00Z')])
   })
+
+  it('marks a booking cancelled and stamps who did it', async () => {
+    const written = booking()
+    await insert(written)
+
+    const cancelled = await runtime.runPromise(
+      repository.cancel(written.id, at('2026-03-01T12:00:00Z'), MEMBER as Booking['userId'])
+    )
+
+    expect(cancelled?.status).toBe(BookingStatus.CANCELLED)
+    expect(cancelled?.cancelledAt).toStrictEqual(at('2026-03-01T12:00:00Z'))
+    expect(cancelled?.cancelledBy).toBe(MEMBER)
+  })
+
+  it('answers nothing when cancelling a booking that is not there', async () => {
+    const cancelled = await runtime.runPromise(
+      repository.cancel(booking().id, at('2026-03-01T12:00:00Z'), MEMBER as Booking['userId'])
+    )
+
+    expect(cancelled).toBeNull()
+  })
+
+  it('reopens the slot a cancelled booking held', async () => {
+    const written = booking()
+    await insert(written)
+    await runtime.runPromise(repository.cancel(written.id, at('2026-03-01T12:00:00Z'), MEMBER as Booking['userId']))
+
+    expect(Exit.isSuccess(await insert(booking()))).toBe(true)
+  })
 })
 
 describe('BookingRepository in memory', () => {
@@ -144,6 +173,30 @@ describe('BookingRepository in memory', () => {
       const exit = await Effect.runPromiseExit(
         memory.insert(booking({ startAt: at('2026-03-02T10:00:00Z'), endAt: at('2026-03-02T11:00:00Z') }))
       )
+
+      expect(Exit.isSuccess(exit)).toBe(true)
+    })
+
+    it('marks a booking cancelled like Postgres does', async () => {
+      const memory = make()
+      const written = booking()
+      await Effect.runPromise(memory.insert(written))
+
+      const cancelled = await Effect.runPromise(
+        memory.cancel(written.id, at('2026-03-01T12:00:00Z'), MEMBER as Booking['userId'])
+      )
+
+      expect(cancelled?.status).toBe(BookingStatus.CANCELLED)
+      expect(cancelled?.cancelledBy).toBe(MEMBER)
+    })
+
+    it('reopens the slot a cancelled booking held, like Postgres does', async () => {
+      const memory = make()
+      const written = booking()
+      await Effect.runPromise(memory.insert(written))
+      await Effect.runPromise(memory.cancel(written.id, at('2026-03-01T12:00:00Z'), MEMBER as Booking['userId']))
+
+      const exit = await Effect.runPromiseExit(memory.insert(booking()))
 
       expect(Exit.isSuccess(exit)).toBe(true)
     })
