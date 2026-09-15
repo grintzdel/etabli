@@ -4,6 +4,7 @@ import * as DateTime from 'effect/DateTime'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 
+import { ADMIN_USERS_LIMIT } from '../domain/user.constants'
 import type { UserStatus } from '../domain/user.constants'
 import type { Email, User } from '../domain/user.schema'
 import { Email as EmailSchema } from '../domain/user.schema'
@@ -37,6 +38,9 @@ const toUser = (row: UserRow): User => ({
 })
 
 const fail = (operation: string) => (cause: unknown) => new RepoError({ cause, operation })
+
+const toLikePattern = (search: string): string =>
+  `%${search.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_')}%`
 
 const toPgTextArray = (values: ReadonlyArray<string>): string =>
   `{${values.map((value) => `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`).join(',')}}`
@@ -94,6 +98,34 @@ export const makeUserRepositorySql = (sql: SqlClient.SqlClient) =>
       `.pipe(
         Effect.map((rows) => (rows[0] === undefined ? null : toUser(rows[0]))),
         Effect.mapError(fail('users.markOnboarded'))
+      ),
+
+    listForAdmin: (params) => {
+      const pattern = params.search === undefined ? null : toLikePattern(params.search)
+      return sql<UserRow>`
+        SELECT * FROM users
+        WHERE (${pattern}::text IS NULL OR email ILIKE ${pattern}::text OR display_name ILIKE ${pattern}::text)
+          AND (${params.platformRole ?? null}::text IS NULL OR platform_role = ${params.platformRole ?? null}::text)
+          AND (${params.status ?? null}::text IS NULL OR status = ${params.status ?? null}::text)
+        ORDER BY created_at DESC
+        LIMIT ${ADMIN_USERS_LIMIT}
+      `.pipe(
+        Effect.map((rows) => rows.map(toUser)),
+        Effect.mapError(fail('users.listForAdmin'))
+      )
+    },
+
+    updateAdminState: (id, patch, at) =>
+      sql<UserRow>`
+        UPDATE users
+        SET platform_role = COALESCE(${patch.platformRole ?? null}::text, platform_role),
+            status = COALESCE(${patch.status ?? null}::text, status),
+            updated_at = ${DateTime.toDate(at)}
+        WHERE id = ${id}
+        RETURNING *
+      `.pipe(
+        Effect.map((rows) => (rows[0] === undefined ? null : toUser(rows[0]))),
+        Effect.mapError(fail('users.updateAdminState'))
       ),
 
     insert: (user) =>

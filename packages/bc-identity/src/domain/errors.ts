@@ -18,3 +18,15 @@ export class PreferredAtelierNotJoinedError extends Schema.TaggedError<Preferred
   { atelierId: Schema.String },
   HttpApiSchema.annotations({ status: 409 })
 ) {}
+
+export class UserUnknownError extends Schema.TaggedError<UserUnknownError>()(
+  'UserUnknownError',
+  { userId: Schema.String },
+  HttpApiSchema.annotations({ status: 404 })
+) {}
+
+export class AdminSelfLockoutError extends Schema.TaggedError<AdminSelfLockoutError>()(
+  'AdminSelfLockoutError',
+  {},
+  HttpApiSchema.annotations({ status: 409 })
+) {}

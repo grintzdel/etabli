@@ -65,3 +65,27 @@ export type ChangePasswordInput = {
   readonly currentPassword: string
   readonly newPassword: string
 }
+
+export type UserStatus = 'ACTIVE' | 'SUSPENDED'
+
+export type AdminUser = {
+  readonly id: string
+  readonly email: string
+  readonly displayName: string
+  readonly platformRole: PlatformRole
+  readonly status: UserStatus
+  readonly practice: ReadonlyArray<string>
+  readonly onboardingCompletedAt: string | null
+  readonly createdAt: string
+}
+
+export type AdminUsersQuery = {
+  readonly search?: string
+  readonly platformRole?: PlatformRole
+  readonly status?: UserStatus
+}
+
+export type UpdateAdminUser = {
+  readonly platformRole?: PlatformRole
+  readonly status?: UserStatus
+}

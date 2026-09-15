@@ -7,6 +7,9 @@ const BY_TAG: Readonly<Record<string, IdentityFailureCode>> = {
   AccountSuspendedError: IdentityFailureCode.ACCOUNT_SUSPENDED,
   UnauthorizedError: IdentityFailureCode.UNAUTHORIZED,
   PreferredAtelierNotJoinedError: IdentityFailureCode.PREFERRED_ATELIER_NOT_JOINED,
+  ForbiddenError: IdentityFailureCode.FORBIDDEN,
+  UserUnknownError: IdentityFailureCode.USER_UNKNOWN,
+  AdminSelfLockoutError: IdentityFailureCode.SELF_LOCKOUT,
 }
 
 const tagOf = (body: unknown): string | undefined => {

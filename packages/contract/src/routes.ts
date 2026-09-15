@@ -50,7 +50,7 @@ export const routes = {
     ateliers: '/admin/ateliers',
     atelier: '/admin/ateliers/:id',
     users: '/admin/users',
-    userRole: '/admin/users/:id/role',
+    user: '/admin/users/:id',
     stats: '/admin/stats',
   },
 } as const satisfies RouteNode

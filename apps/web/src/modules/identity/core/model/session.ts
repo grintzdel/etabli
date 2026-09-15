@@ -12,6 +12,9 @@ export const IdentityFailureCode = {
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
   ACCOUNT_SUSPENDED: 'ACCOUNT_SUSPENDED',
   PREFERRED_ATELIER_NOT_JOINED: 'PREFERRED_ATELIER_NOT_JOINED',
+  FORBIDDEN: 'FORBIDDEN',
+  USER_UNKNOWN: 'USER_UNKNOWN',
+  SELF_LOCKOUT: 'SELF_LOCKOUT',
   UNAUTHORIZED: 'UNAUTHORIZED',
   UNREACHABLE: 'UNREACHABLE',
 } as const
@@ -32,6 +35,9 @@ export const FAILURE_MESSAGES: Readonly<Record<IdentityFailureCode, string>> = {
   INVALID_CREDENTIALS: 'Adresse e-mail ou mot de passe incorrect.',
   ACCOUNT_SUSPENDED: 'Ce compte est suspendu.',
   PREFERRED_ATELIER_NOT_JOINED: "Vous n'êtes pas membre de cet atelier.",
+  FORBIDDEN: 'Cette page est réservée aux administrateurs de la plateforme.',
+  USER_UNKNOWN: 'Ce compte n’existe pas.',
+  SELF_LOCKOUT: 'Vous ne pouvez ni retirer votre propre rôle d’administrateur, ni suspendre votre compte.',
   UNAUTHORIZED: 'Votre session a expiré.',
   UNREACHABLE: 'Le service est momentanément indisponible.',
 }
