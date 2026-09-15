@@ -1,4 +1,5 @@
 import * as SqlClient from '@effect/sql/SqlClient'
+import type { MembershipRole } from '@etabli/shared/auth-context'
 import { RepoError } from '@etabli/shared/errors'
 import type { AtelierId, MachineId, UserId } from '@etabli/shared/schema'
 import * as DateTime from 'effect/DateTime'
@@ -251,6 +252,41 @@ export const makeAtelierRepositorySql = (sql: SqlClient.SqlClient) =>
           }))
         ),
         Effect.mapError(fail('memberships.listMemberAteliersForUser'))
+      ),
+
+    listMemberAteliersForUsers: (userIds: ReadonlyArray<UserId>) =>
+      userIds.length === 0
+        ? Effect.succeed(new Map())
+        : sql<MemberAtelierRow & { readonly user_id: string }>`
+            SELECT m.user_id, a.id, a.slug, a.name, m.role
+            FROM memberships m
+            JOIN ateliers a ON a.id = m.atelier_id
+            WHERE m.user_id IN ${sql.in(userIds)}
+            ORDER BY m.joined_at ASC
+          `.pipe(
+            Effect.map((rows) => {
+              const byUser = new Map<UserId, ReadonlyArray<MemberAtelier>>()
+              for (const row of rows) {
+                const userId = row.user_id as UserId
+                const entry = {
+                  id: row.id as MemberAtelier['id'],
+                  slug: row.slug as MemberAtelier['slug'],
+                  name: row.name,
+                  role: row.role as MemberAtelier['role'],
+                }
+                byUser.set(userId, [...(byUser.get(userId) ?? []), entry])
+              }
+              return byUser as ReadonlyMap<UserId, ReadonlyArray<MemberAtelier>>
+            }),
+            Effect.mapError(fail('memberships.listMemberAteliersForUsers'))
+          ),
+
+    updateMembershipRole: (userId: UserId, atelierId: AtelierId, role: MembershipRole) =>
+      sql<MembershipRow>`
+        UPDATE memberships SET role = ${role} WHERE user_id = ${userId} AND atelier_id = ${atelierId} RETURNING *
+      `.pipe(
+        Effect.map((rows) => (rows[0] === undefined ? null : toMembership(rows[0]))),
+        Effect.mapError(fail('memberships.updateRole'))
       ),
 
     listMachines: (atelierId: AtelierId) =>

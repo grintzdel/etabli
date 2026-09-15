@@ -6,7 +6,7 @@ import { parseAdminUsersQuery } from '@/modules/identity/core/model/admin-user'
 import { IdentityFailureCode } from '@/modules/identity/core/model/session'
 import { AdminUserFilters } from '@/modules/identity/react/components/AdminUserFilters'
 import { AdminUserTable } from '@/modules/identity/react/components/AdminUserTable'
-import { updateAdminUserAction } from '@/server/admin-users.actions'
+import { setMembershipRoleAction, updateAdminUserAction } from '@/server/admin-users.actions'
 import { adminUserPort } from '@/server/container'
 import { readSessionToken } from '@/server/session'
 import { Surface } from '@/ui/Surface'
@@ -36,7 +36,7 @@ const Users = async ({ searchParams }: { readonly searchParams: SearchParams }) 
   return (
     <>
       <AdminUserFilters query={query} />
-      <AdminUserTable users={result.value} action={updateAdminUserAction} />
+      <AdminUserTable users={result.value} action={updateAdminUserAction} membershipAction={setMembershipRoleAction} />
     </>
   )
 }

@@ -1,3 +1,4 @@
+import type { MembershipRole } from '@etabli/shared/auth-context'
 import type { RepoError } from '@etabli/shared/errors'
 import type { AtelierId, MachineId, UserId } from '@etabli/shared/schema'
 import * as Context from 'effect/Context'
@@ -23,6 +24,14 @@ export interface AtelierRepositoryService {
   readonly findMembership: (userId: UserId, atelierId: AtelierId) => Effect.Effect<Membership | null, RepoError>
   readonly listMembershipsForUser: (userId: UserId) => Effect.Effect<ReadonlyArray<Membership>, RepoError>
   readonly listMemberAteliersForUser: (userId: UserId) => Effect.Effect<ReadonlyArray<MemberAtelier>, RepoError>
+  readonly listMemberAteliersForUsers: (
+    userIds: ReadonlyArray<UserId>
+  ) => Effect.Effect<ReadonlyMap<UserId, ReadonlyArray<MemberAtelier>>, RepoError>
+  readonly updateMembershipRole: (
+    userId: UserId,
+    atelierId: AtelierId,
+    role: MembershipRole
+  ) => Effect.Effect<Membership | null, RepoError>
   readonly listMachines: (atelierId: AtelierId) => Effect.Effect<ReadonlyArray<Machine>, RepoError>
   readonly listAll: () => Effect.Effect<ReadonlyArray<AdminAtelier>, RepoError>
   readonly findAnyById: (id: AtelierId) => Effect.Effect<Atelier | null, RepoError>

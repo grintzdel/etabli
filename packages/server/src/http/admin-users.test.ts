@@ -21,6 +21,12 @@ afterAll(async () => {
 
 const UNKNOWN = '66666666-6666-4666-8666-666666666666'
 
+interface AdminUserAtelier {
+  readonly id: string
+  readonly name: string
+  readonly role: string
+}
+
 interface AdminUser {
   readonly id: string
   readonly email: string
@@ -28,6 +34,7 @@ interface AdminUser {
   readonly platformRole: string
   readonly status: string
   readonly createdAt: string
+  readonly ateliers: ReadonlyArray<AdminUserAtelier>
 }
 
 const send = (method: string, path: string, body?: unknown, token?: string) =>
@@ -58,6 +65,29 @@ const promote = async (): Promise<{ readonly token: string; readonly userId: str
 }
 
 const listUsers = (token?: string, query = '') => send('GET', `/admin/users${query}`, undefined, token)
+const setMembershipRole = (atelierId: string, userId: string, role: string, token?: string) =>
+  send('PATCH', `/admin/ateliers/${atelierId}/members/${userId}`, { role }, token)
+
+const FORGE = '77777777-7777-4777-8777-777777777777'
+
+const seedAtelier = () =>
+  runtime.runPromise(
+    sql`
+      INSERT INTO ateliers (id, slug, name, description, city, latitude, longitude, status)
+      VALUES (${FORGE}, 'la-forge-users', 'La Forge', 'Un atelier partagé', 'Montreuil', 48.8638, 2.4485, 'PUBLISHED')
+      ON CONFLICT (id) DO NOTHING
+    `
+  )
+
+const join = async (userId: string): Promise<void> => {
+  await seedAtelier()
+  await runtime.runPromise(
+    sql`
+      INSERT INTO memberships (id, user_id, atelier_id, role, status)
+      VALUES (${globalThis.crypto.randomUUID()}, ${userId}, ${FORGE}, 'MEMBER', 'ACTIVE')
+    `
+  )
+}
 const patchUser = (id: string, body: unknown, token?: string) => send('PATCH', `/admin/users/${id}`, body, token)
 
 describe('GET /admin/users', () => {
@@ -186,5 +216,81 @@ describe('PATCH /admin/users/:id', () => {
 
   it('answers 401 without a token', async () => {
     expect((await patchUser(UNKNOWN, { status: 'SUSPENDED' })).status).toBe(401)
+  })
+})
+
+describe('PATCH /admin/ateliers/:atelierId/members/:userId', () => {
+  it('names a member fabmanager of the atelier it joined', async () => {
+    const { token } = await promote()
+    const camille = await register()
+    await join(camille.userId)
+
+    const response = await setMembershipRole(FORGE, camille.userId, 'FABMANAGER', token)
+    expect(response.status).toBe(200)
+    expect(((await response.json()) as { role: string }).role).toBe('FABMANAGER')
+  })
+
+  it('shows the new role on the account listing', async () => {
+    const { token } = await promote()
+    const camille = await register()
+    await join(camille.userId)
+    await setMembershipRole(FORGE, camille.userId, 'FABMANAGER', token)
+
+    const body = (await (
+      await listUsers(token, `?search=${encodeURIComponent(camille.email)}`)
+    ).json()) as ReadonlyArray<AdminUser>
+    expect(body[0]?.ateliers).toStrictEqual([
+      { id: FORGE, slug: 'la-forge-users', name: 'La Forge', role: 'FABMANAGER' },
+    ])
+  })
+
+  it('takes the role back', async () => {
+    const { token } = await promote()
+    const camille = await register()
+    await join(camille.userId)
+    await setMembershipRole(FORGE, camille.userId, 'FABMANAGER', token)
+
+    const response = await setMembershipRole(FORGE, camille.userId, 'MEMBER', token)
+    expect(((await response.json()) as { role: string }).role).toBe('MEMBER')
+  })
+
+  it('answers 404 on an account that never joined the atelier', async () => {
+    const { token } = await promote()
+    const camille = await register()
+
+    const response = await setMembershipRole(FORGE, camille.userId, 'FABMANAGER', token)
+    expect(response.status).toBe(404)
+    expect(((await response.json()) as { _tag: string })._tag).toBe('MembershipUnknownError')
+  })
+
+  it('answers 400 on a role nobody holds', async () => {
+    const { token } = await promote()
+    const camille = await register()
+    await join(camille.userId)
+
+    expect((await setMembershipRole(FORGE, camille.userId, 'ROOT', token)).status).toBe(400)
+  })
+
+  it('answers 403 to a plain member', async () => {
+    const { token } = await register()
+    const camille = await register()
+    await join(camille.userId)
+
+    expect((await setMembershipRole(FORGE, camille.userId, 'FABMANAGER', token)).status).toBe(403)
+  })
+
+  it('answers 403 to the fabmanager of that very atelier', async () => {
+    const { token } = await promote()
+    const fabmanager = await register()
+    await join(fabmanager.userId)
+    await setMembershipRole(FORGE, fabmanager.userId, 'FABMANAGER', token)
+    const camille = await register()
+    await join(camille.userId)
+
+    expect((await setMembershipRole(FORGE, camille.userId, 'FABMANAGER', fabmanager.token)).status).toBe(403)
+  })
+
+  it('answers 401 without a token', async () => {
+    expect((await setMembershipRole(FORGE, UNKNOWN, 'FABMANAGER')).status).toBe(401)
   })
 })

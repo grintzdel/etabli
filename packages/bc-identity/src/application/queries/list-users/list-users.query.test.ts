@@ -8,11 +8,13 @@ import * as Layer from 'effect/Layer'
 import * as Option from 'effect/Option'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import type { MemberAtelier } from '../../../domain/member-atelier.schema'
 import { UserStatus } from '../../../domain/user.constants'
 import type { AdminUsersParams, User } from '../../../domain/user.schema'
 import { Email } from '../../../domain/user.schema'
 import { UserRepository } from '../../../infrastructure/user.repository'
 import { makeUserRepositoryMemory } from '../../../infrastructure/user.repository.memory'
+import { MemberAteliers } from '../../ports/member-ateliers'
 import { listUsers } from './list-users.query'
 
 const ADMIN = UserId.make('00000000-0000-4000-8000-0000000000a1')
@@ -37,6 +39,7 @@ const userFixture = (overrides: Partial<User> = {}): User => {
 }
 
 let repository: ReturnType<typeof makeUserRepositoryMemory>
+let ateliersByUser: ReadonlyMap<UserId, ReadonlyArray<MemberAtelier>> = new Map()
 
 const failureTag = (exit: Exit.Exit<unknown, unknown>): string => {
   if (Exit.isSuccess(exit)) return 'success'
@@ -50,7 +53,11 @@ const run = (params: AdminUsersParams = {}, caller: 'PLATFORM_ADMIN' | 'MEMBER' 
       Effect.provide(
         Layer.mergeAll(
           Layer.succeed(UserRepository, repository),
-          Layer.succeed(AuthContext, { userId: ADMIN, platformRole: caller, memberships: [] })
+          Layer.succeed(AuthContext, { userId: ADMIN, platformRole: caller, memberships: [] }),
+          Layer.succeed(MemberAteliers, {
+            forUser: () => Effect.succeed([]),
+            forUsers: () => Effect.succeed(ateliersByUser),
+          })
         )
       )
     )
@@ -62,6 +69,7 @@ const seed = (users: ReadonlyArray<User>) => {
 
 beforeEach(() => {
   counter = 0
+  ateliersByUser = new Map()
   seed([])
 })
 
@@ -106,6 +114,33 @@ describe('listUsers', () => {
     if (Exit.isFailure(byName) || Exit.isFailure(byAddress)) return
     expect(byName.value).toHaveLength(1)
     expect(byAddress.value).toHaveLength(1)
+  })
+
+  it('names the ateliers each account belongs to, and the role it holds there', async () => {
+    const camille = userFixture()
+    seed([camille])
+    ateliersByUser = new Map([
+      [
+        camille.id,
+        [{ id: camille.id as unknown as MemberAtelier['id'], slug: 'la-forge', name: 'La Forge', role: 'FABMANAGER' }],
+      ],
+    ])
+
+    const exit = await run()
+
+    if (Exit.isFailure(exit)) return
+    expect(exit.value[0]?.ateliers).toStrictEqual([
+      { id: camille.id, slug: 'la-forge', name: 'La Forge', role: 'FABMANAGER' },
+    ])
+  })
+
+  it('hands back an empty list for an account that joined nothing', async () => {
+    seed([userFixture()])
+
+    const exit = await run()
+
+    if (Exit.isFailure(exit)) return
+    expect(exit.value[0]?.ateliers).toStrictEqual([])
   })
 
   it('never hands back the password hash', async () => {

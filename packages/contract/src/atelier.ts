@@ -1,3 +1,5 @@
+import type { MembershipRole, MembershipStatus } from './identity'
+
 export type AtelierStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED'
 
 export type MachineKind = 'LASER_CUTTER' | 'PRINTER_3D' | 'CNC_MILL' | 'WOOD_LATHE' | 'SEWING' | 'ELECTRONICS_BENCH'
@@ -133,4 +135,17 @@ export type UpdateMachineInput = {
   readonly requiresCertification?: boolean
   readonly slotDurationMinutes?: number
   readonly nfcTagId?: string | null
+}
+
+export type SetMembershipRoleInput = {
+  readonly role: MembershipRole
+}
+
+export type AtelierMembership = {
+  readonly id: string
+  readonly userId: string
+  readonly atelierId: string
+  readonly role: MembershipRole
+  readonly status: MembershipStatus
+  readonly joinedAt: string
 }

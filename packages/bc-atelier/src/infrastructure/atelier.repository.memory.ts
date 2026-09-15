@@ -1,3 +1,4 @@
+import type { MembershipRole } from '@etabli/shared/auth-context'
 import type { RepoError } from '@etabli/shared/errors'
 import type { AtelierId, MachineId, UserId } from '@etabli/shared/schema'
 import * as Effect from 'effect/Effect'
@@ -9,6 +10,7 @@ import type {
   AtelierSummary,
   ListAteliersParams,
   Machine,
+  MemberAtelier,
   Membership,
   Slug,
   UpdateMachine,
@@ -113,6 +115,29 @@ export const makeAtelierRepositoryMemory = (): AtelierRepositoryMemory => {
       ),
     listMembershipsForUser: (userId: UserId) =>
       Effect.sync(() => [...memberships.values()].filter((membership) => membership.userId === userId)),
+    listMemberAteliersForUsers: (userIds: ReadonlyArray<UserId>) =>
+      Effect.sync(() => {
+        const wanted = new Set(userIds)
+        const byUser = new Map<UserId, ReadonlyArray<MemberAtelier>>()
+        for (const membership of memberships.values()) {
+          if (!wanted.has(membership.userId)) continue
+          const atelier = ateliers.get(membership.atelierId)
+          if (atelier === undefined) continue
+          const entry = { id: atelier.id, slug: atelier.slug, name: atelier.name, role: membership.role }
+          byUser.set(membership.userId, [...(byUser.get(membership.userId) ?? []), entry])
+        }
+        return byUser
+      }),
+    updateMembershipRole: (userId: UserId, atelierId: AtelierId, role: MembershipRole) =>
+      Effect.sync(() => {
+        const membership = [...memberships.values()].find(
+          (candidate) => candidate.userId === userId && candidate.atelierId === atelierId
+        )
+        if (membership === undefined) return null
+        const updated = { ...membership, role }
+        memberships.set(membership.id, updated)
+        return updated
+      }),
     listMemberAteliersForUser: (userId: UserId) =>
       Effect.sync(() =>
         [...memberships.values()]

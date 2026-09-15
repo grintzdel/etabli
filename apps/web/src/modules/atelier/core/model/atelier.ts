@@ -1,6 +1,7 @@
 import type {
   AdminAtelier,
   AtelierDetail,
+  AtelierMembership,
   AtelierStatus,
   AtelierSummary,
   CompleteOnboardingInput,
@@ -13,12 +14,14 @@ import type {
   OnboardingResult,
   PublicMachine,
   SetAtelierStatusInput,
+  SetMembershipRoleInput,
   UpdateMachineInput,
 } from '@etabli/contract'
 
 export type {
   AdminAtelier,
   AtelierDetail,
+  AtelierMembership,
   AtelierStatus,
   AtelierSummary,
   CompleteOnboardingInput,
@@ -31,6 +34,7 @@ export type {
   OnboardingResult,
   PublicMachine,
   SetAtelierStatusInput,
+  SetMembershipRoleInput,
   UpdateMachineInput,
 }
 
