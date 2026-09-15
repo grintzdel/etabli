@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { atelierFixture, machineFixture } from '../../../__tests__/atelier.factory'
 import { MachineStatus } from '../../../domain/atelier.constants'
-import type { UpdateMachine } from '../../../domain/atelier.schema'
+import type { Machine, UpdateMachine } from '../../../domain/atelier.schema'
 import { AtelierRepository } from '../../../infrastructure/atelier.repository'
 import type { AtelierRepositoryMemory } from '../../../infrastructure/atelier.repository.memory'
 import { makeAtelierRepositoryMemory } from '../../../infrastructure/atelier.repository.memory'
@@ -33,13 +33,17 @@ const run = (machineId: MachineId, patch: UpdateMachine, memberships: ReadonlyAr
     )
   )
 
-const seedMachine = () => {
+const seedMachine = (overrides: Partial<Machine> = {}) => {
   const atelier = atelierFixture()
-  const machine = machineFixture(atelier.id)
+  const machine = machineFixture(atelier.id, overrides)
   repository.ateliers.set(atelier.id, atelier)
   repository.machines.set(machine.id, machine)
   return machine
 }
+
+const fabmanagerOf = (machine: Machine): ReadonlyArray<AuthMembership> => [
+  { atelierId: machine.atelierId, role: 'FABMANAGER' },
+]
 
 beforeEach(() => {
   repository = makeAtelierRepositoryMemory()
@@ -85,5 +89,52 @@ describe('updateMachine', () => {
     expect(Exit.isFailure(refused)).toBe(true)
     expect(Exit.isFailure(unknown)).toBe(true)
     expect(repository.machines.get(machine.id)?.status).toBe(MachineStatus.AVAILABLE)
+  })
+
+  it('sticks a tag on a machine that had none', async () => {
+    const machine = seedMachine()
+
+    const exit = await run(machine.id, { nfcTagId: 'tag-trotec' }, fabmanagerOf(machine))
+
+    expect(Exit.isSuccess(exit)).toBe(true)
+    expect(repository.machines.get(machine.id)?.nfcTagId).toBe('tag-trotec')
+  })
+
+  it('peels the tag off when the patch carries null', async () => {
+    const machine = seedMachine({ nfcTagId: 'tag-trotec' })
+
+    const exit = await run(machine.id, { nfcTagId: null }, fabmanagerOf(machine))
+
+    expect(Exit.isSuccess(exit)).toBe(true)
+    expect(repository.machines.get(machine.id)?.nfcTagId).toBeNull()
+  })
+
+  it('leaves the tag alone when the patch does not mention it', async () => {
+    const machine = seedMachine({ nfcTagId: 'tag-trotec' })
+
+    await run(machine.id, { status: MachineStatus.MAINTENANCE }, fabmanagerOf(machine))
+
+    expect(repository.machines.get(machine.id)?.nfcTagId).toBe('tag-trotec')
+  })
+
+  it('refuses a tag already stuck on another machine', async () => {
+    const taken = seedMachine({ nfcTagId: 'tag-trotec' })
+    const machine = seedMachine()
+
+    const exit = await run(machine.id, { nfcTagId: 'tag-trotec' }, fabmanagerOf(machine))
+
+    expect(Exit.isFailure(exit)).toBe(true)
+    expect(JSON.stringify(exit)).toContain('MachineNfcTagTakenError')
+    expect(repository.machines.get(machine.id)?.nfcTagId).toBeNull()
+    expect(repository.machines.get(taken.id)?.nfcTagId).toBe('tag-trotec')
+  })
+
+  it('accepts the tag the machine already wears', async () => {
+    const machine = seedMachine({ nfcTagId: 'tag-trotec' })
+
+    const exit = await run(machine.id, { nfcTagId: 'tag-trotec' }, fabmanagerOf(machine))
+
+    expect(Exit.isSuccess(exit)).toBe(true)
+    expect(repository.machines.get(machine.id)?.nfcTagId).toBe('tag-trotec')
   })
 })

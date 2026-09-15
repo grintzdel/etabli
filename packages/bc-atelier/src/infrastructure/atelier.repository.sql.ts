@@ -310,6 +310,12 @@ export const makeAtelierRepositorySql = (sql: SqlClient.SqlClient) =>
         Effect.mapError(fail('machines.findById'))
       ),
 
+    findMachineByNfcTag: (nfcTagId: string) =>
+      sql<MachineRow>`SELECT * FROM machines WHERE nfc_tag_id = ${nfcTagId} LIMIT 1`.pipe(
+        Effect.map((rows) => (rows[0] === undefined ? null : toMachine(rows[0]))),
+        Effect.mapError(fail('machines.findByNfcTag'))
+      ),
+
     updateMachine: (id: MachineId, patch: UpdateMachine, at: Machine['updatedAt']) =>
       sql<MachineRow>`
         UPDATE machines
@@ -318,6 +324,10 @@ export const makeAtelierRepositorySql = (sql: SqlClient.SqlClient) =>
             status = coalesce(${patch.status ?? null}::text, status),
             requires_certification = coalesce(${patch.requiresCertification ?? null}::boolean, requires_certification),
             slot_duration_minutes = coalesce(${patch.slotDurationMinutes ?? null}::integer, slot_duration_minutes),
+            nfc_tag_id = CASE
+              WHEN ${patch.nfcTagId !== undefined}::boolean THEN ${patch.nfcTagId ?? null}::text
+              ELSE nfc_tag_id
+            END,
             updated_at = ${DateTime.toDate(at)}
         WHERE id = ${id}
         RETURNING *

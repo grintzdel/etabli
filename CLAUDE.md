@@ -92,9 +92,13 @@ le second, pour que la première empreinte reste opposable à un no-show.
 la command et la projection du read model le partagent, et le front lit
 `canCheckIn` au lieu de redériver la fenêtre de 15 min avant / 30 min après.
 
-`UpdateMachineSchema` ne porte pas `nfcTagId` : un fabmanager ne peut associer
-un tag qu'à la création de la machine. Le §8 de la spec promet le PATCH — à
-écrire dans `bc-atelier` quand l'écran de gestion en aura besoin.
+`PATCH /manage/machines/:id` associe, remplace ou retire un tag NFC :
+`nfcTagId` absent laisse le tag en place, `null` le décolle, une chaîne le pose.
+Le tag est unique sur tout le réseau — `nfc_tag_id` porte la contrainte en base
+depuis la migration `0003`, et `MachineNfcTagTakenError` (409) la double à la
+création comme à la modification, pour ne pas rendre un 500 sur un doublon.
+Reposer sur une machine le tag qu'elle porte déjà passe. Aucun écran ne s'en
+sert encore : le formulaire de `/manage/machines` ne crée que.
 
 ## Repos de référence
 

@@ -680,6 +680,11 @@ Toutes les routes sont décrites en `HttpApiEndpoint`, avec leurs schémas d'ent
 | `POST` | `/manage/bookings/:id/no-show` | Marquer un no-show |
 | `GET` | `/manage/stats` | Occupation, no-shows, heures |
 
+Sur `PATCH /manage/machines/:id`, `nfcTagId` absent laisse le tag en place,
+`null` le décolle et une chaîne le pose. Un tag ne peut habiller qu'une machine
+du réseau : le poser sur une deuxième répond `MachineNfcTagTakenError` (409), à
+la création comme à la modification.
+
 ### Administrateur plateforme
 
 | Méthode | Route | Rôle |

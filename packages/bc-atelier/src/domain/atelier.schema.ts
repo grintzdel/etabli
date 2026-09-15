@@ -254,6 +254,7 @@ export const UpdateMachineSchema = Schema.Struct({
   status: Schema.optional(MachineStatusSchema),
   requiresCertification: Schema.optional(Schema.Boolean),
   slotDurationMinutes: Schema.optional(Schema.Int.pipe(Schema.between(MIN_SLOT_MINUTES, MAX_SLOT_MINUTES))),
+  nfcTagId: Schema.optional(Schema.NullOr(Schema.Trim.pipe(Schema.minLength(1)))),
 })
 export type UpdateMachine = Schema.Schema.Type<typeof UpdateMachineSchema>
 

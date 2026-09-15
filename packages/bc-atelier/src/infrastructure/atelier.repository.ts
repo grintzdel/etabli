@@ -32,6 +32,7 @@ export interface AtelierRepositoryService {
   ) => Effect.Effect<Atelier | null, RepoError>
   readonly insertAtelier: (atelier: Atelier) => Effect.Effect<Atelier, RepoError>
   readonly findMachineById: (id: MachineId) => Effect.Effect<Machine | null, RepoError>
+  readonly findMachineByNfcTag: (nfcTagId: string) => Effect.Effect<Machine | null, RepoError>
   readonly updateMachine: (
     id: MachineId,
     patch: UpdateMachine,

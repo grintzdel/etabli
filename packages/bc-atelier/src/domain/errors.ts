@@ -30,3 +30,9 @@ export class MachineUnknownError extends Schema.TaggedError<MachineUnknownError>
   { machineId: Schema.String },
   HttpApiSchema.annotations({ status: 404 })
 ) {}
+
+export class MachineNfcTagTakenError extends Schema.TaggedError<MachineNfcTagTakenError>()(
+  'MachineNfcTagTakenError',
+  { nfcTagId: Schema.String },
+  HttpApiSchema.annotations({ status: 409 })
+) {}

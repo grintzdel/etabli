@@ -5,13 +5,17 @@ import { Clock } from '@etabli/shared/time'
 import * as Effect from 'effect/Effect'
 
 import type { Machine, UpdateMachine } from '../../../domain/atelier.schema'
-import { MachineUnknownError } from '../../../domain/errors'
+import { MachineNfcTagTakenError, MachineUnknownError } from '../../../domain/errors'
 import { AtelierRepository } from '../../../infrastructure/atelier.repository'
 
 export const updateMachine = (
   machineId: MachineId,
   patch: UpdateMachine
-): Effect.Effect<Machine, MachineUnknownError | RepoError, AuthContext | AtelierRepository | Clock> =>
+): Effect.Effect<
+  Machine,
+  MachineUnknownError | MachineNfcTagTakenError | RepoError,
+  AuthContext | AtelierRepository | Clock
+> =>
   Effect.gen(function* () {
     const auth = yield* AuthContext
     const repository = yield* AtelierRepository
@@ -20,6 +24,13 @@ export const updateMachine = (
     const machine = yield* repository.findMachineById(machineId)
     if (machine === null || !isFabmanagerOf(auth, machine.atelierId)) {
       return yield* Effect.fail(new MachineUnknownError({ machineId }))
+    }
+
+    if (patch.nfcTagId !== undefined && patch.nfcTagId !== null) {
+      const wearer = yield* repository.findMachineByNfcTag(patch.nfcTagId)
+      if (wearer !== null && wearer.id !== machineId) {
+        return yield* Effect.fail(new MachineNfcTagTakenError({ nfcTagId: patch.nfcTagId }))
+      }
     }
 
     const updated = yield* repository.updateMachine(machineId, patch, yield* clock.now)
