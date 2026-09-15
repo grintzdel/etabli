@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit'
 import * as Layer from 'effect/Layer'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { atelierFixture } from '../../../__tests__/atelier.factory'
+import { atelierFixture, machineFixture } from '../../../__tests__/atelier.factory'
 import { MachineKind, MachineStatus } from '../../../domain/atelier.constants'
 import type { CreateMachine } from '../../../domain/atelier.schema'
 import { AtelierRepository } from '../../../infrastructure/atelier.repository'
@@ -81,5 +81,20 @@ describe('createMachine', () => {
     const exit = await run(input(atelier.id), [{ atelierId: OTHER, role: 'FABMANAGER' }])
 
     expect(Exit.isFailure(exit)).toBe(true)
+  })
+
+  it('refuses a tag already stuck on another machine', async () => {
+    const atelier = atelierFixture()
+    repository.ateliers.set(atelier.id, atelier)
+    const taken = machineFixture(atelier.id, { nfcTagId: 'tag-trotec' })
+    repository.machines.set(taken.id, taken)
+
+    const exit = await run(input(atelier.id, { nfcTagId: 'tag-trotec' }), [
+      { atelierId: atelier.id, role: 'FABMANAGER' },
+    ])
+
+    expect(Exit.isFailure(exit)).toBe(true)
+    expect(JSON.stringify(exit)).toContain('MachineNfcTagTakenError')
+    expect([...repository.machines.values()]).toHaveLength(1)
   })
 })

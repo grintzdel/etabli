@@ -8,7 +8,7 @@ import type { AssertEquals } from '@etabli/shared/type-level'
 import * as Schema from 'effect/Schema'
 
 import { CreateMachineSchema, MachineSchema, ManagedParcSchema, UpdateMachineSchema } from '../domain/atelier.schema'
-import { MachineUnknownError } from '../domain/errors'
+import { MachineNfcTagTakenError, MachineUnknownError } from '../domain/errors'
 
 export const managedParcContractParity: AssertEquals<
   Schema.Schema.Encoded<typeof ManagedParcSchema>,
@@ -22,6 +22,7 @@ export const manageApiGroup = HttpApiGroup.make('manage')
       .setPayload(CreateMachineSchema)
       .addSuccess(MachineSchema, { status: 201 })
       .addError(ForbiddenError)
+      .addError(MachineNfcTagTakenError)
   )
   .add(
     HttpApiEndpoint.patch('updateMachine', routes.manage.machine)
@@ -29,5 +30,6 @@ export const manageApiGroup = HttpApiGroup.make('manage')
       .setPayload(UpdateMachineSchema)
       .addSuccess(MachineSchema)
       .addError(MachineUnknownError)
+      .addError(MachineNfcTagTakenError)
   )
   .middleware(AuthMiddleware)

@@ -142,6 +142,8 @@ export const makeAtelierRepositoryMemory = (): AtelierRepositoryMemory => {
         return atelier
       }),
     findMachineById: (id: MachineId) => Effect.sync(() => machines.get(id) ?? null),
+    findMachineByNfcTag: (nfcTagId: string) =>
+      Effect.sync(() => [...machines.values()].find((machine) => machine.nfcTagId === nfcTagId) ?? null),
     updateMachine: (id: MachineId, patch: UpdateMachine, at: Machine['updatedAt']) =>
       Effect.sync(() => {
         const machine = machines.get(id)

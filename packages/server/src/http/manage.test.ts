@@ -167,6 +167,48 @@ describe('PATCH /manage/machines/:id', () => {
     const token = await join(FORGE, 'FABMANAGER')
     expect((await send('PATCH', `/manage/machines/${UNKNOWN}`, { status: 'RETIRED' }, token)).status).toBe(404)
   })
+
+  it('sticks an nfc tag on a machine, then peels it off', async () => {
+    const token = await join(FORGE, 'FABMANAGER')
+    const created = (await (await send('POST', '/manage/machines', machine(FORGE, 'Taggable'), token)).json()) as {
+      id: string
+    }
+
+    const tagged = await send('PATCH', `/manage/machines/${created.id}`, { nfcTagId: 'tag-taggable' }, token)
+    expect(tagged.status).toBe(200)
+    expect(((await tagged.json()) as Record<string, unknown>)['nfcTagId']).toBe('tag-taggable')
+
+    const peeled = await send('PATCH', `/manage/machines/${created.id}`, { nfcTagId: null }, token)
+    expect(((await peeled.json()) as Record<string, unknown>)['nfcTagId']).toBeNull()
+  })
+
+  it('leaves the tag in place when the patch does not mention it', async () => {
+    const token = await join(FORGE, 'FABMANAGER')
+    const created = (await (await send('POST', '/manage/machines', machine(FORGE, 'Tag gardé'), token)).json()) as {
+      id: string
+    }
+    await send('PATCH', `/manage/machines/${created.id}`, { nfcTagId: 'tag-garde' }, token)
+
+    const response = await send('PATCH', `/manage/machines/${created.id}`, { status: 'MAINTENANCE' }, token)
+
+    expect(((await response.json()) as Record<string, unknown>)['nfcTagId']).toBe('tag-garde')
+  })
+
+  it('answers 409 on a tag already stuck on another machine', async () => {
+    const token = await join(FORGE, 'FABMANAGER')
+    const first = (await (await send('POST', '/manage/machines', machine(FORGE, 'Porteuse'), token)).json()) as {
+      id: string
+    }
+    const second = (await (await send('POST', '/manage/machines', machine(FORGE, 'Convoiteuse'), token)).json()) as {
+      id: string
+    }
+    await send('PATCH', `/manage/machines/${first.id}`, { nfcTagId: 'tag-porteuse' }, token)
+
+    const response = await send('PATCH', `/manage/machines/${second.id}`, { nfcTagId: 'tag-porteuse' }, token)
+
+    expect(response.status).toBe(409)
+    expect(((await response.json()) as Record<string, unknown>)['_tag']).toBe('MachineNfcTagTakenError')
+  })
 })
 
 describe('GET /manage/machines', () => {

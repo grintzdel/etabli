@@ -132,4 +132,5 @@ export type UpdateMachineInput = {
   readonly status?: MachineStatus
   readonly requiresCertification?: boolean
   readonly slotDurationMinutes?: number
+  readonly nfcTagId?: string | null
 }
