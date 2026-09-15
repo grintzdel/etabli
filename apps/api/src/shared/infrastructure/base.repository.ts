@@ -16,7 +16,7 @@ export abstract class BaseRepository<Row extends Record<string, unknown>> {
     return tx ?? this.db
   }
 
-  protected async selectOne(where: SQL, tx?: Transactable): Promise<Row | null> {
+  protected async selectOne(where: SQL | undefined, tx?: Transactable): Promise<Row | null> {
     const rows = await this.conn(tx).select().from(this.table).where(where).limit(1)
     return (rows[0] as Row | undefined) ?? null
   }

@@ -38,9 +38,7 @@ export class CertificationRepositoryDrizzlePg
   }
 
   async findForUserAndMachine(userId: string, machineId: string): Promise<CertificationEntity | null> {
-    const row = await this.selectOne(
-      and(eq(certifications.userId, userId), eq(certifications.machineId, machineId)) as never
-    )
+    const row = await this.selectOne(and(eq(certifications.userId, userId), eq(certifications.machineId, machineId)))
     return row === null ? null : toCertification(row)
   }
 

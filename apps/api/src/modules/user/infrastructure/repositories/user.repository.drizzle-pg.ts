@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, desc, eq, ilike, inArray, or, type SQL } from 'drizzle-orm'
+import { desc, eq, ilike, inArray, or, type SQL } from 'drizzle-orm'
 
 import {
   type Database,
@@ -211,11 +211,9 @@ export class UserRepositoryDrizzlePg extends BaseRepository<UserRow> implements 
       .from(memberships)
       .innerJoin(ateliers, eq(ateliers.id, memberships.atelierId))
       .where(
-        and(
-          inArray(
-            memberships.userId,
-            rows.map((row) => row.id)
-          )
+        inArray(
+          memberships.userId,
+          rows.map((row) => row.id)
         )
       )
       .orderBy(memberships.joinedAt)

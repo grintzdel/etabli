@@ -54,8 +54,11 @@ export class AtelierRepositoryDrizzlePg extends BaseRepository<AtelierRow> imple
   }
 
   async listPublished(filter: DirectoryFilter): Promise<ReadonlyArray<AtelierSummary>> {
-    const geo = filter.lat !== undefined && filter.lng !== undefined && filter.radiusKm !== undefined
-    const distance = geo ? distanceExpression(filter.lat as number, filter.lng as number) : null
+    const geo =
+      filter.lat !== undefined && filter.lng !== undefined && filter.radiusKm !== undefined
+        ? { lat: filter.lat, lng: filter.lng, radiusKm: filter.radiusKm }
+        : null
+    const distance = geo === null ? null : distanceExpression(geo.lat, geo.lng)
 
     const clauses: Array<SQL | undefined> = [eq(ateliers.status, AtelierStatus.PUBLISHED)]
     if (filter.city !== undefined) clauses.push(sql`lower(${ateliers.city}) = lower(${filter.city})`)
@@ -65,7 +68,7 @@ export class AtelierRepositoryDrizzlePg extends BaseRepository<AtelierRow> imple
           AND mk.kind = ${filter.machineKind} AND mk.status <> ${MachineStatusValues.RETIRED})`
       )
     }
-    if (distance !== null) clauses.push(sql`${distance} <= ${filter.radiusKm as number}`)
+    if (geo !== null && distance !== null) clauses.push(sql`${distance} <= ${geo.radiusKm}`)
 
     const rows = await this.db
       .select({
@@ -107,12 +110,12 @@ export class AtelierRepositoryDrizzlePg extends BaseRepository<AtelierRow> imple
   }
 
   async findPublishedBySlug(slug: string): Promise<AtelierEntity | null> {
-    const row = await this.selectOne(and(eq(ateliers.slug, slug), eq(ateliers.status, AtelierStatus.PUBLISHED)) as SQL)
+    const row = await this.selectOne(and(eq(ateliers.slug, slug), eq(ateliers.status, AtelierStatus.PUBLISHED)))
     return row === null ? null : toAtelier(row)
   }
 
   async findPublishedById(id: string): Promise<AtelierEntity | null> {
-    const row = await this.selectOne(and(eq(ateliers.id, id), eq(ateliers.status, AtelierStatus.PUBLISHED)) as SQL)
+    const row = await this.selectOne(and(eq(ateliers.id, id), eq(ateliers.status, AtelierStatus.PUBLISHED)))
     return row === null ? null : toAtelier(row)
   }
 
