@@ -29,4 +29,10 @@ export class ManageBookingHttpAdapter implements IManageBookingPort {
       method: 'POST',
     })
   }
+
+  markNoShow(token: string, id: string): Promise<BookingResult<AtelierBooking>> {
+    return requestBooking<AtelierBooking>(this.baseUrl, buildPath(routes.manage.noShow, { id }), token, {
+      method: 'POST',
+    })
+  }
 }

@@ -30,6 +30,7 @@ test('the fabmanager finds the slot a member took, on its day and on no other', 
   await expect(row.getByText('Camille Roux')).toBeVisible()
   await expect(row.getByText('Confirmée')).toBeVisible()
   await expect(row.getByRole('button', { name: /pointer/i })).toBeHidden()
+  await expect(row.getByRole('button', { name: /marquer non honorée/i })).toBeHidden()
 
   await page.goto('/manage/bookings?day=2020-01-06')
   await expect(page.getByText(/aucune réservation ce jour-là/i)).toBeVisible()

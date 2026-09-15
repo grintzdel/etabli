@@ -2,6 +2,7 @@ import type * as DateTime from 'effect/DateTime'
 
 import type { AtelierBooking, Booking } from './booking.schema'
 import { isCheckInOpen } from './check-in'
+import { isNoShowMarkable } from './no-show'
 
 export interface AtelierBookingNaming {
   readonly machineName: string
@@ -29,4 +30,5 @@ export const toAtelierBooking = (
   checkedInAt: booking.checkedInAt,
   checkedInVia: booking.checkedInVia,
   canCheckIn: isCheckInOpen(booking, now),
+  canMarkNoShow: isNoShowMarkable(booking, now),
 })

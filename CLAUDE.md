@@ -12,12 +12,12 @@ plages avec le paramètre `pages`).
 
 ## État
 
-Jalons 0 à 3 terminés et sur `main`. Jalon 4 : le parcours membre est complet
-de bout en bout, de l'atelier au créneau réservé, et le fabmanager tient le
-pointage de secours depuis `/manage/bookings`. Reste le no-show —
-`/manage/bookings/:id/no-show` est au contrat, pas encore écrit.
+Jalons 0 à 4 terminés et sur `main`. Le parcours membre est complet de bout en
+bout, de l'atelier au créneau réservé, et le fabmanager tient le pointage de
+secours et le no-show depuis `/manage/bookings`. Prochaine étape : le jalon 5,
+les paramètres.
 
-`pnpm check` est vert : 516 tests unitaires, `next build`. Les 66 E2E
+`pnpm check` est vert : 540 tests unitaires, `next build`. Les 66 E2E
 Playwright passent mais **ne tournent plus dans `pnpm verify`, sur décision de
 l'auteur** — `pnpm db:test:up` puis `pnpm test:e2e` pour les lancer.
 
@@ -34,10 +34,11 @@ Ce qui existe, package par package :
 - `bc-booking` — domaine, migration `0005`, repository, et le parcours membre
   complet : `GET /machines/:id/availability`, `POST /bookings`, `GET /bookings`,
   `GET /bookings/:id`, `POST /bookings/:id/cancel`, `POST /bookings/:id/check-in`.
-  Côté fabmanager, `GET /manage/bookings` et `POST /manage/bookings/:id/check-in`.
+  Côté fabmanager, `GET /manage/bookings`, `POST /manage/bookings/:id/check-in`
+  et `POST /manage/bookings/:id/no-show`.
   Côté web, `/machines/:id` ouvre la semaine et réserve, `/reservations` et
   `/reservations/:id` listent, détaillent et annulent, et `/manage/bookings`
-  tient le pointage de la journée.
+  tient le pointage et le no-show de la journée.
 
 Neon est branché et à jour des cinq migrations. Sur une machine neuve : copier
 `.env.example` en `.env` et y mettre l'URL *pooled* du projet Neon. `pg` émet un
@@ -101,6 +102,9 @@ première empreinte reste opposable à un no-show.
 `isCheckInOpen(booking, now)` est un prédicat pur, jumeau d'`isCancellable` :
 la command et la projection du read model le partagent, et le front lit
 `canCheckIn` au lieu de redériver la fenêtre de 15 min avant / 30 min après.
+`isNoShowMarkable` est le troisième du genre, et il se lit sur la fermeture de
+cette même fenêtre — pas sur la fin du créneau. Avant elle, le membre peut
+encore arriver ; après, l'absence est acquise. Règle 10 du §5.
 
 `PATCH /manage/machines/:id` associe, remplace ou retire un tag NFC :
 `nfcTagId` absent laisse le tag en place, `null` le décolle, une chaîne le pose.

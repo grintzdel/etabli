@@ -4,4 +4,5 @@ import type { AtelierBooking, AtelierBookingsQuery } from '../model/manage-booki
 export interface IManageBookingPort {
   list(token: string, query: AtelierBookingsQuery): Promise<BookingResult<ReadonlyArray<AtelierBooking>>>
   checkIn(token: string, id: string): Promise<BookingResult<AtelierBooking>>
+  markNoShow(token: string, id: string): Promise<BookingResult<AtelierBooking>>
 }

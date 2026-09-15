@@ -39,6 +39,7 @@ export const atelierBookingFixture = (overrides: Partial<AtelierBooking> = {}): 
     checkedInAt: null,
     checkedInVia: null,
     canCheckIn: true,
+    canMarkNoShow: false,
     ...overrides,
   }
 }

@@ -200,6 +200,30 @@ describe('BookingRepository on Postgres', () => {
     expect(checkedIn?.checkedInVia).toBe(CheckInMethod.NFC)
   })
 
+  it('marks a booking not honoured', async () => {
+    const written = booking()
+    await insert(written)
+
+    const marked = await runtime.runPromise(repository.markNoShow(written.id, at('2026-03-02T10:00:00Z')))
+
+    expect(marked?.status).toBe(BookingStatus.NO_SHOW)
+    expect(marked?.updatedAt).toStrictEqual(at('2026-03-02T10:00:00Z'))
+  })
+
+  it('answers nothing when marking a booking that is not there', async () => {
+    const marked = await runtime.runPromise(repository.markNoShow(booking().id, at('2026-03-02T10:00:00Z')))
+
+    expect(marked).toBeNull()
+  })
+
+  it('reopens the slot a booking not honoured held', async () => {
+    const written = booking()
+    await insert(written)
+    await runtime.runPromise(repository.markNoShow(written.id, at('2026-03-02T10:00:00Z')))
+
+    expect(Exit.isSuccess(await insert(booking()))).toBe(true)
+  })
+
   it('answers nothing when checking in a booking that is not there', async () => {
     const checkedIn = await runtime.runPromise(
       repository.checkIn(booking().id, at('2026-03-02T08:50:00Z'), CheckInMethod.NFC)
@@ -267,6 +291,16 @@ describe('BookingRepository in memory', () => {
       )
 
       expect(found.map((item) => item.startAt)).toStrictEqual([at('2026-03-02T09:00:00Z')])
+    })
+
+    it('marks a booking not honoured like Postgres does', async () => {
+      const memory = make()
+      const written = booking()
+      await Effect.runPromise(memory.insert(written))
+
+      const marked = await Effect.runPromise(memory.markNoShow(written.id, at('2026-03-02T10:00:00Z')))
+
+      expect(marked?.status).toBe(BookingStatus.NO_SHOW)
     })
 
     it('marks a booking cancelled like Postgres does', async () => {

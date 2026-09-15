@@ -113,6 +113,7 @@ export const AtelierBookingSchema = Schema.Struct({
   checkedInAt: Schema.NullOr(Schema.DateTimeUtc),
   checkedInVia: Schema.NullOr(CheckInMethodSchema),
   canCheckIn: Schema.Boolean,
+  canMarkNoShow: Schema.Boolean,
 })
 export type AtelierBooking = Schema.Schema.Type<typeof AtelierBookingSchema>
 

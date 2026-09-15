@@ -82,6 +82,14 @@ export const makeBookingRepositoryMemory = (): BookingRepositoryMemory => {
         bookings.set(id, checkedIn)
         return checkedIn
       }),
+    markNoShow: (id: BookingId, at) =>
+      Effect.sync(() => {
+        const existing = bookings.get(id)
+        if (existing === undefined) return null
+        const marked = { ...existing, status: BookingStatus.NO_SHOW, updatedAt: at }
+        bookings.set(id, marked)
+        return marked
+      }),
     cancel: (id: BookingId, at, by: UserId) =>
       Effect.sync(() => {
         const existing = bookings.get(id)

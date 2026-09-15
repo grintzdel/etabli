@@ -6,7 +6,7 @@ import { BookingFailureCode } from '@/modules/booking/core/model/booking'
 import { parseBookingDeskFilters, toAtelierBookingsQuery } from '@/modules/booking/core/model/manage-booking'
 import { BookingDesk } from '@/modules/booking/react/components/BookingDesk'
 import { BookingDeskFilters } from '@/modules/booking/react/components/BookingDeskFilters'
-import { manualCheckInAction } from '@/server/booking.actions'
+import { manualCheckInAction, markNoShowAction } from '@/server/booking.actions'
 import { manageBookingPort } from '@/server/container'
 import { readSessionToken } from '@/server/session'
 import { Surface } from '@/ui/Surface'
@@ -36,7 +36,7 @@ const Desk = async ({ searchParams }: { readonly searchParams: SearchParams }) =
   return (
     <>
       <BookingDeskFilters filters={filters} />
-      <BookingDesk bookings={result.value} checkIn={manualCheckInAction} />
+      <BookingDesk bookings={result.value} checkIn={manualCheckInAction} markNoShow={markNoShowAction} />
     </>
   )
 }

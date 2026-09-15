@@ -68,3 +68,20 @@ export const manualCheckInAction = async (
   refresh()
   return { error: null }
 }
+
+export const markNoShowAction = async (_state: BookingActionState, formData: FormData): Promise<BookingActionState> => {
+  const bookingId = formData.get('bookingId')
+  if (typeof bookingId !== 'string' || bookingId.length === 0) return { error: null }
+
+  const token = await readSessionToken()
+  if (token === null) redirect('/connexion?next=/manage/bookings')
+
+  const result = await manageBookingPort.markNoShow(token, bookingId)
+  if (!result.ok) {
+    if (result.error.code === BookingFailureCode.UNAUTHORIZED) redirect('/connexion?next=/manage/bookings')
+    return { error: result.error.message }
+  }
+
+  refresh()
+  return { error: null }
+}
