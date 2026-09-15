@@ -35,6 +35,58 @@ body {
   font-family: var(--font-sans);
 }
 
+/* The ramp is semantic, not literal — 950 is the ground and 50 is the ink — so light
+   mode inverts the rungs instead of recolouring the utilities that name them. */
+[data-theme='light'] {
+  --color-graphite-950: #f4f6f8;
+  --color-graphite-900: #e9ecf0;
+  --color-graphite-800: #dcdfe4;
+  --color-graphite-700: #c3c8d0;
+  --color-graphite-600: #9fa5af;
+  --color-graphite-500: #7b828d;
+  --color-graphite-400: #5c636c;
+  --color-graphite-300: #3d434c;
+  --color-graphite-200: #2a2e35;
+  --color-graphite-100: #1c1f24;
+  --color-graphite-50: #131518;
+
+  --color-signal-600: #7a2e00;
+  --color-signal-500: #a33d00;
+  --color-signal-400: #d14f00;
+
+  --color-status-ok: #1a7040;
+  --color-status-warn: #7c5200;
+  --color-status-danger: #b0272c;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: light) {
+  [data-theme='system'] {
+    --color-graphite-950: #f4f6f8;
+    --color-graphite-900: #e9ecf0;
+    --color-graphite-800: #dcdfe4;
+    --color-graphite-700: #c3c8d0;
+    --color-graphite-600: #9fa5af;
+    --color-graphite-500: #7b828d;
+    --color-graphite-400: #5c636c;
+    --color-graphite-300: #3d434c;
+    --color-graphite-200: #2a2e35;
+    --color-graphite-100: #1c1f24;
+    --color-graphite-50: #131518;
+
+    --color-signal-600: #7a2e00;
+    --color-signal-500: #a33d00;
+    --color-signal-400: #d14f00;
+
+    --color-status-ok: #1a7040;
+    --color-status-warn: #7c5200;
+    --color-status-danger: #b0272c;
+
+    color-scheme: light;
+  }
+}
+
 :focus-visible {
   outline: 2px solid var(--color-signal-500);
   outline-offset: 2px;

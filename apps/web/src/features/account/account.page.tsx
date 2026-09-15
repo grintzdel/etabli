@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 
@@ -6,6 +7,7 @@ import { MembershipList } from '@/modules/atelier/react/components/MembershipLis
 import { AccountCard } from '@/modules/identity/react/components/AccountCard'
 import { atelierPort, identityPort } from '@/server/container'
 import { readSessionToken } from '@/server/session'
+import { buttonVariants } from '@/ui/Button'
 import { Surface } from '@/ui/Surface'
 
 export const metadata: Metadata = {
@@ -44,6 +46,9 @@ export const AccountPage = () => (
   <main className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-20">
     <header className="flex flex-wrap items-center justify-between gap-4">
       <h1 className="font-display text-3xl font-bold tracking-tight uppercase">Mon compte</h1>
+      <Link href="/parametres" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+        Paramètres
+      </Link>
     </header>
 
     <Suspense fallback={<AccountDetailsFallback />}>

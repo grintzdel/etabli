@@ -9,6 +9,7 @@ export const IdentityFailureCode = {
   EMAIL_TAKEN: 'EMAIL_TAKEN',
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
   ACCOUNT_SUSPENDED: 'ACCOUNT_SUSPENDED',
+  PREFERRED_ATELIER_NOT_JOINED: 'PREFERRED_ATELIER_NOT_JOINED',
   UNAUTHORIZED: 'UNAUTHORIZED',
   UNREACHABLE: 'UNREACHABLE',
 } as const
@@ -28,6 +29,7 @@ export const FAILURE_MESSAGES: Readonly<Record<IdentityFailureCode, string>> = {
   EMAIL_TAKEN: 'Cette adresse a déjà un compte.',
   INVALID_CREDENTIALS: 'Adresse e-mail ou mot de passe incorrect.',
   ACCOUNT_SUSPENDED: 'Ce compte est suspendu.',
+  PREFERRED_ATELIER_NOT_JOINED: "Vous n'êtes pas membre de cet atelier.",
   UNAUTHORIZED: 'Votre session a expiré.',
   UNREACHABLE: 'Le service est momentanément indisponible.',
 }

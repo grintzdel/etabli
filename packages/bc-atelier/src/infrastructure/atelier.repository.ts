@@ -10,6 +10,7 @@ import type {
   AtelierSummary,
   ListAteliersParams,
   Machine,
+  MemberAtelier,
   Membership,
   Slug,
   UpdateMachine,
@@ -21,6 +22,7 @@ export interface AtelierRepositoryService {
   readonly findPublishedById: (id: AtelierId) => Effect.Effect<Atelier | null, RepoError>
   readonly findMembership: (userId: UserId, atelierId: AtelierId) => Effect.Effect<Membership | null, RepoError>
   readonly listMembershipsForUser: (userId: UserId) => Effect.Effect<ReadonlyArray<Membership>, RepoError>
+  readonly listMemberAteliersForUser: (userId: UserId) => Effect.Effect<ReadonlyArray<MemberAtelier>, RepoError>
   readonly listMachines: (atelierId: AtelierId) => Effect.Effect<ReadonlyArray<Machine>, RepoError>
   readonly listAll: () => Effect.Effect<ReadonlyArray<AdminAtelier>, RepoError>
   readonly findAnyById: (id: AtelierId) => Effect.Effect<Atelier | null, RepoError>

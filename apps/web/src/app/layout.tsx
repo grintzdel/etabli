@@ -1,11 +1,6 @@
 import type { Metadata } from 'next'
 import { Barlow_Condensed, Inter } from 'next/font/google'
 import type { ReactNode } from 'react'
-import { Suspense } from 'react'
-
-import { CurrentSessionNav } from '@/server/session-nav'
-import { SiteFooter } from '@/ui/SiteFooter'
-import { SignedOutLinks, SiteHeader } from '@/ui/SiteHeader'
 
 import './globals.css'
 
@@ -25,17 +20,7 @@ export const metadata: Metadata = {
 
 const RootLayout = ({ children }: { children: ReactNode }) => (
   <html lang="fr" className={`${inter.variable} ${barlowCondensed.variable}`}>
-    <body className="flex min-h-dvh flex-col">
-      <SiteHeader
-        session={
-          <Suspense fallback={<SignedOutLinks />}>
-            <CurrentSessionNav />
-          </Suspense>
-        }
-      />
-      <div className="flex-1">{children}</div>
-      <SiteFooter />
-    </body>
+    <body className="flex min-h-dvh flex-col">{children}</body>
   </html>
 )
 

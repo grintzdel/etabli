@@ -11,11 +11,14 @@ import type { IManageBookingPort } from '@/modules/booking/core/ports/manage-boo
 import { CertificationHttpAdapter } from '@/modules/certification/core/adapters/certification.http.adapter'
 import type { ICertificationPort } from '@/modules/certification/core/ports/certification.port'
 import { IdentityHttpAdapter } from '@/modules/identity/core/adapters/identity.http.adapter'
+import { PreferencesHttpAdapter } from '@/modules/identity/core/adapters/preferences.http.adapter'
 import type { IIdentityPort } from '@/modules/identity/core/ports/identity.port'
+import type { IPreferencesPort } from '@/modules/identity/core/ports/preferences.port'
 
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
 
 export const identityPort: IIdentityPort = new IdentityHttpAdapter(apiUrl)
+export const preferencesPort: IPreferencesPort = new PreferencesHttpAdapter(apiUrl)
 export const atelierPort: IAtelierPort = new AtelierHttpAdapter(apiUrl)
 export const adminAtelierPort: IAdminAtelierPort = new AdminAtelierHttpAdapter(apiUrl)
 export const manageMachinePort: IManageMachinePort = new ManageMachineHttpAdapter(apiUrl)

@@ -92,6 +92,14 @@ export const MembershipSchema = Schema.Struct({
 })
 export type Membership = Schema.Schema.Type<typeof MembershipSchema>
 
+export const MemberAtelierSchema = Schema.Struct({
+  id: AtelierId,
+  slug: Slug,
+  name: Schema.String,
+  role: MembershipRoleSchema,
+})
+export type MemberAtelier = Schema.Schema.Type<typeof MemberAtelierSchema>
+
 export const AtelierSummarySchema = Schema.Struct({
   id: AtelierId,
   slug: Slug,
