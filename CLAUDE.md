@@ -78,6 +78,10 @@ n'interdisait de réserver dans le passé. Ajoutée, et inscrite au §5.
 Une réservation qui n'appartient pas à l'appelant répond 404, pas 403 : le
 statut ne doit pas révéler qu'elle existe.
 
+Une machine `RETIRED` répond 404 partout — availability comme `POST /bookings`.
+Elle est sortie du parc, donc indiscernable d'une machine inconnue. Seul
+`MAINTENANCE` vaut un 409 : la machine existe et reviendra.
+
 ## Repos de référence
 
 Deux repos locaux servent de modèle. Les consulter plutôt que d'inventer.

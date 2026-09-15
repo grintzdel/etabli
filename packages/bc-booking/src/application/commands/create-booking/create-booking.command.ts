@@ -41,7 +41,9 @@ export const createBooking = (
     const clock = yield* Clock
 
     const machine = yield* catalog.find(input.machineId)
-    if (machine === null || !isMemberOf(auth, machine.atelierId)) {
+    const reachable =
+      machine !== null && machine.status !== BookableMachineStatus.RETIRED && isMemberOf(auth, machine.atelierId)
+    if (machine === null || !reachable) {
       return yield* Effect.fail(new MachineNotBookableError({ machineId: input.machineId }))
     }
 

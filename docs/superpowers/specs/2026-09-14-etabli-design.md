@@ -172,7 +172,7 @@ Le cœur. Ce sont des règles de **refus** : le système dit non, avec une erreu
 |---|---|---|---|
 | 1 | Une machine `requiresCertification` n'est réservable qu'avec une habilitation `GRANTED` **sur cette machine** | `MissingCertificationError` | 403 |
 | 2 | Deux réservations ne peuvent se chevaucher sur la même machine | `BookingOverlapError` | 409 |
-| 3 | Une machine en `MAINTENANCE` ou `RETIRED` n'est pas réservable | `MachineUnavailableError` | 409 |
+| 3 | Une machine en `MAINTENANCE` n'est pas réservable ; une machine `RETIRED` répond comme une machine inconnue | `MachineUnavailableError` · `MachineNotBookableError` | 409 · 404 |
 | 4 | Un fabmanager n'agit que dans son atelier | `ForbiddenError` | 403 |
 | 5 | Le check-in n'est possible qu'entre 15 min avant et 30 min après le début du créneau | `CheckInWindowClosedError` | 409 |
 | 6 | Le tag NFC présenté doit être celui de la machine réservée | `NfcTagMismatchError` | 409 |
@@ -184,6 +184,8 @@ Reportées en v1.1 : le créneau doit tomber dans les horaires d'ouverture de l'
 La règle 1 disait d'abord « pour ce type de machine, dans cet atelier », et parlait d'une habilitation « non expirée ». Le jalon 3 a posé l'habilitation sur une machine, sans date d'expiration, et toute l'interface de validation nomme une machine ; la règle a été resserrée pour dire ce que le code garantit. Élargir au type plus tard n'invalide aucune habilitation déjà accordée — l'inverse retirerait des accès.
 
 La règle 8 ne figurait pas dans le brief. Aucune des sept autres n'interdisait de réserver un créneau révolu.
+
+La règle 3 distingue deux états que le brief confondait. `MAINTENANCE` est transitoire : la machine existe, elle reste visible, elle reviendra — un 409 dit exactement cela. `RETIRED` est définitif : la machine sort du parc réservable, et `GET /machines/:id/availability` comme `POST /bookings` répondent 404, du même mot qu'une machine qui n'a jamais existé.
 
 Une réservation qui n'appartient pas à l'appelant répond `404`, jamais `403` : le statut ne doit pas révéler son existence.
 
