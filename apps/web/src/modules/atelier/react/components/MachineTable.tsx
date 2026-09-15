@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 import type { MachineStatus, PublicMachine } from '@/modules/atelier/core/model/atelier'
 import { MACHINE_KIND_LABELS, MACHINE_STATUS_LABELS } from '@/modules/atelier/core/model/atelier'
 import { StatusBadge } from '@/ui/StatusBadge'
@@ -46,7 +48,13 @@ export const MachineTable = ({ machines }: MachineTableProps) => {
           {machines.map((machine) => (
             <tr key={machine.id}>
               <th scope="row" className={`${cellClassName} font-semibold`}>
-                {machine.name}
+                {machine.status === 'RETIRED' ? (
+                  machine.name
+                ) : (
+                  <Link href={`/machines/${machine.id}`} className="hover:text-signal-500">
+                    {machine.name}
+                  </Link>
+                )}
                 <span className="text-graphite-400 block text-sm font-normal">{machine.description}</span>
               </th>
               <td className={cellClassName}>{MACHINE_KIND_LABELS[machine.kind]}</td>

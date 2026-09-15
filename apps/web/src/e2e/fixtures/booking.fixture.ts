@@ -4,6 +4,9 @@ import { expect } from '@playwright/test'
 import { apiUrl } from './auth.fixture'
 
 export const BOOKABLE_MACHINE_ID = '0a7e1f00-0000-4000-8000-000000000402'
+export const CERTIFIED_MACHINE_ID = '0a7e1f00-0000-4000-8000-000000000101'
+export const MAINTENANCE_MACHINE_ID = '0a7e1f00-0000-4000-8000-000000000102'
+export const RETIRED_MACHINE_ID = '0a7e1f00-0000-4000-8000-000000000105'
 
 type Slot = { readonly startAt: string; readonly available: boolean }
 type Availability = { readonly slots: ReadonlyArray<Slot> }
@@ -34,4 +37,11 @@ export const bookAFreeSlot = async (
   }
 
   return take(0)
+}
+
+export const releaseBooking = async (request: APIRequestContext, token: string, id: string): Promise<void> => {
+  const response = await request.post(`${apiUrl}/bookings/${id}/cancel`, {
+    headers: { authorization: `Bearer ${token}` },
+  })
+  expect(response.status()).toBe(200)
 }

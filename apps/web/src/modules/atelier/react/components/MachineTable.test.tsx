@@ -23,6 +23,18 @@ describe('MachineTable', () => {
     expect(screen.getByText('En maintenance')).toBeInTheDocument()
   })
 
+  it('opens a machine still in the parc on its week of slots', () => {
+    const machine = machineFixture({ name: 'Prusa' })
+    render(<MachineTable machines={[machine]} />)
+    expect(screen.getByRole('link', { name: 'Prusa' })).toHaveAttribute('href', `/machines/${machine.id}`)
+  })
+
+  it('leaves a retired machine unlinked', () => {
+    render(<MachineTable machines={[machineFixture({ name: 'Kity', status: 'RETIRED' })]} />)
+    expect(screen.queryByRole('link', { name: 'Kity' })).not.toBeInTheDocument()
+    expect(screen.getByRole('rowheader', { name: /Kity/ })).toBeInTheDocument()
+  })
+
   it('states whether a certification is required', () => {
     render(
       <MachineTable

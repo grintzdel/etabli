@@ -1,6 +1,13 @@
-import type { AvailabilitySlot, BookingDetail, BookingStatus, MachineAvailability, SlotReason } from '@etabli/contract'
+import type {
+  AvailabilitySlot,
+  BookingDetail,
+  BookingStatus,
+  CreateBooking,
+  MachineAvailability,
+  SlotReason,
+} from '@etabli/contract'
 
-export type { AvailabilitySlot, BookingDetail, BookingStatus, MachineAvailability, SlotReason }
+export type { AvailabilitySlot, BookingDetail, BookingStatus, CreateBooking, MachineAvailability, SlotReason }
 
 export const BookingFailureCode = {
   MACHINE_NOT_BOOKABLE: 'MACHINE_NOT_BOOKABLE',
@@ -61,6 +68,13 @@ export const STATUS_TONES: Readonly<Record<BookingStatus, 'ok' | 'warn' | 'dange
   COMPLETED: 'neutral',
   CANCELLED: 'neutral',
   NO_SHOW: 'danger',
+}
+
+export const SLOT_REASON_LABELS: Readonly<Record<SlotReason, string>> = {
+  FREE: 'Libre',
+  BOOKED: 'Déjà réservé',
+  PAST: 'Passé',
+  MACHINE_UNAVAILABLE: 'Machine indisponible',
 }
 
 const OPEN_STATUSES: ReadonlySet<BookingStatus> = new Set(['CONFIRMED', 'CHECKED_IN'])
