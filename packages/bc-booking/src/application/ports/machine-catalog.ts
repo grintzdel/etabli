@@ -23,6 +23,7 @@ export interface MachineCatalogService {
   readonly listForAteliers: (
     atelierIds: ReadonlyArray<AtelierId>
   ) => Effect.Effect<ReadonlyArray<BookableMachine>, RepoError>
+  readonly listAll: () => Effect.Effect<ReadonlyArray<BookableMachine>, RepoError>
 }
 
 export class MachineCatalog extends Context.Tag('@etabli/MachineCatalog')<MachineCatalog, MachineCatalogService>() {}

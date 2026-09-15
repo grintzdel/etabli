@@ -2,12 +2,14 @@ import { HttpApiEndpoint, HttpApiGroup } from '@effect/platform'
 import type {
   AtelierBooking as AtelierBookingContract,
   AtelierStats as AtelierStatsContract,
+  NetworkStats as NetworkStatsContract,
   BookingDetail as BookingDetailContract,
   CheckInBooking as CheckInBookingContract,
   MachineAvailability as MachineAvailabilityContract,
 } from '@etabli/contract'
 import { routes } from '@etabli/contract'
 import { AuthMiddleware } from '@etabli/shared/auth-context'
+import { ForbiddenError } from '@etabli/shared/errors'
 import { BookingId, MachineId } from '@etabli/shared/schema'
 import type { AssertEquals } from '@etabli/shared/type-level'
 import * as Schema from 'effect/Schema'
@@ -17,6 +19,7 @@ import {
   AtelierBookingsParamsSchema,
   AtelierStatsParamsSchema,
   AtelierStatsSchema,
+  NetworkStatsSchema,
   AvailabilityParamsSchema,
   BookingDetailSchema,
   CheckInBookingSchema,
@@ -50,6 +53,11 @@ export const atelierBookingContractParity: AssertEquals<
 export const atelierStatsContractParity: AssertEquals<
   Schema.Schema.Encoded<typeof AtelierStatsSchema>,
   AtelierStatsContract
+> = true
+
+export const networkStatsContractParity: AssertEquals<
+  Schema.Schema.Encoded<typeof NetworkStatsSchema>,
+  NetworkStatsContract
 > = true
 
 export const bookingDetailContractParity: AssertEquals<
@@ -132,4 +140,13 @@ export const bookingManagementApiGroup = HttpApiGroup.make('bookingManagement')
       .addError(BookingUnknownError)
       .addError(BookingNotMarkableAsNoShowError)
   )
+  .middleware(AuthMiddleware)
+
+export const networkStatsApiGroup = HttpApiGroup.make('networkStats')
+  .add(
+    HttpApiEndpoint.get('stats', routes.admin.stats)
+      .setUrlParams(AtelierStatsParamsSchema)
+      .addSuccess(NetworkStatsSchema)
+  )
+  .addError(ForbiddenError)
   .middleware(AuthMiddleware)

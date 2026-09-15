@@ -9,6 +9,7 @@ import { markNoShow } from '../application/commands/mark-no-show/mark-no-show.co
 import { getAtelierStats } from '../application/queries/get-atelier-stats/get-atelier-stats.query'
 import { getBookingDetail } from '../application/queries/get-booking-detail/get-booking-detail.query'
 import { getMachineAvailability } from '../application/queries/get-machine-availability/get-machine-availability.query'
+import { getNetworkStats } from '../application/queries/get-network-stats/get-network-stats.query'
 import { listAtelierBookings } from '../application/queries/list-atelier-bookings/list-atelier-bookings.query'
 import { listMyBookings } from '../application/queries/list-my-bookings/list-my-bookings.query'
 import type {
@@ -47,4 +48,9 @@ export const bookingManagementHandlers = {
     markNoShow(path.id).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
   stats: ({ urlParams }: { readonly urlParams: AtelierStatsParams }) =>
     getAtelierStats(urlParams).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
+}
+
+export const networkStatsHandlers = {
+  stats: ({ urlParams }: { readonly urlParams: AtelierStatsParams }) =>
+    getNetworkStats(urlParams).pipe(Effect.catchTag('RepoError', (error) => Effect.die(error))),
 }

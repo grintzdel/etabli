@@ -21,6 +21,7 @@ export const BookingFailureCode = {
   CHECK_IN_WINDOW_CLOSED: 'CHECK_IN_WINDOW_CLOSED',
   NOT_MARKABLE_AS_NO_SHOW: 'NOT_MARKABLE_AS_NO_SHOW',
   NFC_TAG_MISMATCH: 'NFC_TAG_MISMATCH',
+  FORBIDDEN: 'FORBIDDEN',
   UNAUTHORIZED: 'UNAUTHORIZED',
   UNREACHABLE: 'UNREACHABLE',
 } as const
@@ -48,6 +49,7 @@ export const FAILURE_MESSAGES: Readonly<Record<BookingFailureCode, string>> = {
   NOT_MARKABLE_AS_NO_SHOW:
     'Ce créneau ne peut pas être marqué non honoré : il est pointé, clos, ou sa fenêtre de pointage court encore.',
   NFC_TAG_MISMATCH: 'Ce tag n’est pas celui de la machine réservée.',
+  FORBIDDEN: 'Cette page est réservée aux administrateurs de la plateforme.',
   UNAUTHORIZED: 'Votre session a expiré.',
   UNREACHABLE: 'Les réservations sont momentanément indisponibles.',
 }

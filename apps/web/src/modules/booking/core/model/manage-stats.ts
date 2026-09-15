@@ -1,6 +1,6 @@
-import type { AtelierStats, AtelierStatsQuery, MachineUsage, StatsPeriod } from '@etabli/contract'
+import type { AtelierStats, AtelierStatsQuery, MachineUsage, NetworkStats, StatsPeriod } from '@etabli/contract'
 
-export type { AtelierStats, AtelierStatsQuery, MachineUsage, StatsPeriod }
+export type { AtelierStats, AtelierStatsQuery, MachineUsage, NetworkStats, StatsPeriod }
 
 export const STATS_PERIODS: ReadonlyArray<StatsPeriod> = ['7d', '30d', '90d']
 

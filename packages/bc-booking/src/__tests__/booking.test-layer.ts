@@ -91,6 +91,7 @@ export const makeTestLayer = ({
           Effect.sync(() => machines.filter((machine) => machineIds.includes(machine.machineId))),
         listForAteliers: (atelierIds) =>
           Effect.sync(() => machines.filter((machine) => atelierIds.includes(machine.atelierId))),
+        listAll: () => Effect.sync(() => machines),
       })
     ),
     Layer.succeed(

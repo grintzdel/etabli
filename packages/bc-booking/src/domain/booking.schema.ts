@@ -156,3 +156,20 @@ export const AtelierStatsParamsSchema = Schema.Struct({
   period: Schema.optional(StatsPeriodSchema),
 })
 export type AtelierStatsParams = Schema.Schema.Type<typeof AtelierStatsParamsSchema>
+
+export const NetworkStatsSchema = Schema.Struct({
+  period: StatsPeriodSchema,
+  from: Schema.DateTimeUtc,
+  to: Schema.DateTimeUtc,
+  ateliers: Schema.Int,
+  machines: Schema.Int,
+  openHours: Schema.Number,
+  bookings: Schema.Int,
+  bookedHours: Schema.Number,
+  consumedHours: Schema.Number,
+  noShows: Schema.Int,
+  cancellations: Schema.Int,
+  occupancyRate: Schema.Number,
+  byAtelier: Schema.Array(AtelierStatsSchema),
+})
+export type NetworkStats = Schema.Schema.Type<typeof NetworkStatsSchema>

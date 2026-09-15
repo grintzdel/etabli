@@ -536,6 +536,16 @@ interface MachineUsage {
   readonly noShows: number
 }
 
+interface NetworkStats {
+  readonly period: string
+  readonly ateliers: number
+  readonly machines: number
+  readonly openHours: number
+  readonly bookedHours: number
+  readonly occupancyRate: number
+  readonly byAtelier: ReadonlyArray<AtelierStats>
+}
+
 interface AtelierStats {
   readonly atelierName: string
   readonly period: string
@@ -551,6 +561,13 @@ interface AtelierStats {
 
 const atelierBookings = (token?: string, query = '') => send('GET', `/manage/bookings${query}`, undefined, token)
 const atelierStats = (token?: string, query = '') => send('GET', `/manage/stats${query}`, undefined, token)
+const networkStats = (token?: string, query = '') => send('GET', `/admin/stats${query}`, undefined, token)
+
+const promoteToAdmin = async (token: string): Promise<string> => {
+  const me = (await (await send('GET', '/auth/me', undefined, token)).json()) as { readonly id: string }
+  await runtime.runPromise(sql`UPDATE users SET platform_role = 'PLATFORM_ADMIN' WHERE id = ${me.id}`)
+  return token
+}
 const manualCheckIn = (id: string, token?: string) => send('POST', `/manage/bookings/${id}/check-in`, undefined, token)
 
 const seedBooking = async (machineId: string, atelierId: string, userId: string, startsIn: string): Promise<string> => {
@@ -714,6 +731,40 @@ describe('GET /manage/stats', () => {
 
   it('answers 401 without a token', async () => {
     expect((await atelierStats()).status).toBe(401)
+  })
+})
+
+describe('GET /admin/stats', () => {
+  it('measures every atelier of the network, not only the caller’s', async () => {
+    const { fabmanager } = await createMachine(FORGE, 'Prusa réseau', { requiresCertification: false })
+    await createMachine(LYON, 'Scie réseau', { requiresCertification: false })
+    const admin = await promoteToAdmin(fabmanager)
+
+    const response = await networkStats(admin, '?period=7d')
+    expect(response.status).toBe(200)
+
+    const body = (await response.json()) as NetworkStats
+    expect(body.period).toBe('7d')
+    expect(body.openHours).toBe(7 * 14)
+    expect(body.byAtelier.map((atelier) => atelier.atelierName).toSorted()).toContain('lyon')
+    expect(body.machines).toBeGreaterThanOrEqual(2)
+  })
+
+  it('answers 403 to a fabmanager who runs an atelier', async () => {
+    const { fabmanager } = await createMachine(FORGE, 'Prusa refusée', { requiresCertification: false })
+
+    expect((await networkStats(fabmanager)).status).toBe(403)
+  })
+
+  it('answers 400 on a period that is not one of the three', async () => {
+    const { fabmanager } = await createMachine(FORGE, 'Prusa hors bornes réseau', { requiresCertification: false })
+    const admin = await promoteToAdmin(fabmanager)
+
+    expect((await networkStats(admin, '?period=1y')).status).toBe(400)
+  })
+
+  it('answers 401 without a token', async () => {
+    expect((await networkStats()).status).toBe(401)
   })
 })
 
