@@ -8,4 +8,5 @@ export const AdminLive = HttpApiBuilder.group(etabliApi, 'admin', (handlers) =>
     .handle('listAteliers', adminHandlers.listAteliers)
     .handle('createAtelier', adminHandlers.createAtelier)
     .handle('setAtelierStatus', adminHandlers.setAtelierStatus)
+    .handle('setMembershipRole', adminHandlers.setMembershipRole)
 )

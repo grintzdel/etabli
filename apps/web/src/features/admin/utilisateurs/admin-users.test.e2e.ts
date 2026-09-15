@@ -4,6 +4,7 @@ import { expect, test } from '@playwright/test'
 import { apiUrl, signIn } from '@/e2e/fixtures/auth.fixture'
 
 const PASSWORD = 'un-mot-de-passe'
+const COPEAUX_ID = '0a7e1f00-0000-4000-8000-000000000004'
 
 const registerAccount = async (
   request: APIRequestContext,
@@ -69,4 +70,40 @@ test('the admin cannot lock itself out', async ({ page }) => {
 
   await expect(row.getByRole('alert')).toContainText(/ni retirer votre propre rôle/i)
   await expect(row).toContainText('Administrateur')
+})
+
+test('the admin names a member fabmanager of the atelier it joined, and takes it back', async ({ page, request }) => {
+  const { email } = await registerAccount(request, 'Compte à promouvoir')
+
+  const session = await request.post(`${apiUrl}/auth/login`, { data: { email, password: PASSWORD } })
+  const { token } = (await session.json()) as { readonly token: string }
+  const joined = await request.post(`${apiUrl}/onboarding/complete`, {
+    headers: { authorization: `Bearer ${token}` },
+    data: { atelierId: COPEAUX_ID, practice: ['bois'] },
+  })
+  expect(joined.status()).toBe(201)
+
+  await signIn(page, 'admin@etabli.test')
+  await page.goto(`/admin/utilisateurs?search=${encodeURIComponent(email)}`)
+
+  const row = page.getByRole('row', { name: /compte à promouvoir/i })
+  await expect(row).toContainText('Copeaux & Cie · Membre')
+
+  await row.getByRole('button', { name: /nommer fabmanager de copeaux & cie/i }).click()
+  await expect(page.getByRole('row', { name: /compte à promouvoir/i })).toContainText('Copeaux & Cie · Fabmanager')
+
+  await page
+    .getByRole('row', { name: /compte à promouvoir/i })
+    .getByRole('button', { name: /retirer la gestion de copeaux & cie/i })
+    .click()
+  await expect(page.getByRole('row', { name: /compte à promouvoir/i })).toContainText('Copeaux & Cie · Membre')
+})
+
+test('an account that joined nothing shows no atelier', async ({ page, request }) => {
+  const { email } = await registerAccount(request, 'Compte sans atelier')
+
+  await signIn(page, 'admin@etabli.test')
+  await page.goto(`/admin/utilisateurs?search=${encodeURIComponent(email)}`)
+
+  await expect(page.getByRole('row', { name: /compte sans atelier/i })).toContainText('Aucun')
 })

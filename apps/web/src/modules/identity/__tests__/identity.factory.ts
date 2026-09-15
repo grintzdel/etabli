@@ -13,6 +13,7 @@ export const adminUserFixture = (overrides: Partial<AdminUser> = {}): AdminUser 
     practice: ['Bois'],
     onboardingCompletedAt: null,
     createdAt: '2026-01-15T09:00:00.000Z',
+    ateliers: [],
     ...overrides,
   }
 }

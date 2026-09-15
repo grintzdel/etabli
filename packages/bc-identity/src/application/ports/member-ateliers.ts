@@ -7,6 +7,9 @@ import type { MemberAtelier } from '../../domain/member-atelier.schema'
 
 export interface MemberAteliersService {
   readonly forUser: (userId: UserId) => Effect.Effect<ReadonlyArray<MemberAtelier>, RepoError>
+  readonly forUsers: (
+    userIds: ReadonlyArray<UserId>
+  ) => Effect.Effect<ReadonlyMap<UserId, ReadonlyArray<MemberAtelier>>, RepoError>
 }
 
 export class MemberAteliers extends Context.Tag('@etabli/MemberAteliers')<MemberAteliers, MemberAteliersService>() {}

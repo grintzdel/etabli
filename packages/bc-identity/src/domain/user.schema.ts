@@ -3,6 +3,8 @@ import { AuthMembershipSchema, PlatformRoleSchema } from '@etabli/shared/auth-co
 import { UserId } from '@etabli/shared/schema'
 import * as Schema from 'effect/Schema'
 
+import type { MemberAtelier } from './member-atelier.schema'
+import { MemberAtelierSchema } from './member-atelier.schema'
 import { MAX_PRACTICES, PASSWORD_MIN_LENGTH, UserStatus } from './user.constants'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -108,6 +110,7 @@ export const AdminUserSchema = Schema.Struct({
   practice: Schema.Array(Schema.String),
   onboardingCompletedAt: Schema.NullOr(Schema.DateTimeUtc),
   createdAt: Schema.DateTimeUtc,
+  ateliers: Schema.Array(MemberAtelierSchema),
 })
 export type AdminUser = Schema.Schema.Type<typeof AdminUserSchema>
 
@@ -124,7 +127,7 @@ export const UpdateAdminUserSchema = Schema.Struct({
 })
 export type UpdateAdminUser = Schema.Schema.Type<typeof UpdateAdminUserSchema>
 
-export const toAdminUser = (user: User): AdminUser => ({
+export const toAdminUser = (user: User, ateliers: ReadonlyArray<MemberAtelier> = []): AdminUser => ({
   id: user.id,
   email: user.email,
   displayName: user.displayName,
@@ -133,4 +136,5 @@ export const toAdminUser = (user: User): AdminUser => ({
   practice: user.practice,
   onboardingCompletedAt: user.onboardingCompletedAt,
   createdAt: user.createdAt,
+  ateliers,
 })

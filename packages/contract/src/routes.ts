@@ -49,6 +49,7 @@ export const routes = {
   admin: {
     ateliers: '/admin/ateliers',
     atelier: '/admin/ateliers/:id',
+    atelierMember: '/admin/ateliers/:atelierId/members/:userId',
     users: '/admin/users',
     user: '/admin/users/:id',
     stats: '/admin/stats',

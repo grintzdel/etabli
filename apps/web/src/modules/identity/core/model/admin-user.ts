@@ -1,6 +1,21 @@
-import type { AdminUser, AdminUsersQuery, PlatformRole, UpdateAdminUser, UserStatus } from '@etabli/contract'
+import type {
+  AdminUser,
+  AdminUsersQuery,
+  MemberAtelier,
+  MembershipRole,
+  PlatformRole,
+  UpdateAdminUser,
+  UserStatus,
+} from '@etabli/contract'
 
-export type { AdminUser, AdminUsersQuery, PlatformRole, UpdateAdminUser, UserStatus }
+export type { AdminUser, AdminUsersQuery, MemberAtelier, MembershipRole, PlatformRole, UpdateAdminUser, UserStatus }
+
+export const MEMBERSHIP_ROLE_LABELS: Readonly<Record<MembershipRole, string>> = {
+  MEMBER: 'Membre',
+  FABMANAGER: 'Fabmanager',
+}
+
+export const isMembershipRole = (value: string): value is MembershipRole => value === 'MEMBER' || value === 'FABMANAGER'
 
 export const ADMIN_USERS_LIMIT = 50
 

@@ -2,6 +2,8 @@ export type PlatformRole = 'MEMBER' | 'PLATFORM_ADMIN'
 
 export type MembershipRole = 'MEMBER' | 'FABMANAGER'
 
+export type MembershipStatus = 'ACTIVE' | 'SUSPENDED'
+
 export type Membership = {
   readonly atelierId: string
   readonly role: MembershipRole
@@ -77,6 +79,7 @@ export type AdminUser = {
   readonly practice: ReadonlyArray<string>
   readonly onboardingCompletedAt: string | null
   readonly createdAt: string
+  readonly ateliers: ReadonlyArray<MemberAtelier>
 }
 
 export type AdminUsersQuery = {

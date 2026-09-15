@@ -21,6 +21,7 @@ export const MemberAteliersLive = Layer.effect(
   Effect.map(AtelierRepository, (repository) =>
     MemberAteliers.of({
       forUser: (userId) => repository.listMemberAteliersForUser(userId),
+      forUsers: (userIds) => repository.listMemberAteliersForUsers(userIds),
     })
   )
 )

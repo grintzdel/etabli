@@ -1,6 +1,13 @@
 import { buildPath, routes } from '@etabli/contract'
 
-import type { AdminAtelier, AtelierResult, CreateAtelierInput, SetAtelierStatusInput } from '../model/atelier'
+import type {
+  AdminAtelier,
+  AtelierMembership,
+  AtelierResult,
+  CreateAtelierInput,
+  SetAtelierStatusInput,
+  SetMembershipRoleInput,
+} from '../model/atelier'
 import { AtelierFailureCode, failure } from '../model/atelier'
 import type { IAdminAtelierPort } from '../ports/admin-atelier.port'
 
@@ -50,6 +57,18 @@ export class AdminAtelierHttpAdapter implements IAdminAtelierPort {
 
   setStatus(token: string, id: string, input: SetAtelierStatusInput): Promise<AtelierResult<AdminAtelier>> {
     return this.call<AdminAtelier>(buildPath(routes.admin.atelier, { id }), token, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    })
+  }
+
+  setMembershipRole(
+    token: string,
+    atelierId: string,
+    userId: string,
+    input: SetMembershipRoleInput
+  ): Promise<AtelierResult<AtelierMembership>> {
+    return this.call<AtelierMembership>(buildPath(routes.admin.atelierMember, { atelierId, userId }), token, {
       method: 'PATCH',
       body: JSON.stringify(input),
     })

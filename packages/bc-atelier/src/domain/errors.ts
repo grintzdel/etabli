@@ -36,3 +36,9 @@ export class MachineNfcTagTakenError extends Schema.TaggedError<MachineNfcTagTak
   { nfcTagId: Schema.String },
   HttpApiSchema.annotations({ status: 409 })
 ) {}
+
+export class MembershipUnknownError extends Schema.TaggedError<MembershipUnknownError>()(
+  'MembershipUnknownError',
+  { atelierId: Schema.String, userId: Schema.String },
+  HttpApiSchema.annotations({ status: 404 })
+) {}
