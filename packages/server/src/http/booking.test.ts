@@ -553,6 +553,14 @@ const seedBookingUnderWay = (machineId: string, atelierId: string, userId: strin
 const seedBookingMissed = (machineId: string, atelierId: string, userId: string): Promise<string> =>
   seedBooking(machineId, atelierId, userId, '-3 hours')
 
+const seedBookingDone = async (machineId: string, atelierId: string, userId: string): Promise<string> => {
+  const id = await seedBooking(machineId, atelierId, userId, '-3 hours')
+  await runtime.runPromise(
+    sql`UPDATE bookings SET status = 'CHECKED_IN', checked_in_at = start_at, checked_in_via = 'MANUAL' WHERE id = ${id}`
+  )
+  return id
+}
+
 describe('GET /manage/bookings', () => {
   it('lists the day of the atelier the caller runs, member named', async () => {
     const { id: machineId, fabmanager } = await createMachine(FORGE, 'Prusa du jour', { requiresCertification: false })
@@ -598,6 +606,33 @@ describe('GET /manage/bookings', () => {
       await atelierBookings(fabmanager, '?date=2020-01-06T09:00:00.000Z')
     ).json()) as ReadonlyArray<AtelierBooking>
     expect(body).toStrictEqual([])
+  })
+
+  it('reads a stamped slot that has run its course as completed', async () => {
+    const { id: machineId, fabmanager } = await createMachine(FORGE, 'Prusa finie', { requiresCertification: false })
+    const member = await enrol(FORGE, 'MEMBER')
+    await seedBookingDone(machineId, FORGE, member.userId)
+
+    const body = (await (await atelierBookings(fabmanager)).json()) as ReadonlyArray<AtelierBooking>
+    const mine = body.filter((entry) => entry.machineName === 'Prusa finie')
+    expect(mine).toHaveLength(1)
+    expect(mine[0]?.status).toBe('COMPLETED')
+  })
+
+  it('narrows to the completed slots on a status the column never holds', async () => {
+    const { id: machineId, fabmanager } = await createMachine(FORGE, 'Prusa triée', { requiresCertification: false })
+    const member = await enrol(FORGE, 'MEMBER')
+    await seedBookingDone(machineId, FORGE, member.userId)
+
+    const completed = (await (
+      await atelierBookings(fabmanager, '?status=COMPLETED')
+    ).json()) as ReadonlyArray<AtelierBooking>
+    expect(completed.filter((entry) => entry.machineName === 'Prusa triée')).toHaveLength(1)
+
+    const stamped = (await (
+      await atelierBookings(fabmanager, '?status=CHECKED_IN')
+    ).json()) as ReadonlyArray<AtelierBooking>
+    expect(stamped.filter((entry) => entry.machineName === 'Prusa triée')).toStrictEqual([])
   })
 
   it('answers 401 without a token', async () => {

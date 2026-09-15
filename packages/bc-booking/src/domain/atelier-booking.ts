@@ -2,6 +2,7 @@ import type * as DateTime from 'effect/DateTime'
 
 import type { AtelierBooking, Booking } from './booking.schema'
 import { isCheckInOpen } from './check-in'
+import { effectiveStatus } from './completion'
 import { isNoShowMarkable } from './no-show'
 
 export interface AtelierBookingNaming {
@@ -26,7 +27,7 @@ export const toAtelierBooking = (
   memberName: memberName ?? UNKNOWN_MEMBER,
   startAt: booking.startAt,
   endAt: booking.endAt,
-  status: booking.status,
+  status: effectiveStatus(booking, now),
   checkedInAt: booking.checkedInAt,
   checkedInVia: booking.checkedInVia,
   canCheckIn: isCheckInOpen(booking, now),

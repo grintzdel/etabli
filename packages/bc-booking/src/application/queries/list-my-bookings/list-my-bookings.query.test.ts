@@ -96,6 +96,32 @@ describe('listMyBookings', () => {
     expect(exit.value.map((entry) => entry.canCancel)).toStrictEqual([true, false])
   })
 
+  it('reads a stamped slot that has run its course as completed', async () => {
+    await store({
+      startAt: at('2026-02-20T09:00:00Z'),
+      endAt: at('2026-02-20T10:00:00Z'),
+      status: BookingStatus.CHECKED_IN,
+    })
+
+    const exit = await run()
+
+    if (Exit.isFailure(exit)) return
+    expect(exit.value[0]?.status).toBe(BookingStatus.COMPLETED)
+  })
+
+  it('leaves a stamped slot still running as checked in', async () => {
+    await store({
+      startAt: at('2026-02-28T23:30:00Z'),
+      endAt: at('2026-03-01T00:30:00Z'),
+      status: BookingStatus.CHECKED_IN,
+    })
+
+    const exit = await run()
+
+    if (Exit.isFailure(exit)) return
+    expect(exit.value[0]?.status).toBe(BookingStatus.CHECKED_IN)
+  })
+
   it('answers an empty list when the member booked nothing', async () => {
     const exit = await run()
 
