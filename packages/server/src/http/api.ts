@@ -1,6 +1,6 @@
 import { HttpApi } from '@effect/platform'
 import { adminApiGroup, atelierApiGroup, manageApiGroup, onboardingApiGroup } from '@etabli/bc-atelier'
-import { bookingApiGroup, bookingManagementApiGroup } from '@etabli/bc-booking'
+import { bookingApiGroup, bookingManagementApiGroup, networkStatsApiGroup } from '@etabli/bc-booking'
 import { certificationApiGroup, certificationReviewApiGroup } from '@etabli/bc-certification'
 import { adminUsersApiGroup, identityApiGroup } from '@etabli/bc-identity'
 
@@ -18,3 +18,4 @@ export const etabliApi = HttpApi.make('etabli')
   .add(certificationReviewApiGroup)
   .add(bookingApiGroup)
   .add(bookingManagementApiGroup)
+  .add(networkStatsApiGroup)

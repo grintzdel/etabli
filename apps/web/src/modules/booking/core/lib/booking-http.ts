@@ -13,6 +13,7 @@ const BY_TAG: Readonly<Record<string, BookingFailureCode>> = {
   CheckInWindowClosedError: BookingFailureCode.CHECK_IN_WINDOW_CLOSED,
   BookingNotMarkableAsNoShowError: BookingFailureCode.NOT_MARKABLE_AS_NO_SHOW,
   NfcTagMismatchError: BookingFailureCode.NFC_TAG_MISMATCH,
+  ForbiddenError: BookingFailureCode.FORBIDDEN,
 }
 
 const tagOf = (body: unknown): string | undefined => {
@@ -26,6 +27,7 @@ export const codeOf = (status: number, body: unknown): BookingFailureCode => {
   const mapped = tag === undefined ? undefined : BY_TAG[tag]
   if (mapped !== undefined) return mapped
   if (status === 401) return BookingFailureCode.UNAUTHORIZED
+  if (status === 403) return BookingFailureCode.FORBIDDEN
   if (status === 404) return BookingFailureCode.BOOKING_UNKNOWN
   return BookingFailureCode.UNREACHABLE
 }

@@ -33,13 +33,17 @@ export const MachineCatalogLive = Layer.effect(
         Effect.map((machines) => machines.filter((machine) => machine !== null))
       )
 
+    const listForAteliers = (atelierIds: ReadonlyArray<AtelierId>) =>
+      Effect.forEach([...new Set(atelierIds)], (atelierId) => repository.listMachines(atelierId), {
+        concurrency: 'unbounded',
+      }).pipe(Effect.flatMap((lists) => findMany(lists.flat().map((machine) => machine.id))))
+
     return MachineCatalog.of({
       find,
       findMany,
-      listForAteliers: (atelierIds: ReadonlyArray<AtelierId>) =>
-        Effect.forEach([...new Set(atelierIds)], (atelierId) => repository.listMachines(atelierId), {
-          concurrency: 'unbounded',
-        }).pipe(Effect.flatMap((lists) => findMany(lists.flat().map((machine) => machine.id)))),
+      listForAteliers,
+      listAll: () =>
+        repository.listAll().pipe(Effect.flatMap((ateliers) => listForAteliers(ateliers.map((a) => a.id)))),
     })
   })
 )

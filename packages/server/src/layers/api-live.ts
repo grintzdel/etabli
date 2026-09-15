@@ -8,7 +8,7 @@ import { AdminUsersLive } from '../http/admin-users.handlers'
 import { AdminLive } from '../http/admin.handlers'
 import { etabliApi } from '../http/api'
 import { AtelierLive } from '../http/atelier.handlers'
-import { BookingLive, BookingManagementLive } from '../http/booking.handlers'
+import { BookingLive, BookingManagementLive, NetworkStatsLive } from '../http/booking.handlers'
 import { CertificationLive, CertificationReviewLive } from '../http/certification.handlers'
 import { HealthLive } from '../http/health.handlers'
 import { IdentityLive } from '../http/identity.handlers'
@@ -31,6 +31,7 @@ const HandledApi = HttpApiBuilder.api(etabliApi).pipe(
   Layer.provide(CertificationLive),
   Layer.provide(BookingLive),
   Layer.provide(BookingManagementLive),
+  Layer.provide(NetworkStatsLive),
   Layer.provide(CertificationReviewLive)
 )
 

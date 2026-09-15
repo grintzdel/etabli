@@ -1,5 +1,5 @@
 import { HttpApiBuilder } from '@effect/platform'
-import { bookingHandlers, bookingManagementHandlers } from '@etabli/bc-booking'
+import { bookingHandlers, bookingManagementHandlers, networkStatsHandlers } from '@etabli/bc-booking'
 
 import { etabliApi } from './api'
 
@@ -19,4 +19,8 @@ export const BookingManagementLive = HttpApiBuilder.group(etabliApi, 'bookingMan
     .handle('checkIn', bookingManagementHandlers.checkIn)
     .handle('markNoShow', bookingManagementHandlers.markNoShow)
     .handle('stats', bookingManagementHandlers.stats)
+)
+
+export const NetworkStatsLive = HttpApiBuilder.group(etabliApi, 'networkStats', (handlers) =>
+  handlers.handle('stats', networkStatsHandlers.stats)
 )

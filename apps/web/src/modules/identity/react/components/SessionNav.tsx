@@ -61,6 +61,9 @@ export const SessionNav = ({
         <Link href="/admin/utilisateurs" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
           Utilisateurs
         </Link>
+        <Link href="/admin/stats" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
+          Réseau
+        </Link>
       </>
     ) : null}
     <Link href="/parametres" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">

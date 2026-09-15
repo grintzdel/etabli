@@ -124,3 +124,19 @@ export type AtelierStats = {
 export type AtelierStatsQuery = {
   readonly period?: StatsPeriod
 }
+
+export type NetworkStats = {
+  readonly period: StatsPeriod
+  readonly from: string
+  readonly to: string
+  readonly ateliers: number
+  readonly machines: number
+  readonly openHours: number
+  readonly bookings: number
+  readonly bookedHours: number
+  readonly consumedHours: number
+  readonly noShows: number
+  readonly cancellations: number
+  readonly occupancyRate: number
+  readonly byAtelier: ReadonlyArray<AtelierStats>
+}
