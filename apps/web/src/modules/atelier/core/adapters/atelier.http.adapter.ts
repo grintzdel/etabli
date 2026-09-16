@@ -6,6 +6,7 @@ import type {
   AtelierSummary,
   CompleteOnboardingInput,
   DirectoryFilters,
+  MachineDetail,
   OnboardingResult,
 } from '../model/atelier'
 import { AtelierFailureCode, failure } from '../model/atelier'
@@ -49,6 +50,10 @@ export class AtelierHttpAdapter implements IAtelierPort {
 
   getBySlug(slug: string): Promise<AtelierResult<AtelierDetail>> {
     return this.call<AtelierDetail>(buildPath(routes.ateliers.getBySlug, { slug }))
+  }
+
+  getMachineById(id: string): Promise<AtelierResult<MachineDetail>> {
+    return this.call<MachineDetail>(buildPath(routes.machines.getById, { id }))
   }
 
   completeOnboarding(token: string, input: CompleteOnboardingInput): Promise<AtelierResult<OnboardingResult>> {

@@ -7,6 +7,8 @@ export const BOOKABLE_MACHINE_ID = '0a7e1f00-0000-4000-8000-000000000402'
 export const CERTIFIED_MACHINE_ID = '0a7e1f00-0000-4000-8000-000000000101'
 export const MAINTENANCE_MACHINE_ID = '0a7e1f00-0000-4000-8000-000000000102'
 export const RETIRED_MACHINE_ID = '0a7e1f00-0000-4000-8000-000000000105'
+// Singer 4423 of the Atelier des Canuts: neither the demo member nor Théo belongs to that atelier.
+export const OUTSIDE_MACHINE_ID = '0a7e1f00-0000-4000-8000-000000000501'
 
 type Slot = { readonly startAt: string; readonly available: boolean }
 type Availability = { readonly slots: ReadonlyArray<Slot> }

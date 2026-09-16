@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { detailFixture, summaryFixture } from '@/modules/atelier/__tests__/atelier.factory'
+import { detailFixture, machineDetailFixture, summaryFixture } from '@/modules/atelier/__tests__/atelier.factory'
 
 import { AtelierHttpAdapter } from './atelier.http.adapter'
 
@@ -67,6 +67,34 @@ describe('AtelierHttpAdapter.getBySlug', () => {
   it('turns a 404 into a not-found failure', async () => {
     respondWith(404, { _tag: 'AtelierNotFoundError' })
     const result = await new AtelierHttpAdapter(BASE).getBySlug('inconnu')
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error.code).toBe('NOT_FOUND')
+  })
+})
+
+describe('AtelierHttpAdapter.getMachineById', () => {
+  it('builds the machine path from the contract template', async () => {
+    const fetchMock = respondWith(200, machineDetailFixture())
+    await new AtelierHttpAdapter(BASE).getMachineById('0a7e1f00-0000-4000-8000-000000000501')
+    expect(urlOf(fetchMock)).toBe(`${BASE}/machines/0a7e1f00-0000-4000-8000-000000000501`)
+  })
+
+  it('escapes an id that would otherwise change the path', async () => {
+    const fetchMock = respondWith(404, {})
+    await new AtelierHttpAdapter(BASE).getMachineById('../auth/me')
+    expect(urlOf(fetchMock)).toBe(`${BASE}/machines/..%2Fauth%2Fme`)
+  })
+
+  it('answers the fiche on success', async () => {
+    const fixture = machineDetailFixture({ name: 'Singer 4423 Heavy Duty' })
+    respondWith(200, fixture)
+
+    expect(await new AtelierHttpAdapter(BASE).getMachineById(fixture.id)).toEqual({ ok: true, value: fixture })
+  })
+
+  it('turns a 404 into a not-found failure', async () => {
+    respondWith(404, { code: 'MACHINE_UNKNOWN' })
+    const result = await new AtelierHttpAdapter(BASE).getMachineById('inconnue')
     expect(result.ok).toBe(false)
     if (!result.ok) expect(result.error.code).toBe('NOT_FOUND')
   })
