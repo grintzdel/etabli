@@ -243,6 +243,35 @@ La route est écrite **deux fois**, dans `packages/bc-atelier` (v1) et dans
 route qu'à la v2 l'aurait laissée absente de tout ce qui tourne. À la bascule,
 seule la v1 est à retirer.
 
+### Photographies marketing — ce qui est tranché
+
+Les plaques dessinées ne racontaient rien : quatre variantes d'un même motif,
+la même sur la home et sur une carte d'atelier. `/` et `/fonctionnalites`
+portent maintenant une photographie, et l'annuaire montre une machine que
+l'atelier publie vraiment.
+
+**Pexels, pas Unsplash.** Unsplash 401 sur ses pages de recherche dès qu'un
+script les lit, et ses résultats mêlent des photos de contributeurs à des Getty
+premium que sa licence ne couvre pas. La licence Pexels donne l'usage
+commercial sans attribution ; `public/marketing/LICENSES.md` crédite quand même.
+
+**Le voile est en CSS, pas cuit dans le fichier.** `PhotoHero` empile la photo,
+un dégradé `from-graphite-950` et le contenu. La rampe étant sémantique, le
+voile s'éclaircit tout seul en mode clair, où l'encre devient sombre — un
+duotone cuit aurait demandé un second jeu de fichiers.
+
+**Les plaques restent.** Un atelier sans machine publiée n'a pas de type à
+photographier : `atelierPhotoFor` rend `null` et la carte retombe sur
+`coverArtFor`. Le générateur n'est pas supprimé, il devient le repli.
+
+La photo d'une carte est tirée du slug parmi les **types que l'atelier publie**
+— pas le premier de la liste, qui aurait donné la même fraiseuse à presque
+toutes les cartes, `array_agg(DISTINCT)` triant par valeur. Elle reste donc
+vraie, et l'annuaire reste varié.
+
+La FAQ n'a rien reçu : c'est une page de texte, une photo n'y serait que du
+remplissage.
+
 ### Réservation — ce qui est tranché
 
 La contrainte d'exclusion `bookings_no_overlap` est en base, sous
