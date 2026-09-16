@@ -1,22 +1,20 @@
 import type { ReactNode } from 'react'
 import { Suspense } from 'react'
 
-import { AppHeader } from '@/ui/AppHeader'
-import { SiteFooter } from '@/ui/SiteFooter'
+import { AppSidebar } from '@/ui/AppSidebar'
 import { SignedOutLinks } from '@/ui/SiteHeader'
 
 import { CurrentSessionNav } from './session-nav'
 
 export const AppShell = ({ children }: { readonly children: ReactNode }) => (
-  <>
-    <AppHeader
+  <div className="flex flex-1 flex-col lg:flex-row">
+    <AppSidebar
       nav={
         <Suspense fallback={<SignedOutLinks />}>
           <CurrentSessionNav />
         </Suspense>
       }
     />
-    <div className="flex-1">{children}</div>
-    <SiteFooter />
-  </>
+    <div className="min-w-0 flex-1">{children}</div>
+  </div>
 )
