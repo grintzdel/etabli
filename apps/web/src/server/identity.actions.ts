@@ -13,7 +13,7 @@ const text = (formData: FormData, name: string): string => {
 }
 
 const safeNext = (candidate: string): string =>
-  candidate.startsWith('/') && !candidate.startsWith('//') ? candidate : '/compte'
+  candidate.startsWith('/') && !candidate.startsWith('//') ? candidate : '/tableau-de-bord'
 
 export const registerAction = async (_previous: AuthFormState, formData: FormData): Promise<AuthFormState> => {
   const email = text(formData, 'email')

@@ -31,6 +31,9 @@ export const SessionNav = ({
         {defaultAtelier.name}
       </Link>
     )}
+    <Link href="/tableau-de-bord" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
+      Tableau de bord
+    </Link>
     <Link href="/reservations" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
       Réservations
     </Link>

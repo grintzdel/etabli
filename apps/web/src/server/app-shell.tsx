@@ -1,17 +1,18 @@
 import type { ReactNode } from 'react'
 import { Suspense } from 'react'
 
+import { AppHeader } from '@/ui/AppHeader'
 import { SiteFooter } from '@/ui/SiteFooter'
-import { SignedOutLinks, SiteHeader } from '@/ui/SiteHeader'
+import { SignedOutLinks } from '@/ui/SiteHeader'
 
-import { MarketingSessionNav } from './marketing-session-nav'
+import { CurrentSessionNav } from './session-nav'
 
-export const SiteShell = ({ children }: { readonly children: ReactNode }) => (
+export const AppShell = ({ children }: { readonly children: ReactNode }) => (
   <>
-    <SiteHeader
-      session={
+    <AppHeader
+      nav={
         <Suspense fallback={<SignedOutLinks />}>
-          <MarketingSessionNav />
+          <CurrentSessionNav />
         </Suspense>
       }
     />
