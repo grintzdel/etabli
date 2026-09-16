@@ -35,7 +35,8 @@ Ce qui existe, package par package :
   `GET`/`PATCH /me/preferences`, `GET /me/ateliers`, migration `0006`, et le
   back-office plateforme : `GET /admin/users`, `PATCH /admin/users/:id`
 - `bc-atelier` — ateliers, adhésions, machines ; annuaire public et fiche avec
-  `use cache` / `cacheTag` ; onboarding persisté ; routes `/admin/ateliers` et
+  `use cache` / `cacheTag` ; `GET /machines/:id`, la fiche publique d'une
+  machine ; onboarding persisté ; routes `/admin/ateliers` et
   `/manage/machines` ; `PATCH /admin/ateliers/:atelierId/members/:userId` pour
   nommer un fabmanager
 - `bc-certification` — demander, accorder, révoquer ; file de validation
@@ -47,8 +48,9 @@ Ce qui existe, package par package :
   Côté fabmanager, `GET /manage/bookings`, `POST /manage/bookings/:id/check-in`
   et `POST /manage/bookings/:id/no-show`.
   `POST /manage/bookings/:id/cancel`, `GET /manage/stats` et `GET /admin/stats`.
-  Côté web, `/machines/:id` ouvre la semaine et réserve, `/reservations` et
-  `/reservations/:id` listent, détaillent et annulent, `/manage/bookings`
+  Côté web, `/machines/:id` porte la fiche publique et n'ouvre la semaine
+  qu'au membre de l'atelier, `/reservations` et `/reservations/:id` listent,
+  détaillent et annulent, `/manage/bookings`
   tient le pointage, le no-show et l'annulation de la journée, et `/manage/stats`
   comme `/admin/stats` mesurent l'occupation.
 
@@ -212,6 +214,34 @@ demande d'habilitation qui n'est pas la sienne. Tous trois lisent maintenant le
 `_tag` du corps avant le statut. **Quand une route gagne une erreur typée,
 l'adapter qui l'appelle doit gagner son code** — sans quoi le message affiché
 parle d'indisponibilité.
+
+### Fiche machine — ce qui est tranché
+
+`/machines/:id` est **publique**. L'annuaire `/ateliers/:slug` lie chaque
+machine en service, et il est public : gardée derrière la session, la fiche
+rendait un lien mort pour tout visiteur, et un 404 sec pour un membre d'un
+autre atelier. `/machines` est donc sorti de `PRIVATE_PREFIXES` — donc aussi du
+`Disallow` de `robots.txt`, et la page s'indexe.
+
+La fiche et la semaine sont deux choses. La fiche vient de `GET /machines/:id`,
+anonyme, `use cache` sous le tag `ateliers` — que `manage.actions.ts` invalide
+déjà quand un fabmanager touche au parc. La semaine vient d'`availability`, qui
+reste réservée aux membres. Qui n'y a pas droit lit `MachineAccessNotice` : le
+visiteur un lien de connexion qui revient sur la machine, le membre d'un autre
+atelier un lien vers l'atelier à rejoindre.
+
+D'où le découpage du fichier : la fiche est attendue dans le corps de la page,
+pas dans un `Suspense`, pour qu'une machine retirée rende un **vrai 404** et
+non un 200 portant un corps 404 ; seule la semaine, qui lit le cookie, est
+derrière une frontière. La page passe de `ƒ` à `◐`.
+
+Le `nfcTagId` ne sort pas : la fiche publique a son propre DTO, et un test le
+fige des deux côtés.
+
+La route est écrite **deux fois**, dans `packages/bc-atelier` (v1) et dans
+`apps/api` (v2). `pnpm dev` et Playwright bootent encore v1 : n'ajouter la
+route qu'à la v2 l'aurait laissée absente de tout ce qui tourne. À la bascule,
+seule la v1 est à retirer.
 
 ### Réservation — ce qui est tranché
 
