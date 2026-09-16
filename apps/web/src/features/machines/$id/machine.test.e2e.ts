@@ -41,7 +41,8 @@ test('a member takes a free slot and lands on its booking', async ({ page, reque
 })
 
 test('a machine that demands an habilitation refuses the member who has none', async ({ page }) => {
-  await signIn(page, 'membre@etabli.test')
+  // Théo is a member of the atelier and holds no certification on this machine; the demo member does.
+  await signIn(page, 'theo@etabli.test')
   await page.goto(`/machines/${CERTIFIED_MACHINE_ID}`)
 
   await expect(page.getByText(/cette machine exige une habilitation/i)).toBeVisible()

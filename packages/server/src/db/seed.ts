@@ -50,6 +50,27 @@ interface SeedMembership {
   readonly status: string
 }
 
+interface SeedCertification {
+  readonly id: string
+  readonly userId: string
+  readonly machineId: string
+  readonly status: string
+  readonly decidedBy: string | null
+  readonly requestedDaysAgo: number
+}
+
+interface SeedBooking {
+  readonly id: string
+  readonly machineId: string
+  readonly atelierId: string
+  readonly userId: string
+  readonly dayOffset: number
+  readonly localHour: number
+  readonly minutes: number
+  readonly status: string
+  readonly checkedInVia: string | null
+}
+
 export const SEED_PASSWORD = 'etabli-2026'
 
 const ATELIERS: ReadonlyArray<SeedAtelier> = [
@@ -435,6 +456,33 @@ const USERS: ReadonlyArray<SeedUser> = [
     status: 'ACTIVE',
   },
   {
+    id: '0a7e2000-0000-4000-8000-000000000008',
+    email: 'lea@etabli.test',
+    displayName: 'Léa Nguyen',
+    platformRole: 'MEMBER',
+    practice: ['bois', 'tournage'],
+    onboardingCompleted: true,
+    status: 'ACTIVE',
+  },
+  {
+    id: '0a7e2000-0000-4000-8000-000000000009',
+    email: 'theo@etabli.test',
+    displayName: 'Théo Bacher',
+    platformRole: 'MEMBER',
+    practice: ['électronique', 'textile'],
+    onboardingCompleted: true,
+    status: 'ACTIVE',
+  },
+  {
+    id: '0a7e2000-0000-4000-8000-000000000010',
+    email: 'manon@etabli.test',
+    displayName: 'Manon Silva',
+    platformRole: 'MEMBER',
+    practice: ['impression 3D'],
+    onboardingCompleted: true,
+    status: 'ACTIVE',
+  },
+  {
     id: '0a7e2000-0000-4000-8000-000000000006',
     email: 'suspendu@etabli.test',
     displayName: 'Lou Marchand',
@@ -496,6 +544,34 @@ const MEMBERSHIPS: ReadonlyArray<SeedMembership> = [
     status: 'ACTIVE',
   },
   {
+    id: '0a7e3000-0000-4000-8000-000000000009',
+    userId: '0a7e2000-0000-4000-8000-000000000008',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000001',
+    role: 'MEMBER',
+    status: 'ACTIVE',
+  },
+  {
+    id: '0a7e3000-0000-4000-8000-000000000010',
+    userId: '0a7e2000-0000-4000-8000-000000000009',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000001',
+    role: 'MEMBER',
+    status: 'ACTIVE',
+  },
+  {
+    id: '0a7e3000-0000-4000-8000-000000000011',
+    userId: '0a7e2000-0000-4000-8000-000000000009',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000002',
+    role: 'MEMBER',
+    status: 'ACTIVE',
+  },
+  {
+    id: '0a7e3000-0000-4000-8000-000000000012',
+    userId: '0a7e2000-0000-4000-8000-000000000010',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000004',
+    role: 'MEMBER',
+    status: 'ACTIVE',
+  },
+  {
     id: '0a7e3000-0000-4000-8000-000000000007',
     userId: '0a7e2000-0000-4000-8000-000000000006',
     atelierId: '0a7e1f00-0000-4000-8000-000000000002',
@@ -503,6 +579,264 @@ const MEMBERSHIPS: ReadonlyArray<SeedMembership> = [
     status: 'SUSPENDED',
   },
 ]
+
+const CERTIFICATIONS: ReadonlyArray<SeedCertification> = [
+  {
+    id: '0a7e4000-0000-4000-8000-000000000001',
+    userId: '0a7e2000-0000-4000-8000-000000000004',
+    machineId: '0a7e1f00-0000-4000-8000-000000000101',
+    status: 'GRANTED',
+    decidedBy: '0a7e2000-0000-4000-8000-000000000002',
+    requestedDaysAgo: 40,
+  },
+  {
+    id: '0a7e4000-0000-4000-8000-000000000002',
+    userId: '0a7e2000-0000-4000-8000-000000000004',
+    machineId: '0a7e1f00-0000-4000-8000-000000000104',
+    status: 'GRANTED',
+    decidedBy: '0a7e2000-0000-4000-8000-000000000002',
+    requestedDaysAgo: 35,
+  },
+  {
+    id: '0a7e4000-0000-4000-8000-000000000003',
+    userId: '0a7e2000-0000-4000-8000-000000000004',
+    machineId: '0a7e1f00-0000-4000-8000-000000000103',
+    status: 'PENDING',
+    decidedBy: null,
+    requestedDaysAgo: 2,
+  },
+  {
+    id: '0a7e4000-0000-4000-8000-000000000004',
+    userId: '0a7e2000-0000-4000-8000-000000000004',
+    machineId: '0a7e1f00-0000-4000-8000-000000000401',
+    status: 'GRANTED',
+    decidedBy: '0a7e2000-0000-4000-8000-000000000007',
+    requestedDaysAgo: 28,
+  },
+  {
+    id: '0a7e4000-0000-4000-8000-000000000005',
+    userId: '0a7e2000-0000-4000-8000-000000000008',
+    machineId: '0a7e1f00-0000-4000-8000-000000000103',
+    status: 'GRANTED',
+    decidedBy: '0a7e2000-0000-4000-8000-000000000002',
+    requestedDaysAgo: 22,
+  },
+  {
+    id: '0a7e4000-0000-4000-8000-000000000006',
+    userId: '0a7e2000-0000-4000-8000-000000000008',
+    machineId: '0a7e1f00-0000-4000-8000-000000000101',
+    status: 'PENDING',
+    decidedBy: null,
+    requestedDaysAgo: 1,
+  },
+  {
+    id: '0a7e4000-0000-4000-8000-000000000007',
+    userId: '0a7e2000-0000-4000-8000-000000000008',
+    machineId: '0a7e1f00-0000-4000-8000-000000000104',
+    status: 'REVOKED',
+    decidedBy: '0a7e2000-0000-4000-8000-000000000002',
+    requestedDaysAgo: 18,
+  },
+  {
+    id: '0a7e4000-0000-4000-8000-000000000008',
+    userId: '0a7e2000-0000-4000-8000-000000000009',
+    machineId: '0a7e1f00-0000-4000-8000-000000000104',
+    status: 'PENDING',
+    decidedBy: null,
+    requestedDaysAgo: 3,
+  },
+  {
+    id: '0a7e4000-0000-4000-8000-000000000009',
+    userId: '0a7e2000-0000-4000-8000-000000000009',
+    machineId: '0a7e1f00-0000-4000-8000-000000000203',
+    status: 'GRANTED',
+    decidedBy: '0a7e2000-0000-4000-8000-000000000003',
+    requestedDaysAgo: 15,
+  },
+  {
+    id: '0a7e4000-0000-4000-8000-000000000010',
+    userId: '0a7e2000-0000-4000-8000-000000000010',
+    machineId: '0a7e1f00-0000-4000-8000-000000000401',
+    status: 'PENDING',
+    decidedBy: null,
+    requestedDaysAgo: 4,
+  },
+]
+
+const BOOKINGS: ReadonlyArray<SeedBooking> = [
+  {
+    id: '0a7e5000-0000-4000-8000-000000000001',
+    machineId: '0a7e1f00-0000-4000-8000-000000000101',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000001',
+    userId: '0a7e2000-0000-4000-8000-000000000004',
+    dayOffset: 1,
+    localHour: 10,
+    minutes: 60,
+    status: 'CONFIRMED',
+    checkedInVia: null,
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000002',
+    machineId: '0a7e1f00-0000-4000-8000-000000000401',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000004',
+    userId: '0a7e2000-0000-4000-8000-000000000004',
+    dayOffset: 3,
+    localHour: 14,
+    minutes: 90,
+    status: 'CONFIRMED',
+    checkedInVia: null,
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000003',
+    machineId: '0a7e1f00-0000-4000-8000-000000000101',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000001',
+    userId: '0a7e2000-0000-4000-8000-000000000004',
+    dayOffset: -5,
+    localHour: 9,
+    minutes: 60,
+    status: 'CHECKED_IN',
+    checkedInVia: 'NFC',
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000004',
+    machineId: '0a7e1f00-0000-4000-8000-000000000104',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000001',
+    userId: '0a7e2000-0000-4000-8000-000000000004',
+    dayOffset: -12,
+    localHour: 14,
+    minutes: 120,
+    status: 'CHECKED_IN',
+    checkedInVia: 'NFC',
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000005',
+    machineId: '0a7e1f00-0000-4000-8000-000000000101',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000001',
+    userId: '0a7e2000-0000-4000-8000-000000000004',
+    dayOffset: -8,
+    localHour: 16,
+    minutes: 60,
+    status: 'NO_SHOW',
+    checkedInVia: null,
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000006',
+    machineId: '0a7e1f00-0000-4000-8000-000000000402',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000004',
+    userId: '0a7e2000-0000-4000-8000-000000000004',
+    dayOffset: -20,
+    localHour: 9,
+    minutes: 180,
+    status: 'CHECKED_IN',
+    checkedInVia: 'MANUAL',
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000007',
+    machineId: '0a7e1f00-0000-4000-8000-000000000402',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000004',
+    userId: '0a7e2000-0000-4000-8000-000000000004',
+    dayOffset: -2,
+    localHour: 9,
+    minutes: 180,
+    status: 'CANCELLED',
+    checkedInVia: null,
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000008',
+    machineId: '0a7e1f00-0000-4000-8000-000000000103',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000001',
+    userId: '0a7e2000-0000-4000-8000-000000000008',
+    dayOffset: 1,
+    localHour: 14,
+    minutes: 60,
+    status: 'CONFIRMED',
+    checkedInVia: null,
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000009',
+    machineId: '0a7e1f00-0000-4000-8000-000000000103',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000001',
+    userId: '0a7e2000-0000-4000-8000-000000000008',
+    dayOffset: -3,
+    localHour: 10,
+    minutes: 60,
+    status: 'CHECKED_IN',
+    checkedInVia: 'NFC',
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000010',
+    machineId: '0a7e1f00-0000-4000-8000-000000000203',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000002',
+    userId: '0a7e2000-0000-4000-8000-000000000009',
+    dayOffset: 2,
+    localHour: 10,
+    minutes: 90,
+    status: 'CONFIRMED',
+    checkedInVia: null,
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000011',
+    machineId: '0a7e1f00-0000-4000-8000-000000000202',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000002',
+    userId: '0a7e2000-0000-4000-8000-000000000009',
+    dayOffset: -6,
+    localHour: 14,
+    minutes: 60,
+    status: 'CHECKED_IN',
+    checkedInVia: 'NFC',
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000012',
+    machineId: '0a7e1f00-0000-4000-8000-000000000402',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000004',
+    userId: '0a7e2000-0000-4000-8000-000000000010',
+    dayOffset: 1,
+    localHour: 9,
+    minutes: 180,
+    status: 'CONFIRMED',
+    checkedInVia: null,
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000013',
+    machineId: '0a7e1f00-0000-4000-8000-000000000402',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000004',
+    userId: '0a7e2000-0000-4000-8000-000000000010',
+    dayOffset: -10,
+    localHour: 13,
+    minutes: 180,
+    status: 'CHECKED_IN',
+    checkedInVia: 'NFC',
+  },
+]
+
+const DAY_MS = 86_400_000
+
+const parisOffsetMinutes = (instant: Date): number => {
+  const label = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Paris', timeZoneName: 'longOffset' })
+    .formatToParts(instant)
+    .find((part) => part.type === 'timeZoneName')?.value
+  const match = /GMT([+-])(\d{2}):(\d{2})/.exec(label ?? '')
+  if (match === null) return 0
+
+  return (match[1] === '-' ? -1 : 1) * (Number(match[2]) * 60 + Number(match[3]))
+}
+
+const slotAt = (dayOffset: number, localHour: number, minutes: number): { start: Date; end: Date } => {
+  const parts = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).formatToParts(new Date(Date.now() + dayOffset * DAY_MS))
+  const at = (type: string): number => Number(parts.find((part) => part.type === type)?.value ?? 0)
+
+  const noon = Date.UTC(at('year'), at('month') - 1, at('day'), 12)
+  const start = new Date(
+    Date.UTC(at('year'), at('month') - 1, at('day'), localHour) - parisOffsetMinutes(new Date(noon)) * 60_000
+  )
+
+  return { start, end: new Date(start.getTime() + minutes * 60_000) }
+}
 
 const toPgTextArray = (values: ReadonlyArray<string>): string =>
   `{${values.map((value) => `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`).join(',')}}`
@@ -552,9 +886,44 @@ const program = Effect.gen(function* () {
     `
   }
 
+  // Re-asserted rather than left alone: the slots are relative to now, so a second run
+  // has to move them forward instead of keeping yesterday's demo.
+  yield* sql`DELETE FROM bookings WHERE id IN ${sql.in(BOOKINGS.map((booking) => booking.id))}`
+  yield* sql`DELETE FROM certifications WHERE id IN ${sql.in(CERTIFICATIONS.map((certification) => certification.id))}`
+
+  for (const certification of CERTIFICATIONS) {
+    const requestedAt = new Date(Date.now() - certification.requestedDaysAgo * DAY_MS)
+    const decidedAt = certification.decidedBy === null ? null : new Date(requestedAt.getTime() + DAY_MS)
+
+    yield* sql`
+      INSERT INTO certifications (id, user_id, machine_id, status, requested_at, decided_at, decided_by)
+      VALUES (
+        ${certification.id}, ${certification.userId}, ${certification.machineId}, ${certification.status},
+        ${requestedAt}, ${decidedAt}, ${certification.decidedBy}
+      )
+      ON CONFLICT (user_id, machine_id) DO NOTHING
+    `
+  }
+
+  for (const booking of BOOKINGS) {
+    const { start, end } = slotAt(booking.dayOffset, booking.localHour, booking.minutes)
+    const checkedInAt = booking.checkedInVia === null ? null : new Date(start.getTime() + 4 * 60_000)
+    const cancelledAt = booking.status === 'CANCELLED' ? new Date(start.getTime() - 2 * 60 * 60_000) : null
+
+    yield* sql`
+      INSERT INTO bookings (id, machine_id, atelier_id, user_id, start_at, end_at, status, checked_in_at, checked_in_via, cancelled_at, cancelled_by)
+      VALUES (
+        ${booking.id}, ${booking.machineId}, ${booking.atelierId}, ${booking.userId}, ${start}, ${end},
+        ${booking.status}, ${checkedInAt}, ${booking.checkedInVia}, ${cancelledAt},
+        ${cancelledAt === null ? null : booking.userId}
+      )
+    `
+  }
+
   const machineCount = ATELIERS.reduce((total, atelier) => total + atelier.machines.length, 0)
   yield* Effect.log(
-    `Seeded ${ATELIERS.length} ateliers, ${machineCount} machines, ${USERS.length} users, ${MEMBERSHIPS.length} memberships`
+    `Seeded ${ATELIERS.length} ateliers, ${machineCount} machines, ${USERS.length} users, ` +
+      `${MEMBERSHIPS.length} memberships, ${CERTIFICATIONS.length} certifications, ${BOOKINGS.length} bookings`
   )
 }).pipe(Effect.provide(MigratorLive.pipe(Layer.provide(SqlClientLive))), Effect.provide(SqlClientLive))
 
