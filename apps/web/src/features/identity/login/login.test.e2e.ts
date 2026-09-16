@@ -36,7 +36,9 @@ test('signing back in reopens the account', async ({ page }) => {
   await page.getByLabel(/mot de passe/i).fill(PASSWORD)
   await page.getByRole('button', { name: /se connecter/i }).click()
 
-  await expect(page).toHaveURL(/\/compte$/)
+  await expect(page).toHaveURL(/\/tableau-de-bord$/)
+
+  await page.goto('/compte')
   await expect(page.getByText(email)).toBeVisible()
 })
 

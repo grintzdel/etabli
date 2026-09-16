@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 
 import { buttonVariants } from '@/ui/Button'
@@ -48,10 +49,20 @@ export const HomePage = () => (
         <Link href="/ateliers" className={buttonVariants()}>
           Découvrir les ateliers
         </Link>
-        <Link href="/inscription" className={buttonVariants({ variant: 'ghost' })}>
-          Créer un compte
+        <Link href="/fonctionnalites" className={buttonVariants({ variant: 'ghost' })}>
+          Voir les fonctionnalités
         </Link>
       </div>
+
+      <Image
+        src="/ateliers/cover-2.png"
+        alt=""
+        width={1200}
+        height={800}
+        priority
+        sizes="(min-width: 1024px) 64rem, 90vw"
+        className="border-graphite-800 h-56 w-full rounded-sm border object-cover sm:h-80"
+      />
     </section>
 
     <section className="flex flex-col gap-6">
@@ -76,6 +87,9 @@ export const HomePage = () => (
         <p>Deux réservations ne peuvent jamais se chevaucher sur la même machine.</p>
         <p>Un fabmanager n'agit que dans son atelier, vérifié côté serveur et non par un bouton masqué.</p>
       </Surface>
+      <Link href="/faq" className="font-display text-signal-500 hover:text-signal-400 text-sm tracking-wide uppercase">
+        Les questions qu'on nous pose
+      </Link>
     </section>
   </main>
 )

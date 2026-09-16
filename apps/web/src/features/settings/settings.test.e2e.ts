@@ -106,7 +106,7 @@ test('a changed password signs the member out of nothing and works on the next s
 
   await page.getByRole('button', { name: /se déconnecter/i }).click()
   await signIn(page, email, 'un-autre-mot-de-passe')
-  await expect(page).toHaveURL(/\/(compte|bienvenue)$/)
+  await expect(page).toHaveURL(/\/(tableau-de-bord|bienvenue)$/)
 })
 
 test('the password change refuses each wrong case with its own words', async ({ page, request }) => {
