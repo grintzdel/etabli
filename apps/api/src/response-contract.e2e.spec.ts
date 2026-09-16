@@ -21,7 +21,10 @@ import {
   certificationResponseSchema,
   myCertificationResponseSchema,
 } from './modules/certification/presentation/dtos/certification.response.dto.ts'
-import { managedParcResponseSchema } from './modules/machine/presentation/dtos/machine.response.dto.ts'
+import {
+  machineDetailResponseSchema,
+  managedParcResponseSchema,
+} from './modules/machine/presentation/dtos/machine.response.dto.ts'
 import { onboardingResultResponseSchema } from './modules/membership/presentation/dtos/membership.response.dto.ts'
 import {
   adminUserResponseSchema,
@@ -89,6 +92,12 @@ describe('every route answers what its schema says', () => {
       'member',
     ],
     ['GET /bookings', () => api().get('/bookings'), nonEmptyArray(bookingDetailResponseSchema), 'member'],
+    [
+      'GET /machines/:id',
+      () => api().get(`/machines/${SEED.machine.copeauxBambu}`),
+      machineDetailResponseSchema,
+      'none',
+    ],
     [
       'GET /machines/:id/availability',
       () => api().get(`/machines/${SEED.machine.copeauxBambu}/availability`),

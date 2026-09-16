@@ -25,6 +25,7 @@ export interface UpdateMachineInput {
 
 export interface IMachineRepository {
   findById(id: string): Promise<MachineWithAtelier | null>
+  findPublicById(id: string): Promise<MachineWithAtelier | null>
   findMany(ids: ReadonlyArray<string>): Promise<ReadonlyArray<MachineWithAtelier>>
   findByNfcTag(nfcTagId: string): Promise<MachineEntity | null>
   listForAtelier(atelierId: string): Promise<ReadonlyArray<MachineEntity>>

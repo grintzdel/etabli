@@ -33,6 +33,7 @@ describe('the OpenAPI document', () => {
       'GET /bookings/{bookingId}',
       'GET /certifications/mine',
       'GET /health',
+      'GET /machines/{machineId}',
       'GET /machines/{machineId}/availability',
       'GET /manage/bookings',
       'GET /manage/certifications',

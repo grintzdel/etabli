@@ -110,3 +110,67 @@ describe('machine parcs', () => {
     expect(response.status).toBe(404)
   })
 })
+
+describe('public machine detail', () => {
+  let harness: SeededApp
+
+  beforeEach(async () => {
+    harness = await makeSeededApp()
+  })
+
+  afterEach(async () => {
+    await harness.close()
+  })
+
+  const api = () => request(harness.app.getHttpServer())
+
+  it('hands the fiche of a machine to a visitor who carries no token', async () => {
+    const response = await api().get(`/machines/${SEED.machine.copeauxBambu}`)
+
+    expect(response.status).toBe(200)
+    expect(response.body).toMatchObject({
+      id: SEED.machine.copeauxBambu,
+      name: 'Bambu Lab P1S',
+      atelierSlug: 'copeaux-et-cie-bastille',
+      atelierName: 'Copeaux & Cie',
+      kind: 'PRINTER_3D',
+      requiresCertification: false,
+      slotDurationMinutes: 180,
+      status: 'AVAILABLE',
+    })
+  })
+
+  it('keeps the NFC tag out of the public fiche', async () => {
+    const response = await api().get(`/machines/${SEED.machine.forgeLaser}`)
+
+    expect(response.status).toBe(200)
+    expect(response.body).not.toHaveProperty('nfcTagId')
+  })
+
+  it('shows a machine under maintenance, since the fiche is not a booking', async () => {
+    const response = await api().get(`/machines/${SEED.machine.forgePrusa}`)
+
+    expect(response.status).toBe(200)
+    expect(response.body.status).toBe('MAINTENANCE')
+  })
+
+  it('hides a retired machine behind a 404, signed in or not', async () => {
+    const anonymous = await api().get(`/machines/${SEED.machine.forgeRetired}`)
+    expect(anonymous.status).toBe(404)
+
+    const token = await harness.signIn(SEED.forgeFabmanager)
+    const fabmanager = await api().get(`/machines/${SEED.machine.forgeRetired}`).set('authorization', bearer(token))
+    expect(fabmanager.status).toBe(404)
+  })
+
+  it('answers 404 on a machine that never existed', async () => {
+    const response = await api().get('/machines/00000000-0000-4000-8000-000000000000')
+
+    expect(response.status).toBe(404)
+    expect(response.body.code).toBe('MACHINE_UNKNOWN')
+  })
+
+  it('refuses an id that is not a uuid', async () => {
+    expect((await api().get('/machines/pas-un-uuid')).status).toBe(400)
+  })
+})

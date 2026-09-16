@@ -77,4 +77,33 @@ describe('MachineRepositoryDrizzlePg', () => {
 
     expect(updated?.nfcTagId).toBeNull()
   })
+
+  it('reads the public fiche of a machine in service, atelier carried along', async () => {
+    const machine = await repository.findPublicById(SEED.machine.forgeLaser)
+
+    expect(machine?.name).toBe('Trotec Speedy 400')
+    expect(machine?.atelierSlug).toBe('la-forge-montreuil')
+  })
+
+  it('withholds a retired machine from the public fiche', async () => {
+    expect(await repository.findPublicById(SEED.machine.forgeRetired)).toBeNull()
+  })
+
+  it('withholds a machine whose atelier is not published', async () => {
+    const hidden = await repository.insert({
+      id: '0a7e1f00-0000-4000-8000-0000000009ff',
+      atelierId: SEED.atelier.draft,
+      name: 'Presse en caisse',
+      description: '',
+      kind: 'CNC_MILL',
+      requiresCertification: true,
+      slotDurationMinutes: 60,
+      status: 'AVAILABLE',
+      nfcTagId: null,
+      createdAt: new Date('2026-09-15T10:00:00Z'),
+    })
+
+    expect(await repository.findById(hidden.id)).not.toBeNull()
+    expect(await repository.findPublicById(hidden.id)).toBeNull()
+  })
 })

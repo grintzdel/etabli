@@ -1,10 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { asc, eq, inArray } from 'drizzle-orm'
+import { and, asc, eq, inArray, ne } from 'drizzle-orm'
 
 import { type Database, DATABASE_CONNECTION } from '../../../../infrastructure/database/database.token.ts'
 import { ateliers, machines } from '../../../../infrastructure/database/schema/index.ts'
 import { BaseRepository } from '../../../../shared/infrastructure/base.repository.ts'
+import { AtelierStatus } from '../../../atelier/domain/constants/atelier.constant.ts'
 import type { MachineKind, MachineStatus } from '../../domain/constants/machine.constant.ts'
+import { MachineStatus as MachineStatusValues } from '../../domain/constants/machine.constant.ts'
 import type { MachineEntity, MachineWithAtelier } from '../../domain/entities/machine.entity.ts'
 import type {
   IMachineRepository,
@@ -46,6 +48,20 @@ export class MachineRepositoryDrizzlePg extends BaseRepository<MachineRow> imple
 
   async findById(id: string): Promise<MachineWithAtelier | null> {
     const [found] = await this.joined().where(eq(machines.id, id)).limit(1)
+    return found === undefined ? null : toMachineWithAtelier(found)
+  }
+
+  async findPublicById(id: string): Promise<MachineWithAtelier | null> {
+    const [found] = await this.joined()
+      .where(
+        and(
+          eq(machines.id, id),
+          ne(machines.status, MachineStatusValues.RETIRED),
+          eq(ateliers.status, AtelierStatus.PUBLISHED)
+        )
+      )
+      .limit(1)
+
     return found === undefined ? null : toMachineWithAtelier(found)
   }
 
