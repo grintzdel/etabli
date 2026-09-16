@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 
 import { buttonVariants } from '@/ui/Button'
+import { PhotoHero } from '@/ui/PhotoHero'
 import { Surface } from '@/ui/Surface'
 
 export const metadata: Metadata = {
@@ -47,24 +47,17 @@ const capabilities = [
 
 export const FeaturesPage = () => (
   <main className="mx-auto flex w-full max-w-5xl flex-col gap-16 px-6 py-20">
-    <header className="flex flex-col gap-6">
-      <h1 className="font-display text-4xl leading-tight font-bold tracking-tight uppercase sm:text-5xl">
-        Ce qu’Établi tient à votre place
-      </h1>
-      <p className="text-graphite-200 max-w-2xl text-lg">
-        Un atelier partagé se gère aujourd’hui avec un groupe de messagerie, un tableur et un cahier près de la machine.
-        Les trois se contredisent. Établi n’en garde qu’une source.
-      </p>
-      <Image
-        src="/ateliers/cover-1.png"
-        alt=""
-        width={1200}
-        height={800}
-        priority
-        sizes="(min-width: 1024px) 64rem, 90vw"
-        className="border-graphite-800 h-56 w-full rounded-sm border object-cover sm:h-72"
-      />
-    </header>
+    <PhotoHero src="/marketing/hero-reseau.webp" priority className="px-6 py-14 sm:px-10 sm:py-20">
+      <header className="flex flex-col gap-6">
+        <h1 className="font-display text-4xl leading-tight font-bold tracking-tight uppercase sm:text-5xl">
+          Ce qu’Établi tient à votre place
+        </h1>
+        <p className="text-graphite-200 max-w-2xl text-lg">
+          Un atelier partagé se gère aujourd’hui avec un groupe de messagerie, un tableur et un cahier près de la
+          machine. Les trois se contredisent. Établi n’en garde qu’une source.
+        </p>
+      </header>
+    </PhotoHero>
 
     <section className="flex flex-col gap-6">
       <h2 className="font-display text-2xl font-semibold tracking-wide uppercase">Le produit, point par point</h2>

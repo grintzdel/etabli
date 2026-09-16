@@ -58,3 +58,16 @@ test('narrows the directory down to one machine kind', async ({ page }) => {
   await expect(ateliers.getByRole('link', { name: 'La Forge', exact: true })).toBeVisible()
   await expect(ateliers.getByRole('link', { name: 'Fabrique Lyonnaise' })).toHaveCount(0)
 })
+
+test('gives every card a photo of a machine that atelier publishes', async ({ page }) => {
+  await page.goto('/ateliers')
+  const cards = page.getByRole('list', { name: 'Ateliers' }).getByRole('listitem')
+
+  await expect(cards.first()).toBeVisible()
+
+  for (const src of await cards
+    .locator('img')
+    .evaluateAll((images) => images.map((image) => image.getAttribute('src')))) {
+    expect(decodeURIComponent(src ?? '')).toMatch(/\/marketing\/kind-|\/ateliers\/cover-/)
+  }
+})

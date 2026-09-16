@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 
 import { buttonVariants } from '@/ui/Button'
+import { PhotoHero } from '@/ui/PhotoHero'
 import { StatusBadge } from '@/ui/StatusBadge'
 import { Surface } from '@/ui/Surface'
 
@@ -35,35 +35,27 @@ const steps = [
 
 export const HomePage = () => (
   <main className="mx-auto flex max-w-5xl flex-col gap-16 px-6 py-20">
-    <section className="flex flex-col gap-6">
-      <StatusBadge tone="warn" label="Réseau d'ateliers partagés" className="self-start" />
-      <h1 className="font-display text-4xl leading-tight font-bold tracking-tight uppercase sm:text-6xl">
-        On ne réserve pas une découpeuse laser parce qu'elle est libre. On la réserve parce qu'on a le droit de s'en
-        servir.
-      </h1>
-      <p className="text-graphite-200 max-w-2xl text-lg">
-        Établi relie l'habilitation, le créneau et la présence physique. Une seule source de vérité, à la place du
-        groupe de messagerie, du tableur et du cahier posé près de la machine.
-      </p>
-      <div className="flex flex-wrap gap-4">
-        <Link href="/ateliers" className={buttonVariants()}>
-          Découvrir les ateliers
-        </Link>
-        <Link href="/fonctionnalites" className={buttonVariants({ variant: 'ghost' })}>
-          Voir les fonctionnalités
-        </Link>
-      </div>
-
-      <Image
-        src="/ateliers/cover-2.png"
-        alt=""
-        width={1200}
-        height={800}
-        priority
-        sizes="(min-width: 1024px) 64rem, 90vw"
-        className="border-graphite-800 h-56 w-full rounded-sm border object-cover sm:h-80"
-      />
-    </section>
+    <PhotoHero src="/marketing/hero-atelier.webp" priority className="px-6 py-14 sm:px-10 sm:py-20">
+      <section className="flex flex-col gap-6">
+        <StatusBadge tone="warn" label="Réseau d'ateliers partagés" className="self-start" />
+        <h1 className="font-display text-4xl leading-tight font-bold tracking-tight uppercase sm:text-6xl">
+          On ne réserve pas une découpeuse laser parce qu'elle est libre. On la réserve parce qu'on a le droit de s'en
+          servir.
+        </h1>
+        <p className="text-graphite-200 max-w-2xl text-lg">
+          Établi relie l'habilitation, le créneau et la présence physique. Une seule source de vérité, à la place du
+          groupe de messagerie, du tableur et du cahier posé près de la machine.
+        </p>
+        <div className="flex flex-wrap gap-4">
+          <Link href="/ateliers" className={buttonVariants()}>
+            Découvrir les ateliers
+          </Link>
+          <Link href="/fonctionnalites" className={buttonVariants({ variant: 'ghost' })}>
+            Voir les fonctionnalités
+          </Link>
+        </div>
+      </section>
+    </PhotoHero>
 
     <section className="flex flex-col gap-6">
       <h2 className="font-display text-2xl font-semibold tracking-wide uppercase">Comment ça marche</h2>
