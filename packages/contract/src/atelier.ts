@@ -30,6 +30,19 @@ export type PublicMachine = {
   readonly status: MachineStatus
 }
 
+export type MachineDetail = {
+  readonly id: string
+  readonly atelierId: string
+  readonly atelierName: string
+  readonly atelierSlug: string
+  readonly name: string
+  readonly description: string
+  readonly kind: MachineKind
+  readonly requiresCertification: boolean
+  readonly slotDurationMinutes: number
+  readonly status: MachineStatus
+}
+
 export type AtelierDetail = {
   readonly id: string
   readonly slug: string
