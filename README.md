@@ -86,6 +86,22 @@ pnpm run dev                  # API sur :3001, web sur :3000
 | `COOKIE_SECURE` | `true` en production |
 | `NEXT_PUBLIC_SITE_URL` | Base des URLs canoniques, du sitemap et de l'Open Graph |
 
+### Les deux implémentations de l'API
+
+`pnpm run dev` lance l'API Effect (`packages/server`). La v2 NestJS tient les mêmes 38 routes et
+se lance à sa place :
+
+```bash
+pnpm run db:migrate:api
+pnpm run db:seed:api
+pnpm run dev:api        # sur le même port, avec pnpm run dev:web à côté
+```
+
+Sa conception est dans `docs/superpowers/specs/2026-09-15-etabli-api-nestjs-design.md`. Deux routes
+y changent de nom — `PATCH /me/profile` au lieu de `PATCH /auth/me`, et `POST /certifications/request`
+au lieu de `POST /certifications`. **Le web est câblé sur la v1** : le basculer demande d'ajuster
+ces deux chemins dans `packages/contract`.
+
 ### Vérifier
 
 ```bash
@@ -118,6 +134,7 @@ pnpm run db:test:down
 | `packages/server` | `HttpApi` Effect, Layers, migrator, serveur Node (`src/main.ts`) |
 | `packages/test-utils` | client SQL pglite pour les tests d'intégration |
 | `apps/web` | application Next.js — App Router, Server Components, Server Actions |
+| `apps/api` | seconde implémentation de l'API, en NestJS, Drizzle et Zod (voir ci-dessous) |
 | `scripts/` | `generate-cover-art.py` — les planches de l'annuaire |
 
 Le préfixe à quatre chiffres des migrations porte l'ordre global, tous packages confondus : un
@@ -264,6 +281,10 @@ refus, la contrainte d'exclusion `gist` qui double la règle 2, la traduction du
 
 ## Limites connues
 
+- **Deux implémentations de l'API coexistent.** `packages/server` (Effect) est celle que le web
+  interroge ; `apps/api` (NestJS, Drizzle, Zod) tient les mêmes routes et ses propres 255 tests, mais
+  aucun écran ne s'y branche encore. Deux back-ends à maintenir pour un seul produit : à trancher
+  avant le rendu, et à savoir défendre en soutenance si les deux restent.
 - **Isolation des E2E.** Le Postgres de test accumule d'un run à l'autre ; il faut `db:test:down`
   puis `db:test:up` entre deux campagnes. Non corrigé.
 - **Pas de révocation de session.** Changer de mot de passe réémet le jeton de l'auteur du
