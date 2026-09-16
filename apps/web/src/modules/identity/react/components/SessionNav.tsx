@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { SidebarLink, SidebarSection } from '@/ui/AppSidebar'
 import { buttonVariants } from '@/ui/Button'
 
 export type DefaultAtelier = {
@@ -23,59 +24,52 @@ export const SessionNav = ({
   signOut,
 }: SessionNavProps) => (
   <>
-    {defaultAtelier === null ? null : (
-      <Link
-        href={`/ateliers/${defaultAtelier.slug}`}
-        className="font-display text-signal-500 hover:text-signal-400 text-sm"
-      >
-        {defaultAtelier.name}
-      </Link>
-    )}
-    <Link href="/reservations" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
-      Réservations
-    </Link>
-    <Link href="/habilitations" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
-      Habilitations
-    </Link>
+    <SidebarSection title="Espace membre">
+      <SidebarLink href="/tableau-de-bord">Tableau de bord</SidebarLink>
+      <SidebarLink href="/reservations">Réservations</SidebarLink>
+      <SidebarLink href="/habilitations">Habilitations</SidebarLink>
+      <SidebarLink href="/ateliers">Annuaire</SidebarLink>
+    </SidebarSection>
+
     {isFabmanager ? (
-      <>
-        <Link href="/manage/machines" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
-          Machines
-        </Link>
-        <Link href="/manage/certifications" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
-          File
-        </Link>
-        <Link href="/manage/bookings" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
-          Pointage
-        </Link>
-        <Link href="/manage/stats" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
-          Statistiques
-        </Link>
-      </>
+      <SidebarSection title="Atelier">
+        <SidebarLink href="/manage/machines">Machines</SidebarLink>
+        <SidebarLink href="/manage/certifications">File</SidebarLink>
+        <SidebarLink href="/manage/bookings">Pointage</SidebarLink>
+        <SidebarLink href="/manage/stats">Statistiques</SidebarLink>
+      </SidebarSection>
     ) : null}
+
     {isPlatformAdmin ? (
-      <>
-        <Link href="/admin/ateliers" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
-          Administration
-        </Link>
-        <Link href="/admin/utilisateurs" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
-          Utilisateurs
-        </Link>
-        <Link href="/admin/stats" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
-          Réseau
-        </Link>
-      </>
+      <SidebarSection title="Plateforme">
+        <SidebarLink href="/admin/ateliers">Administration</SidebarLink>
+        <SidebarLink href="/admin/utilisateurs">Utilisateurs</SidebarLink>
+        <SidebarLink href="/admin/stats">Réseau</SidebarLink>
+      </SidebarSection>
     ) : null}
-    <Link href="/parametres" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
-      Paramètres
-    </Link>
-    <Link href="/compte" className="font-display text-graphite-200 hover:text-graphite-50 text-sm">
-      {displayName}
-    </Link>
-    <form action={signOut}>
-      <button type="submit" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-        Se déconnecter
-      </button>
-    </form>
+
+    <div className="flex flex-col gap-2 lg:mt-auto">
+      {defaultAtelier === null ? null : (
+        <Link
+          href={`/ateliers/${defaultAtelier.slug}`}
+          className="font-display text-signal-500 hover:text-signal-400 text-sm"
+        >
+          {defaultAtelier.name}
+        </Link>
+      )}
+      <div className="border-graphite-800 flex flex-wrap items-center gap-3 lg:flex-col lg:items-stretch lg:border-t lg:pt-4">
+        <Link href="/parametres" className="font-display text-graphite-300 hover:text-graphite-50 text-sm">
+          Paramètres
+        </Link>
+        <Link href="/compte" className="font-display text-graphite-200 hover:text-graphite-50 text-sm">
+          {displayName}
+        </Link>
+        <form action={signOut}>
+          <button type="submit" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+            Se déconnecter
+          </button>
+        </form>
+      </div>
+    </div>
   </>
 )
