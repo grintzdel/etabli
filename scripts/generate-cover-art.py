@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Draw the atelier cover art shipped in apps/web/public/ateliers/.
 
-No stock photography is licensed for this project, so the directory cards carry
-generated blueprint plates instead. Deterministic: same input, same bytes, so a
-re-run never dirties the tree. Palette is the one declared in globals.css.
+These plates are the fallback an atelier gets when it publishes no machine, and
+so has no kind to photograph — fetch-marketing-photos.py covers the rest.
+Deterministic: same input, same bytes, so a re-run never dirties the tree.
+Palette is the one declared in globals.css.
 """
 
 import pathlib
