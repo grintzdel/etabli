@@ -66,6 +66,7 @@ interface SeedBooking {
   readonly userId: string
   readonly dayOffset: number
   readonly localHour: number
+  readonly startsInMinutes?: number
   readonly minutes: number
   readonly status: string
   readonly checkedInVia: string | null
@@ -544,6 +545,13 @@ const MEMBERSHIPS: ReadonlyArray<SeedMembership> = [
     status: 'ACTIVE',
   },
   {
+    id: '0a7e3000-0000-4000-8000-000000000013',
+    userId: '0a7e2000-0000-4000-8000-000000000001',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000001',
+    role: 'MEMBER',
+    status: 'ACTIVE',
+  },
+  {
     id: '0a7e3000-0000-4000-8000-000000000009',
     userId: '0a7e2000-0000-4000-8000-000000000008',
     atelierId: '0a7e1f00-0000-4000-8000-000000000001',
@@ -652,6 +660,54 @@ const CERTIFICATIONS: ReadonlyArray<SeedCertification> = [
     status: 'GRANTED',
     decidedBy: '0a7e2000-0000-4000-8000-000000000003',
     requestedDaysAgo: 15,
+  },
+  {
+    id: '0a7e4000-0000-4000-8000-000000000011',
+    userId: '0a7e2000-0000-4000-8000-000000000001',
+    machineId: '0a7e1f00-0000-4000-8000-000000000702',
+    status: 'GRANTED',
+    decidedBy: '0a7e2000-0000-4000-8000-000000000001',
+    requestedDaysAgo: 60,
+  },
+  {
+    id: '0a7e4000-0000-4000-8000-000000000012',
+    userId: '0a7e2000-0000-4000-8000-000000000001',
+    machineId: '0a7e1f00-0000-4000-8000-000000000101',
+    status: 'GRANTED',
+    decidedBy: '0a7e2000-0000-4000-8000-000000000002',
+    requestedDaysAgo: 31,
+  },
+  {
+    id: '0a7e4000-0000-4000-8000-000000000013',
+    userId: '0a7e2000-0000-4000-8000-000000000001',
+    machineId: '0a7e1f00-0000-4000-8000-000000000701',
+    status: 'PENDING',
+    decidedBy: null,
+    requestedDaysAgo: 2,
+  },
+  {
+    id: '0a7e4000-0000-4000-8000-000000000014',
+    userId: '0a7e2000-0000-4000-8000-000000000002',
+    machineId: '0a7e1f00-0000-4000-8000-000000000103',
+    status: 'GRANTED',
+    decidedBy: '0a7e2000-0000-4000-8000-000000000002',
+    requestedDaysAgo: 90,
+  },
+  {
+    id: '0a7e4000-0000-4000-8000-000000000015',
+    userId: '0a7e2000-0000-4000-8000-000000000003',
+    machineId: '0a7e1f00-0000-4000-8000-000000000502',
+    status: 'GRANTED',
+    decidedBy: '0a7e2000-0000-4000-8000-000000000003',
+    requestedDaysAgo: 75,
+  },
+  {
+    id: '0a7e4000-0000-4000-8000-000000000016',
+    userId: '0a7e2000-0000-4000-8000-000000000007',
+    machineId: '0a7e1f00-0000-4000-8000-000000000401',
+    status: 'GRANTED',
+    decidedBy: '0a7e2000-0000-4000-8000-000000000007',
+    requestedDaysAgo: 70,
   },
   {
     id: '0a7e4000-0000-4000-8000-000000000010',
@@ -797,6 +853,85 @@ const BOOKINGS: ReadonlyArray<SeedBooking> = [
     checkedInVia: null,
   },
   {
+    id: '0a7e5000-0000-4000-8000-000000000014',
+    machineId: '0a7e1f00-0000-4000-8000-000000000104',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000001',
+    userId: '0a7e2000-0000-4000-8000-000000000004',
+    dayOffset: 0,
+    localHour: 0,
+    startsInMinutes: -10,
+    minutes: 120,
+    status: 'CONFIRMED',
+    checkedInVia: null,
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000015',
+    machineId: '0a7e1f00-0000-4000-8000-000000000702',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000007',
+    userId: '0a7e2000-0000-4000-8000-000000000001',
+    dayOffset: 0,
+    localHour: 0,
+    startsInMinutes: -5,
+    minutes: 60,
+    status: 'CONFIRMED',
+    checkedInVia: null,
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000016',
+    machineId: '0a7e1f00-0000-4000-8000-000000000101',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000001',
+    userId: '0a7e2000-0000-4000-8000-000000000001',
+    dayOffset: -4,
+    localHour: 11,
+    minutes: 60,
+    status: 'CHECKED_IN',
+    checkedInVia: 'NFC',
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000017',
+    machineId: '0a7e1f00-0000-4000-8000-000000000702',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000007',
+    userId: '0a7e2000-0000-4000-8000-000000000001',
+    dayOffset: 2,
+    localHour: 9,
+    minutes: 60,
+    status: 'CONFIRMED',
+    checkedInVia: null,
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000018',
+    machineId: '0a7e1f00-0000-4000-8000-000000000103',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000001',
+    userId: '0a7e2000-0000-4000-8000-000000000002',
+    dayOffset: 2,
+    localHour: 9,
+    minutes: 60,
+    status: 'CONFIRMED',
+    checkedInVia: null,
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000019',
+    machineId: '0a7e1f00-0000-4000-8000-000000000502',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000005',
+    userId: '0a7e2000-0000-4000-8000-000000000003',
+    dayOffset: 1,
+    localHour: 11,
+    minutes: 60,
+    status: 'CONFIRMED',
+    checkedInVia: null,
+  },
+  {
+    id: '0a7e5000-0000-4000-8000-000000000020',
+    machineId: '0a7e1f00-0000-4000-8000-000000000401',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000004',
+    userId: '0a7e2000-0000-4000-8000-000000000007',
+    dayOffset: 2,
+    localHour: 10,
+    minutes: 90,
+    status: 'CONFIRMED',
+    checkedInVia: null,
+  },
+  {
     id: '0a7e5000-0000-4000-8000-000000000013',
     machineId: '0a7e1f00-0000-4000-8000-000000000402',
     atelierId: '0a7e1f00-0000-4000-8000-000000000004',
@@ -819,6 +954,13 @@ const parisOffsetMinutes = (instant: Date): number => {
   if (match === null) return 0
 
   return (match[1] === '-' ? -1 : 1) * (Number(match[2]) * 60 + Number(match[3]))
+}
+
+// Anchored on the clock rather than on the grid: the check-in window is 15 minutes before the
+// slot and 30 after it starts, so only a slot placed relative to now is ever open to stamp.
+const startingIn = (offsetMinutes: number, minutes: number): { start: Date; end: Date } => {
+  const start = new Date(Date.now() + offsetMinutes * 60_000)
+  return { start, end: new Date(start.getTime() + minutes * 60_000) }
 }
 
 const slotAt = (dayOffset: number, localHour: number, minutes: number): { start: Date; end: Date } => {
@@ -906,7 +1048,10 @@ const program = Effect.gen(function* () {
   }
 
   for (const booking of BOOKINGS) {
-    const { start, end } = slotAt(booking.dayOffset, booking.localHour, booking.minutes)
+    const { start, end } =
+      booking.startsInMinutes === undefined
+        ? slotAt(booking.dayOffset, booking.localHour, booking.minutes)
+        : startingIn(booking.startsInMinutes, booking.minutes)
     const checkedInAt = booking.checkedInVia === null ? null : new Date(start.getTime() + 4 * 60_000)
     const cancelledAt = booking.status === 'CANCELLED' ? new Date(start.getTime() - 2 * 60 * 60_000) : null
 

@@ -57,18 +57,24 @@ exclusif, la présence est prouvée par NFC.**
 
 `pnpm db:seed` insère ces comptes de façon idempotente. **Mot de passe commun : `etabli-2026`.**
 
-Le seed pose aussi 10 habilitations et 13 réservations — à venir, pointées, non honorée, annulée —
+Le seed pose aussi 16 habilitations et 20 réservations — à venir, pointées, non honorée, annulée —
 pour que le tableau de bord, les files de validation et les statistiques ouvrent sur des chiffres.
+Chaque compte actif a de quoi montrer quelque chose, l'administrateur comme les fabmanagers.
+
 **Les créneaux sont datés relativement à maintenant** : un `db:seed` les réécrit pour que le
 « prochain créneau » soit toujours devant. C'est la seule partie du seed qui remplace au lieu
 d'ignorer les conflits.
 
+Deux créneaux sont ancrés sur l'horloge et non sur la grille, pour que le **pointage** soit
+réellement ouvert au moment de la démonstration : la fenêtre court de 15 minutes avant le créneau à
+30 minutes après son début. Reséedez juste avant de démontrer.
+
 | E-mail | Rôle | À quoi il sert |
 |---|---|---|
-| `admin@etabli.test` | Administrateur plateforme | Tout `/admin/*` |
-| `fabmanager.forge@etabli.test` | Fabmanager — La Forge | Tout `/manage/*` sur un atelier |
+| `admin@etabli.test` | Administrateur plateforme, 2 ateliers | Tout `/admin/*`, et un tableau de bord garni : créneaux à venir, **pointage ouvert**, 1 demande en attente |
+| `fabmanager.forge@etabli.test` | Fabmanager — La Forge | Tout `/manage/*` sur un atelier, 3 demandes dans sa file |
 | `fabmanager.lyon@etabli.test` | Fabmanager — deux ateliers | Vérifier le cloisonnement multi-atelier |
-| `membre@etabli.test` | Membre habilité, 2 ateliers | Parcours complet : créneaux à venir, historique, 1 demande en attente |
+| `membre@etabli.test` | Membre habilité, 2 ateliers | Parcours complet : créneaux à venir, **pointage ouvert**, historique, 1 demande en attente |
 | `lea@etabli.test` | Membre — La Forge | Une habilitation accordée, une en attente, une révoquée |
 | `theo@etabli.test` | Membre — 2 ateliers | Membre sans habilitation sur la découpe laser |
 | `manon@etabli.test` | Membre — Copeaux & Cie | Alimente la file de son fabmanager |
