@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 
 import { SESSION_COOKIE } from '@/modules/identity/core/model/session'
 
-const PRIVATE_PREFIXES = [
+export const PRIVATE_PREFIXES = [
   '/tableau-de-bord',
   '/compte',
   '/parametres',
