@@ -10,7 +10,7 @@ export const signIn = async (page: Page, email: string, password: string = SEED_
   await page.getByLabel(/adresse e-mail/i).fill(email)
   await page.getByLabel(/mot de passe/i).fill(password)
   await page.getByRole('button', { name: /se connecter/i }).click()
-  await expect(page).toHaveURL(/\/(compte|bienvenue)$/)
+  await expect(page).toHaveURL(/\/(tableau-de-bord|bienvenue)$/)
 }
 
 export const tokenOf = async (
