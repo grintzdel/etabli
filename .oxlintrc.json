@@ -44,6 +44,12 @@
       }
     },
     {
+      "files": ["apps/mobile/**"],
+      "rules": {
+        "unicorn/no-array-sort": "off"
+      }
+    },
+    {
       "files": ["apps/api/**/*.ts"],
       "rules": {
         "typescript/no-extraneous-class": [

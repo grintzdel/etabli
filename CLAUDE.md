@@ -425,6 +425,14 @@ produit. Ce qui serait partageable — modèles et routes — vit déjà dans
 chose des deux côtés (cookie httpOnly posé par Next d'un côté, `Bearer` rangé
 par le téléphone de l'autre).
 
+**Hermes s'arrête à l'ES2022.** `toSorted` et le reste de la famille
+change-by-copy compilent, passent les tests sous Node, et lèvent
+`undefined is not a function` sur l'appareil. D'où `lib: ["DOM", "ES2022"]` dans
+les tsconfig d'`apps/mobile` et du `tsconfig.native.json` de `@etabli/ui` : le
+crash redevient une erreur de type. `unicorn/no-array-sort` est éteint sur
+`apps/mobile` pour la même raison — il conseille exactement ce qui casse. Un
+`.sort()` sur le retour d'un `.filter()` ne mute rien de partagé.
+
 **Les écrans ne sont pas testés.** Monter React Native sous vitest demande un
 preset et des mocks natifs pour un parcours qui se vérifie à la main. Le `core/`
 l'est : 55 tests dans `apps/mobile`, entrés dans les projets de la suite

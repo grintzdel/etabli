@@ -102,6 +102,6 @@ const byStartAt = (direction: 1 | -1) => (left: BookingDetail, right: BookingDet
   direction * (new Date(left.startAt).getTime() - new Date(right.startAt).getTime())
 
 export const partitionBookings = (bookings: ReadonlyArray<BookingDetail>, now: Date): BookingPartition => ({
-  upcoming: bookings.filter((booking) => isUpcoming(booking, now)).toSorted(byStartAt(1)),
-  past: bookings.filter((booking) => !isUpcoming(booking, now)).toSorted(byStartAt(-1)),
+  upcoming: bookings.filter((booking) => isUpcoming(booking, now)).sort(byStartAt(1)),
+  past: bookings.filter((booking) => !isUpcoming(booking, now)).sort(byStartAt(-1)),
 })
