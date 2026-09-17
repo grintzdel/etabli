@@ -2,7 +2,10 @@ packages:
   - 'packages/*'
   - 'apps/*'
 
-onlyBuiltDependencies:
-  - '@swc/core'
-  - esbuild
-  - lefthook
+allowBuilds:
+  '@parcel/watcher': true
+  '@scarf/scarf': false
+  '@swc/core': true
+  esbuild: true
+  lefthook: true
+  msgpackr-extract: true
