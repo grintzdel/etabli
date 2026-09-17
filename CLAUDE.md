@@ -16,9 +16,10 @@ Jalons 0 à 6 terminés et sur `main`. Le parcours membre est complet de bout en
 bout, de l'atelier au créneau réservé ; le fabmanager tient le pointage, le
 no-show, l'annulation, le tag NFC et les statistiques de ses ateliers ;
 l'administrateur plateforme tient les ateliers, les comptes, les rôles et le
-tableau réseau. Prochaine étape : le jalon 7, la production.
+tableau réseau. L'application mobile Expo porte le parcours membre jusqu'au
+pointage NFC. Prochaine étape : le jalon 7, la production.
 
-`pnpm check` est vert : 813 tests unitaires, `next build`. Les 95 E2E
+`pnpm check` est vert : 1 207 tests unitaires, `next build`. Les 95 E2E
 Playwright passent mais **ne tournent plus dans `pnpm verify`, sur décision de
 l'auteur** — `pnpm db:test:up` puis `pnpm test:e2e` pour les lancer. Le
 conteneur de test tourne sur un `tmpfs` : `pnpm db:test:down` puis `db:test:up`
@@ -364,6 +365,70 @@ décaler la fenêtre d'un jour.
 
 Le `QueryClient` vit dans `MachineWeek`, pas dans un provider racine : un seul
 écran interroge React Query. Le jour où un deuxième arrive, il remontera.
+
+## Mobile — `apps/mobile` (Expo)
+
+Application Expo / React Native décrite par
+`docs/superpowers/specs/2026-09-17-etabli-mobile-design.md`. Elle n'est pas le
+web en petit : elle existe pour le NFC et pour la position. Sept écrans, deux
+layouts, de la connexion au `CHECKED_IN`.
+
+Elle parle à **`apps/api`** (v2). `pnpm build:packages`, puis `pnpm dev:api` et
+`pnpm dev:mobile`. `pnpm dev` boote la v1 sur le même port — les deux servent
+les mêmes routes, et les adapters lisent les deux formes de refus, donc le
+parcours tient des deux côtés.
+
+`src/app/` ne porte que des coquilles, comme les routes du web : un import de
+`src/features/`, et rien d'autre. Tout vit dans `src/modules/<module>/{core,ui}`.
+
+### Ce qui est tranché
+
+**Le refus se lit dans le corps, pas dans le statut.** La v2 nomme ses erreurs
+`code` (`NFC_TAG_MISMATCH`), la v1 les nommait `_tag` (`NfcTagMismatchError`).
+`errorCodeOf` lit les deux et ne retombe sur le statut que faute de mieux — cinq
+règles métier se partagent le 409, le statut ne suffit donc pas à écrire une
+phrase. Le §8 de la conception ne parlait que de `_tag` : il a été écrit contre
+la v1, et la lettre a été élargie, pas l'intention.
+
+**Le token vit dans `expo-secure-store`**, le trousseau du système, jamais dans
+`AsyncStorage` qui écrit en clair. Lu une fois au démarrage : présent, on entre
+dans les onglets ; absent ou refusé par `GET /auth/me`, on va sur la connexion.
+Un 401 en cours de route efface le token et ramène à la connexion sans message —
+une session expirée n'est pas une panne. `useApiQuery` tient cette règle en un
+seul endroit.
+
+**Refuser la position n'est pas une erreur.** Sans elle, l'annuaire appelle
+`GET /ateliers` sans `lat`, `lng` ni `radiusKm` ; `distanceKm` vaut `null`, la
+liste n'est plus triée par distance, et l'écran le dit avec un bouton pour
+réessayer. Les trois paramètres voyagent ensemble ou pas du tout — le schema de
+l'API refuse un `lat` sans `radiusKm`. Le rayon vaut 1000 km : il est un clip
+dur côté SQL, et le but est de **trier**, pas de filtrer.
+
+**Le port NFC a deux implémentations, et l'écran ignore laquelle il tient.**
+`nfc-manager` sur appareil, `manual` — une saisie du tag dans une feuille modale
+— partout ailleurs. `react-native-nfc-manager` est chargé en `require` sous
+`try`, parce qu'Expo Go n'embarque pas le module natif. C'est ce qui permet de
+développer au simulateur et de ne pas perdre la démonstration si le compte
+développeur Apple n'arrive pas à temps (§10 de la conception).
+
+**TanStack Query vit à la racine.** C'est le second consommateur annoncé : sur
+le web le `QueryClient` ne sort pas de `MachineWeek`, ici tous les écrans lisent
+le réseau. Pas de Redux, pas de hors-ligne.
+
+**La navigation de semaine n'arithmétise aucune date**, comme sur le web : la
+réponse porte son `to`, qui devient le `from` de la semaine suivante, empilé
+dans un `useState`.
+
+**On ne partage pas le `core/` du web**, contre la lettre du §8 de la spec
+produit. Ce qui serait partageable — modèles et routes — vit déjà dans
+`@etabli/contract` ; ce qui reste est un wrapper `fetch` qui ne dit pas la même
+chose des deux côtés (cookie httpOnly posé par Next d'un côté, `Bearer` rangé
+par le téléphone de l'autre).
+
+**Les écrans ne sont pas testés.** Monter React Native sous vitest demande un
+preset et des mocks natifs pour un parcours qui se vérifie à la main. Le `core/`
+l'est : 55 tests dans `apps/mobile`, entrés dans les projets de la suite
+racine.
 
 ## Repos de référence
 
