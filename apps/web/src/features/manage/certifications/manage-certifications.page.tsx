@@ -1,3 +1,4 @@
+import { Surface } from '@etabli/ui'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
@@ -7,7 +8,6 @@ import { CertificationQueue } from '@/modules/certification/react/components/Cer
 import { grantCertificationAction, revokeCertificationAction } from '@/server/certification.actions'
 import { certificationPort } from '@/server/container'
 import { readSessionToken } from '@/server/session'
-import { Surface } from '@/ui/Surface'
 
 export const metadata: Metadata = {
   title: 'Habilitations · Gestion',

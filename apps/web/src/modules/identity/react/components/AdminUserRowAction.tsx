@@ -1,11 +1,11 @@
 'use client'
 
+import { Button } from '@etabli/ui'
 import { useActionState } from 'react'
 
 import type { MembershipRole, PlatformRole, UserStatus } from '@/modules/identity/core/model/admin-user'
 import type { SettingsFormAction } from '@/modules/identity/core/model/settings'
 import { idleSettings, SettingsStatus } from '@/modules/identity/core/model/settings'
-import { Button } from '@/ui/Button'
 
 export type AdminUserRowActionProps = {
   readonly userId: string

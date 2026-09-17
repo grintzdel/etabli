@@ -1,3 +1,4 @@
+import { Surface } from '@etabli/ui'
 import type { Metadata } from 'next'
 import { cacheLife, cacheTag } from 'next/cache'
 import { Suspense } from 'react'
@@ -7,7 +8,6 @@ import { parseDirectoryFilters } from '@/modules/atelier/core/model/atelier'
 import { AtelierDirectoryFilters } from '@/modules/atelier/react/components/AtelierDirectoryFilters'
 import { AtelierList } from '@/modules/atelier/react/components/AtelierList'
 import { atelierPort } from '@/server/container'
-import { Surface } from '@/ui/Surface'
 
 export const metadata: Metadata = {
   title: 'Annuaire des ateliers',

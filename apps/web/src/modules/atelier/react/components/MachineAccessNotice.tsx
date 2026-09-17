@@ -1,7 +1,6 @@
+import { Surface } from '@etabli/ui'
+import { buttonVariants } from '@etabli/ui/web'
 import Link from 'next/link'
-
-import { buttonVariants } from '@/ui/Button'
-import { Surface } from '@/ui/Surface'
 
 export type MachineAccessNoticeProps = {
   readonly signedIn: boolean

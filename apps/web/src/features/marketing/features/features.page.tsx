@@ -1,9 +1,9 @@
+import { Surface } from '@etabli/ui'
+import { buttonVariants } from '@etabli/ui/web'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
-import { buttonVariants } from '@/ui/Button'
 import { PhotoHero } from '@/ui/PhotoHero'
-import { Surface } from '@/ui/Surface'
 
 export const metadata: Metadata = {
   title: 'Fonctionnalités',

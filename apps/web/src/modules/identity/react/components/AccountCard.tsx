@@ -1,6 +1,6 @@
+import { StatusBadge, Surface } from '@etabli/ui'
+
 import type { CurrentUser } from '@/modules/identity/core/model/session'
-import { StatusBadge } from '@/ui/StatusBadge'
-import { Surface } from '@/ui/Surface'
 
 const ROLE_LABELS: Readonly<Record<CurrentUser['platformRole'], string>> = {
   MEMBER: 'Membre',

@@ -1,6 +1,5 @@
+import { buttonVariants } from '@etabli/ui/web'
 import Link from 'next/link'
-
-import { buttonVariants } from './Button'
 
 export type SiteHeaderProps = {
   readonly session: React.ReactNode

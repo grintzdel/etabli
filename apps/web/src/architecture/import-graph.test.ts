@@ -26,12 +26,12 @@ describe('resolveSpecifier', () => {
   const importer = 'src/features/marketing/home/home.page.tsx'
 
   it('resolves the alias form', () => {
-    expect(resolveSpecifier('@/ui/Button', importer, known)).toBe('src/ui/Button.tsx')
+    expect(resolveSpecifier('@/ui/SiteHeader', importer, known)).toBe('src/ui/SiteHeader.tsx')
   })
 
   it('resolves the relative form to the same file as the alias form', () => {
-    expect(resolveSpecifier('../../../ui/Button', importer, known)).toBe(
-      resolveSpecifier('@/ui/Button', importer, known)
+    expect(resolveSpecifier('../../../ui/SiteHeader', importer, known)).toBe(
+      resolveSpecifier('@/ui/SiteHeader', importer, known)
     )
   })
 

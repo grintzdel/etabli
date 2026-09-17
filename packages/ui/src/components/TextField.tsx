@@ -1,12 +1,12 @@
 import type { InputHTMLAttributes } from 'react'
 
-import { cn } from './cn'
+import { cn } from '../cn'
+import type { TextFieldOwnProps } from './text-field.types'
 
-export type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
-  readonly label: string
-  readonly name: string
-  readonly invalid?: boolean
-}
+export type TextFieldProps = InputHTMLAttributes<HTMLInputElement> &
+  TextFieldOwnProps & {
+    readonly name: string
+  }
 
 export const TextField = ({ label, name, invalid = false, className, ...props }: TextFieldProps) => (
   <div className="flex flex-col gap-2">

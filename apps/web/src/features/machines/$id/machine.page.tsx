@@ -1,3 +1,4 @@
+import { StatusBadge, Surface } from '@etabli/ui'
 import type { Metadata } from 'next'
 import { cacheLife, cacheTag } from 'next/cache'
 import Link from 'next/link'
@@ -12,8 +13,6 @@ import { MachineWeek } from '@/modules/booking/react/components/MachineWeek'
 import { createBookingAction } from '@/server/booking.actions'
 import { atelierPort, bookingPort } from '@/server/container'
 import { readSessionToken } from '@/server/session'
-import { StatusBadge } from '@/ui/StatusBadge'
-import { Surface } from '@/ui/Surface'
 
 type PageProps = { readonly params: Promise<{ readonly id: string }> }
 

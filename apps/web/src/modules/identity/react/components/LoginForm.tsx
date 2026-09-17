@@ -1,10 +1,9 @@
 'use client'
 
+import { Button, TextField } from '@etabli/ui'
 import { useActionState } from 'react'
 
 import type { AuthFormAction, AuthFormState } from '@/modules/identity/core/model/session'
-import { Button } from '@/ui/Button'
-import { TextField } from '@/ui/TextField'
 
 import { AuthFormError } from './AuthFormError'
 

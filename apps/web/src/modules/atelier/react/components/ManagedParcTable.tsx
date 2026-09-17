@@ -1,8 +1,8 @@
+import { Button, StatusBadge } from '@etabli/ui'
+
 import type { MachineStatus, ManagedMachine } from '@/modules/atelier/core/model/atelier'
 import { MACHINE_KIND_LABELS, MACHINE_STATUS_LABELS } from '@/modules/atelier/core/model/atelier'
 import type { NfcTagFormAction } from '@/modules/atelier/core/model/nfc-tag-form'
-import { Button } from '@/ui/Button'
-import { StatusBadge } from '@/ui/StatusBadge'
 
 import { MachineNfcTagForm } from './MachineNfcTagForm'
 

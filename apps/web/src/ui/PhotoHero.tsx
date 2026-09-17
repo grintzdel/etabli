@@ -1,7 +1,6 @@
+import { cn } from '@etabli/ui/web'
 import Image from 'next/image'
 import type { ReactNode } from 'react'
-
-import { cn } from './cn'
 
 export type PhotoHeroProps = {
   readonly src: string

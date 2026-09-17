@@ -1,7 +1,7 @@
+import { buttonVariants } from '@etabli/ui/web'
 import Link from 'next/link'
 
 import { SidebarLink, SidebarSection } from '@/ui/AppSidebar'
-import { buttonVariants } from '@/ui/Button'
 
 export type DefaultAtelier = {
   readonly slug: string

@@ -1,7 +1,7 @@
+import { Button, StatusBadge } from '@etabli/ui'
+
 import type { CertificationRequest, CertificationStatus } from '@/modules/certification/core/model/certification'
 import { REQUEST_STATUS_LABELS } from '@/modules/certification/core/model/certification'
-import { Button } from '@/ui/Button'
-import { StatusBadge } from '@/ui/StatusBadge'
 
 export type CertificationQueueProps = {
   readonly requests: ReadonlyArray<CertificationRequest>

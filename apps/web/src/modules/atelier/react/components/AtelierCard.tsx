@@ -1,3 +1,4 @@
+import { StatusBadge, Surface } from '@etabli/ui'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -5,8 +6,6 @@ import { coverArtFor } from '@/modules/atelier/core/lib/cover-art'
 import { atelierPhotoFor } from '@/modules/atelier/core/lib/machine-photo'
 import type { AtelierSummary } from '@/modules/atelier/core/model/atelier'
 import { formatDistance, MACHINE_KIND_LABELS } from '@/modules/atelier/core/model/atelier'
-import { StatusBadge } from '@/ui/StatusBadge'
-import { Surface } from '@/ui/Surface'
 
 export type AtelierCardProps = {
   readonly atelier: AtelierSummary

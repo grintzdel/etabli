@@ -1,7 +1,7 @@
+import { Button, StatusBadge } from '@etabli/ui'
+
 import type { MyCertification, MyCertificationStatus } from '@/modules/certification/core/model/certification'
 import { isRequestable, MY_STATUS_LABELS } from '@/modules/certification/core/model/certification'
-import { Button } from '@/ui/Button'
-import { StatusBadge } from '@/ui/StatusBadge'
 
 export type MyCertificationsTableProps = {
   readonly certifications: ReadonlyArray<MyCertification>

@@ -1,8 +1,8 @@
+import { StatusBadge } from '@etabli/ui'
 import Link from 'next/link'
 
 import type { MachineStatus, PublicMachine } from '@/modules/atelier/core/model/atelier'
 import { MACHINE_KIND_LABELS, MACHINE_STATUS_LABELS } from '@/modules/atelier/core/model/atelier'
-import { StatusBadge } from '@/ui/StatusBadge'
 
 export type MachineTableProps = {
   readonly machines: ReadonlyArray<PublicMachine>

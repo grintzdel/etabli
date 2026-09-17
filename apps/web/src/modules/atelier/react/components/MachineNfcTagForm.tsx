@@ -1,10 +1,10 @@
 'use client'
 
+import { Button } from '@etabli/ui'
 import { useActionState } from 'react'
 
 import type { NfcTagFormAction } from '@/modules/atelier/core/model/nfc-tag-form'
 import { idleNfcTag, NfcTagStatus } from '@/modules/atelier/core/model/nfc-tag-form'
-import { Button } from '@/ui/Button'
 
 export type MachineNfcTagFormProps = {
   readonly machineId: string

@@ -1,3 +1,4 @@
+import { Surface } from '@etabli/ui'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
@@ -9,7 +10,6 @@ import { AtelierDraftForm } from '@/modules/atelier/react/components/AtelierDraf
 import { createAtelierAction, setAtelierStatusAction } from '@/server/admin.actions'
 import { adminAtelierPort } from '@/server/container'
 import { readSessionToken } from '@/server/session'
-import { Surface } from '@/ui/Surface'
 
 export const metadata: Metadata = {
   title: 'Ateliers · Administration',

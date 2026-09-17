@@ -1,11 +1,11 @@
 'use client'
 
+import { Button } from '@etabli/ui'
 import { useActionState } from 'react'
 
 import type { Theme } from '@/modules/identity/core/model/preferences'
 import { THEME_OPTIONS } from '@/modules/identity/core/model/preferences'
 import type { SettingsFormAction, SettingsFormState } from '@/modules/identity/core/model/settings'
-import { Button } from '@/ui/Button'
 
 import { SettingsFeedback } from './SettingsFeedback'
 

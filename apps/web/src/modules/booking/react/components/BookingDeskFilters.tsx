@@ -1,7 +1,8 @@
+import { buttonVariants } from '@etabli/ui/web'
+
 import { STATUS_LABELS } from '@/modules/booking/core/model/booking'
 import type { BookingDeskFilters as Filters } from '@/modules/booking/core/model/manage-booking'
 import { BOOKING_STATUSES } from '@/modules/booking/core/model/manage-booking'
-import { buttonVariants } from '@/ui/Button'
 
 export type BookingDeskFiltersProps = {
   readonly filters: Filters

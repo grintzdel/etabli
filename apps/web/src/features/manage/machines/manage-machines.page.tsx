@@ -1,3 +1,4 @@
+import { StatusBadge, Surface } from '@etabli/ui'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
@@ -9,8 +10,6 @@ import { ManagedParcTable } from '@/modules/atelier/react/components/ManagedParc
 import { manageMachinePort } from '@/server/container'
 import { createMachineAction, setMachineNfcTagAction, setMachineStatusAction } from '@/server/manage.actions'
 import { readSessionToken } from '@/server/session'
-import { StatusBadge } from '@/ui/StatusBadge'
-import { Surface } from '@/ui/Surface'
 
 export const metadata: Metadata = {
   title: 'Machines · Gestion',

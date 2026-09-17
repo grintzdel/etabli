@@ -1,9 +1,10 @@
+import { StatusBadge } from '@etabli/ui'
+
 import { formatRange } from '@/modules/booking/core/lib/format'
 import type { BookingActionState } from '@/modules/booking/core/model/booking'
 import { STATUS_LABELS, STATUS_TONES } from '@/modules/booking/core/model/booking'
 import type { AtelierBooking } from '@/modules/booking/core/model/manage-booking'
 import { CHECK_IN_METHOD_LABELS } from '@/modules/booking/core/model/manage-booking'
-import { StatusBadge } from '@/ui/StatusBadge'
 
 import { BookingRowAction } from './BookingRowAction'
 

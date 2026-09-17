@@ -1,3 +1,5 @@
+import { Surface } from '@etabli/ui'
+import { buttonVariants } from '@etabli/ui/web'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -7,8 +9,6 @@ import { MembershipList } from '@/modules/atelier/react/components/MembershipLis
 import { AccountCard } from '@/modules/identity/react/components/AccountCard'
 import { atelierPort, identityPort } from '@/server/container'
 import { readSessionToken } from '@/server/session'
-import { buttonVariants } from '@/ui/Button'
-import { Surface } from '@/ui/Surface'
 
 export const metadata: Metadata = {
   title: 'Mon compte',

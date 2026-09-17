@@ -1,3 +1,4 @@
+import { Surface } from '@etabli/ui'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
@@ -14,7 +15,6 @@ import { readMyAteliers, readPreferences } from '@/server/preferences'
 import { savePreferencesAction } from '@/server/preferences.actions'
 import { saveProfileAction } from '@/server/profile.actions'
 import { readSessionToken } from '@/server/session'
-import { Surface } from '@/ui/Surface'
 
 export const metadata: Metadata = {
   title: 'Paramètres',

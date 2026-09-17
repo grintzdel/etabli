@@ -30,7 +30,7 @@
     "test": "vitest run --passWithNoTests",
     "test:e2e": "pnpm --filter @etabli/web run test:e2e",
     "test:watch": "vitest",
-    "typecheck": "tsc --build --verbose && pnpm --filter @etabli/api run typecheck && pnpm --filter @etabli/web run typecheck",
+    "typecheck": "tsc --build --verbose && pnpm --filter @etabli/ui run typecheck && pnpm --filter @etabli/api run typecheck && pnpm --filter @etabli/web run typecheck && pnpm --filter @etabli/mobile run typecheck",
     "verify": "pnpm run check && pnpm --filter @etabli/web run build"
   },
   "devDependencies": {

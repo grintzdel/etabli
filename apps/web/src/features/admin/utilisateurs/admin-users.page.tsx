@@ -1,3 +1,4 @@
+import { Surface } from '@etabli/ui'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
@@ -9,7 +10,6 @@ import { AdminUserTable } from '@/modules/identity/react/components/AdminUserTab
 import { setMembershipRoleAction, updateAdminUserAction } from '@/server/admin-users.actions'
 import { adminUserPort } from '@/server/container'
 import { readSessionToken } from '@/server/session'
-import { Surface } from '@/ui/Surface'
 
 export const metadata: Metadata = {
   title: 'Utilisateurs · Administration',

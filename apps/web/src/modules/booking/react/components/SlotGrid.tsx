@@ -1,7 +1,8 @@
+import { cn } from '@etabli/ui/web'
+
 import { formatRange, formatTime } from '@/modules/booking/core/lib/format'
 import type { SlotDay } from '@/modules/booking/core/lib/slots'
 import { SLOT_REASON_LABELS } from '@/modules/booking/core/model/booking'
-import { cn } from '@/ui/cn'
 
 export type SlotGridProps = {
   readonly days: ReadonlyArray<SlotDay>

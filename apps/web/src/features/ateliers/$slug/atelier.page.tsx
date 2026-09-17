@@ -1,3 +1,5 @@
+import { Surface } from '@etabli/ui'
+import { buttonVariants } from '@etabli/ui/web'
 import type { Metadata } from 'next'
 import { cacheLife, cacheTag } from 'next/cache'
 import Link from 'next/link'
@@ -7,9 +9,7 @@ import { atelierPhotoFor } from '@/modules/atelier/core/lib/machine-photo'
 import { AtelierFailureCode } from '@/modules/atelier/core/model/atelier'
 import { MachineTable } from '@/modules/atelier/react/components/MachineTable'
 import { atelierPort } from '@/server/container'
-import { buttonVariants } from '@/ui/Button'
 import { PhotoHero } from '@/ui/PhotoHero'
-import { Surface } from '@/ui/Surface'
 
 type PageProps = { readonly params: Promise<{ readonly slug: string }> }
 

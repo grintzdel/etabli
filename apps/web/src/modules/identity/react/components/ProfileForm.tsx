@@ -1,10 +1,9 @@
 'use client'
 
+import { Button, TextField } from '@etabli/ui'
 import { useActionState } from 'react'
 
 import type { SettingsFormAction, SettingsFormState } from '@/modules/identity/core/model/settings'
-import { Button } from '@/ui/Button'
-import { TextField } from '@/ui/TextField'
 
 import { SettingsFeedback } from './SettingsFeedback'
 
