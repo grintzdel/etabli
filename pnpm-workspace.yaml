@@ -9,3 +9,7 @@ allowBuilds:
   esbuild: true
   lefthook: true
   msgpackr-extract: true
+
+minimumReleaseAgeExclude:
+  - is-core-module
+  - node-releases
