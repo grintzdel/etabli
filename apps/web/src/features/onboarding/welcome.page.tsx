@@ -1,3 +1,4 @@
+import { Surface } from '@etabli/ui'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
@@ -7,7 +8,6 @@ import { OnboardingForm } from '@/modules/atelier/react/components/OnboardingFor
 import { atelierPort, identityPort } from '@/server/container'
 import { completeOnboardingAction } from '@/server/onboarding.actions'
 import { readSessionToken } from '@/server/session'
-import { Surface } from '@/ui/Surface'
 
 export const metadata: Metadata = {
   title: 'Bienvenue',

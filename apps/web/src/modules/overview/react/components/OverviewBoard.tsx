@@ -1,11 +1,10 @@
+import { StatusBadge, Surface } from '@etabli/ui'
+import { buttonVariants } from '@etabli/ui/web'
 import Link from 'next/link'
 
 import { formatDay, formatRange } from '@/modules/booking/core/lib/format'
 import { STATUS_LABELS, STATUS_TONES } from '@/modules/booking/core/model/booking'
 import type { Overview } from '@/modules/overview/core/model/overview'
-import { buttonVariants } from '@/ui/Button'
-import { StatusBadge } from '@/ui/StatusBadge'
-import { Surface } from '@/ui/Surface'
 
 export type OverviewBoardProps = {
   readonly overview: Overview

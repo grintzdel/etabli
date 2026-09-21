@@ -1,7 +1,6 @@
 'use client'
 
-import { Button } from './Button'
-import { Surface } from './Surface'
+import { Button, Surface } from '@etabli/ui'
 
 export type ErrorPanelProps = {
   readonly title: string

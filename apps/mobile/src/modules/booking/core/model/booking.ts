@@ -1,0 +1,107 @@
+import type {
+  AvailabilitySlot,
+  BookingDetail,
+  BookingStatus,
+  CheckInBooking,
+  CreateBooking,
+  MachineAvailability,
+  SlotReason,
+} from '@etabli/contract'
+
+import type { Result } from '../../../shared/core/http/result'
+
+export type {
+  AvailabilitySlot,
+  BookingDetail,
+  BookingStatus,
+  CheckInBooking,
+  CreateBooking,
+  MachineAvailability,
+  SlotReason,
+}
+
+export const BookingFailureCode = {
+  MACHINE_NOT_BOOKABLE: 'MACHINE_NOT_BOOKABLE',
+  MACHINE_UNAVAILABLE: 'MACHINE_UNAVAILABLE',
+  MISSING_CERTIFICATION: 'MISSING_CERTIFICATION',
+  SLOT_IN_THE_PAST: 'SLOT_IN_THE_PAST',
+  SLOT_TAKEN: 'SLOT_TAKEN',
+  BOOKING_UNKNOWN: 'BOOKING_UNKNOWN',
+  NOT_CANCELLABLE: 'NOT_CANCELLABLE',
+  NOT_CHECK_INABLE: 'NOT_CHECK_INABLE',
+  CHECK_IN_WINDOW_CLOSED: 'CHECK_IN_WINDOW_CLOSED',
+  NFC_TAG_MISMATCH: 'NFC_TAG_MISMATCH',
+  INVALID_INPUT: 'INVALID_INPUT',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  UNREACHABLE: 'UNREACHABLE',
+} as const
+export type BookingFailureCode = (typeof BookingFailureCode)[keyof typeof BookingFailureCode]
+
+export interface BookingFailure {
+  readonly code: BookingFailureCode
+  readonly message: string
+}
+
+export type BookingResult<A> = Result<A, BookingFailure>
+
+export const FAILURE_MESSAGES: Readonly<Record<BookingFailureCode, string>> = {
+  MACHINE_NOT_BOOKABLE: 'Cette machine n’existe pas, ou ne fait pas partie de vos ateliers.',
+  MACHINE_UNAVAILABLE: 'Cette machine est en maintenance : elle ne prend pas de réservation.',
+  MISSING_CERTIFICATION: 'Vous n’êtes pas habilité sur cette machine.',
+  SLOT_IN_THE_PAST: 'Ce créneau est déjà passé.',
+  SLOT_TAKEN: 'Ce créneau vient d’être pris.',
+  BOOKING_UNKNOWN: 'Cette réservation n’existe pas.',
+  NOT_CANCELLABLE: 'Cette réservation ne peut plus être annulée.',
+  NOT_CHECK_INABLE: 'Cette réservation ne peut pas être pointée.',
+  CHECK_IN_WINDOW_CLOSED: 'Le pointage ouvre 15 minutes avant le créneau et ferme 30 minutes après son début.',
+  NFC_TAG_MISMATCH: 'Ce tag n’est pas celui de la machine réservée.',
+  INVALID_INPUT: 'Vérifiez les informations saisies.',
+  UNAUTHORIZED: 'Votre session a expiré.',
+  UNREACHABLE: 'Les réservations sont momentanément indisponibles.',
+}
+
+export const failure = (code: BookingFailureCode): BookingResult<never> => ({
+  ok: false,
+  error: { code, message: FAILURE_MESSAGES[code] },
+})
+
+export const STATUS_LABELS: Readonly<Record<BookingStatus, string>> = {
+  CONFIRMED: 'Confirmée',
+  CHECKED_IN: 'Pointée',
+  COMPLETED: 'Terminée',
+  CANCELLED: 'Annulée',
+  NO_SHOW: 'Non honorée',
+}
+
+export const STATUS_TONES: Readonly<Record<BookingStatus, 'ok' | 'warn' | 'danger' | 'neutral'>> = {
+  CONFIRMED: 'ok',
+  CHECKED_IN: 'ok',
+  COMPLETED: 'neutral',
+  CANCELLED: 'neutral',
+  NO_SHOW: 'danger',
+}
+
+export const SLOT_REASON_LABELS: Readonly<Record<SlotReason, string>> = {
+  FREE: 'Libre',
+  BOOKED: 'Déjà réservé',
+  PAST: 'Passé',
+  MACHINE_UNAVAILABLE: 'Machine indisponible',
+}
+
+const OPEN_STATUSES: ReadonlySet<BookingStatus> = new Set<BookingStatus>(['CONFIRMED', 'CHECKED_IN'])
+
+export const isUpcoming = (booking: BookingDetail, now: Date): boolean =>
+  OPEN_STATUSES.has(booking.status) && new Date(booking.endAt).getTime() > now.getTime()
+
+export interface BookingPartition {
+  readonly upcoming: ReadonlyArray<BookingDetail>
+  readonly past: ReadonlyArray<BookingDetail>
+}
+
+const byStartAt = (direction: 1 | -1) => (left: BookingDetail, right: BookingDetail) =>
+  direction * (new Date(left.startAt).getTime() - new Date(right.startAt).getTime())
+
+export const partitionBookings = (bookings: ReadonlyArray<BookingDetail>, now: Date): BookingPartition => ({
+  upcoming: bookings.filter((booking) => isUpcoming(booking, now)).sort(byStartAt(1)),
+  past: bookings.filter((booking) => !isUpcoming(booking, now)).sort(byStartAt(-1)),
+})

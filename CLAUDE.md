@@ -16,9 +16,10 @@ Jalons 0 à 6 terminés et sur `main`. Le parcours membre est complet de bout en
 bout, de l'atelier au créneau réservé ; le fabmanager tient le pointage, le
 no-show, l'annulation, le tag NFC et les statistiques de ses ateliers ;
 l'administrateur plateforme tient les ateliers, les comptes, les rôles et le
-tableau réseau. Prochaine étape : le jalon 7, la production.
+tableau réseau. L'application mobile Expo porte le parcours membre jusqu'au
+pointage NFC. Prochaine étape : le jalon 7, la production.
 
-`pnpm check` est vert : 813 tests unitaires, `next build`. Les 95 E2E
+`pnpm check` est vert : 1 207 tests unitaires, `next build`. Les 95 E2E
 Playwright passent mais **ne tournent plus dans `pnpm verify`, sur décision de
 l'auteur** — `pnpm db:test:up` puis `pnpm test:e2e` pour les lancer. Le
 conteneur de test tourne sur un `tmpfs` : `pnpm db:test:down` puis `db:test:up`
@@ -35,7 +36,8 @@ Ce qui existe, package par package :
   `GET`/`PATCH /me/preferences`, `GET /me/ateliers`, migration `0006`, et le
   back-office plateforme : `GET /admin/users`, `PATCH /admin/users/:id`
 - `bc-atelier` — ateliers, adhésions, machines ; annuaire public et fiche avec
-  `use cache` / `cacheTag` ; onboarding persisté ; routes `/admin/ateliers` et
+  `use cache` / `cacheTag` ; `GET /machines/:id`, la fiche publique d'une
+  machine ; onboarding persisté ; routes `/admin/ateliers` et
   `/manage/machines` ; `PATCH /admin/ateliers/:atelierId/members/:userId` pour
   nommer un fabmanager
 - `bc-certification` — demander, accorder, révoquer ; file de validation
@@ -47,10 +49,53 @@ Ce qui existe, package par package :
   Côté fabmanager, `GET /manage/bookings`, `POST /manage/bookings/:id/check-in`
   et `POST /manage/bookings/:id/no-show`.
   `POST /manage/bookings/:id/cancel`, `GET /manage/stats` et `GET /admin/stats`.
-  Côté web, `/machines/:id` ouvre la semaine et réserve, `/reservations` et
-  `/reservations/:id` listent, détaillent et annulent, `/manage/bookings`
+  Côté web, `/machines/:id` porte la fiche publique et n'ouvre la semaine
+  qu'au membre de l'atelier, `/reservations` et `/reservations/:id` listent,
+  détaillent et annulent, `/manage/bookings`
   tient le pointage, le no-show et l'annulation de la journée, et `/manage/stats`
   comme `/admin/stats` mesurent l'occupation.
+
+## API v2 — `apps/api` (NestJS)
+
+Seconde implémentation du back, sur la branche `feat/api-nestjs`, décrite par
+`docs/superpowers/specs/2026-09-15-etabli-api-nestjs-design.md`. Elle remplace
+fonctionnellement `packages/server` et les quatre `packages/bc-*`, qui restent
+en place et inertes. NestJS 12, Drizzle, Zod, clean architecture port & adapter,
+sans Effect.ts ni bounded contexts. Sept modules — `auth`, `user`, `atelier`,
+`membership`, `machine`, `certification`, `booking` — plus `health`, pour les
+38 routes du §4 de la spec.
+
+`pnpm --filter @etabli/api test` : 255 tests, trois étages (unitaires sur stubs
+et `FixedClock`, intégration des repositories sur PGlite, bout en bout HTTP via
+supertest). Pas de Docker : chaque suite monte sa propre base en mémoire, ce qui
+supprime structurellement le défaut d'isolation des 95 E2E de la v1.
+
+**NestJS 12 est ESM-only.** `apps/api` est donc en `"type": "module"`, en
+`module: NodeNext`, et les imports relatifs portent leur extension. On les écrit
+en `.ts` — `rewriteRelativeImportExtensions` les réécrit en `.js` à l'émission.
+`unplugin-swc` est requis pour Vitest : esbuild n'émet pas
+`emitDecoratorMetadata`, sans quoi l'injection Nest ne résout rien.
+
+**Zod est le seul langage de schéma**, entrée comme sortie — écart assumé au
+§3.2 de la spec, qui demandait des classes `@ApiProperty` pour les réponses.
+Les DTO de requête sont validés par `ZodValidationPipe` via `@ZodBody`,
+`@ZodQuery` et `@UuidParam` ; les DTO de réponse sont des schémas Zod plus un
+mapper, et Swagger est alimenté par `z.toJSONSchema()`. `response-contract.e2e.spec.ts`
+parse la réponse de chaque route contre son schéma, clés en trop comprises.
+
+Deux écarts de plus : `PATCH /auth/me` devient `PATCH /me/profile` (§4.1), et
+`POST /certifications` devient `POST /certifications/request` — la table du §4 de
+la spec l'écrit ainsi, là où son §1 annonce une seule URL changée. La colonne
+`email` est en `text` et non en `citext` : l'adresse est normalisée en minuscules
+par le schema Zod, donc l'extension ne sert plus.
+
+La contrainte d'exclusion `bookings_no_overlap` et `btree_gist` vivent dans une
+migration écrite à la main, `0001`, que `drizzle-kit generate --custom` a
+ordonnée après les sept tables. `domain_events` n'est pas reprise.
+
+Scripts : `pnpm dev:api`, `pnpm db:migrate:api`, `pnpm db:seed:api`,
+`pnpm db:generate:api` (et leurs variantes `:test:api`). Le seed v1 est porté à
+l'identique — neuf ateliers, sept comptes, mot de passe `etabli-2026`.
 
 Neon est branché et à jour des six migrations. Sur une machine neuve : copier
 `.env.example` en `.env` et y mettre l'URL *pooled* du projet Neon. `pg` émet un
@@ -171,6 +216,63 @@ demande d'habilitation qui n'est pas la sienne. Tous trois lisent maintenant le
 l'adapter qui l'appelle doit gagner son code** — sans quoi le message affiché
 parle d'indisponibilité.
 
+### Fiche machine — ce qui est tranché
+
+`/machines/:id` est **publique**. L'annuaire `/ateliers/:slug` lie chaque
+machine en service, et il est public : gardée derrière la session, la fiche
+rendait un lien mort pour tout visiteur, et un 404 sec pour un membre d'un
+autre atelier. `/machines` est donc sorti de `PRIVATE_PREFIXES` — donc aussi du
+`Disallow` de `robots.txt`, et la page s'indexe.
+
+La fiche et la semaine sont deux choses. La fiche vient de `GET /machines/:id`,
+anonyme, `use cache` sous le tag `ateliers` — que `manage.actions.ts` invalide
+déjà quand un fabmanager touche au parc. La semaine vient d'`availability`, qui
+reste réservée aux membres. Qui n'y a pas droit lit `MachineAccessNotice` : le
+visiteur un lien de connexion qui revient sur la machine, le membre d'un autre
+atelier un lien vers l'atelier à rejoindre.
+
+D'où le découpage du fichier : la fiche est attendue dans le corps de la page,
+pas dans un `Suspense`, pour qu'une machine retirée rende un **vrai 404** et
+non un 200 portant un corps 404 ; seule la semaine, qui lit le cookie, est
+derrière une frontière. La page passe de `ƒ` à `◐`.
+
+Le `nfcTagId` ne sort pas : la fiche publique a son propre DTO, et un test le
+fige des deux côtés.
+
+La route est écrite **deux fois**, dans `packages/bc-atelier` (v1) et dans
+`apps/api` (v2). `pnpm dev` et Playwright bootent encore v1 : n'ajouter la
+route qu'à la v2 l'aurait laissée absente de tout ce qui tourne. À la bascule,
+seule la v1 est à retirer.
+
+### Photographies marketing — ce qui est tranché
+
+Les plaques dessinées ne racontaient rien : quatre variantes d'un même motif,
+la même sur la home et sur une carte d'atelier. `/` et `/fonctionnalites`
+portent maintenant une photographie, et l'annuaire montre une machine que
+l'atelier publie vraiment.
+
+**Pexels, pas Unsplash.** Unsplash 401 sur ses pages de recherche dès qu'un
+script les lit, et ses résultats mêlent des photos de contributeurs à des Getty
+premium que sa licence ne couvre pas. La licence Pexels donne l'usage
+commercial sans attribution ; `public/marketing/LICENSES.md` crédite quand même.
+
+**Le voile est en CSS, pas cuit dans le fichier.** `PhotoHero` empile la photo,
+un dégradé `from-graphite-950` et le contenu. La rampe étant sémantique, le
+voile s'éclaircit tout seul en mode clair, où l'encre devient sombre — un
+duotone cuit aurait demandé un second jeu de fichiers.
+
+**Les plaques restent.** Un atelier sans machine publiée n'a pas de type à
+photographier : `atelierPhotoFor` rend `null` et la carte retombe sur
+`coverArtFor`. Le générateur n'est pas supprimé, il devient le repli.
+
+La photo d'une carte est tirée du slug parmi les **types que l'atelier publie**
+— pas le premier de la liste, qui aurait donné la même fraiseuse à presque
+toutes les cartes, `array_agg(DISTINCT)` triant par valeur. Elle reste donc
+vraie, et l'annuaire reste varié.
+
+La FAQ n'a rien reçu : c'est une page de texte, une photo n'y serait que du
+remplissage.
+
 ### Réservation — ce qui est tranché
 
 La contrainte d'exclusion `bookings_no_overlap` est en base, sous
@@ -263,6 +365,78 @@ décaler la fenêtre d'un jour.
 
 Le `QueryClient` vit dans `MachineWeek`, pas dans un provider racine : un seul
 écran interroge React Query. Le jour où un deuxième arrive, il remontera.
+
+## Mobile — `apps/mobile` (Expo)
+
+Application Expo / React Native décrite par
+`docs/superpowers/specs/2026-09-17-etabli-mobile-design.md`. Elle n'est pas le
+web en petit : elle existe pour le NFC et pour la position. Sept écrans, deux
+layouts, de la connexion au `CHECKED_IN`.
+
+Elle parle à **`apps/api`** (v2). `pnpm build:packages`, puis `pnpm dev:api` et
+`pnpm dev:mobile`. `pnpm dev` boote la v1 sur le même port — les deux servent
+les mêmes routes, et les adapters lisent les deux formes de refus, donc le
+parcours tient des deux côtés.
+
+`src/app/` ne porte que des coquilles, comme les routes du web : un import de
+`src/features/`, et rien d'autre. Tout vit dans `src/modules/<module>/{core,ui}`.
+
+### Ce qui est tranché
+
+**Le refus se lit dans le corps, pas dans le statut.** La v2 nomme ses erreurs
+`code` (`NFC_TAG_MISMATCH`), la v1 les nommait `_tag` (`NfcTagMismatchError`).
+`errorCodeOf` lit les deux et ne retombe sur le statut que faute de mieux — cinq
+règles métier se partagent le 409, le statut ne suffit donc pas à écrire une
+phrase. Le §8 de la conception ne parlait que de `_tag` : il a été écrit contre
+la v1, et la lettre a été élargie, pas l'intention.
+
+**Le token vit dans `expo-secure-store`**, le trousseau du système, jamais dans
+`AsyncStorage` qui écrit en clair. Lu une fois au démarrage : présent, on entre
+dans les onglets ; absent ou refusé par `GET /auth/me`, on va sur la connexion.
+Un 401 en cours de route efface le token et ramène à la connexion sans message —
+une session expirée n'est pas une panne. `useApiQuery` tient cette règle en un
+seul endroit.
+
+**Refuser la position n'est pas une erreur.** Sans elle, l'annuaire appelle
+`GET /ateliers` sans `lat`, `lng` ni `radiusKm` ; `distanceKm` vaut `null`, la
+liste n'est plus triée par distance, et l'écran le dit avec un bouton pour
+réessayer. Les trois paramètres voyagent ensemble ou pas du tout — le schema de
+l'API refuse un `lat` sans `radiusKm`. Le rayon vaut 1000 km : il est un clip
+dur côté SQL, et le but est de **trier**, pas de filtrer.
+
+**Le port NFC a deux implémentations, et l'écran ignore laquelle il tient.**
+`nfc-manager` sur appareil, `manual` — une saisie du tag dans une feuille modale
+— partout ailleurs. `react-native-nfc-manager` est chargé en `require` sous
+`try`, parce qu'Expo Go n'embarque pas le module natif. C'est ce qui permet de
+développer au simulateur et de ne pas perdre la démonstration si le compte
+développeur Apple n'arrive pas à temps (§10 de la conception).
+
+**TanStack Query vit à la racine.** C'est le second consommateur annoncé : sur
+le web le `QueryClient` ne sort pas de `MachineWeek`, ici tous les écrans lisent
+le réseau. Pas de Redux, pas de hors-ligne.
+
+**La navigation de semaine n'arithmétise aucune date**, comme sur le web : la
+réponse porte son `to`, qui devient le `from` de la semaine suivante, empilé
+dans un `useState`.
+
+**On ne partage pas le `core/` du web**, contre la lettre du §8 de la spec
+produit. Ce qui serait partageable — modèles et routes — vit déjà dans
+`@etabli/contract` ; ce qui reste est un wrapper `fetch` qui ne dit pas la même
+chose des deux côtés (cookie httpOnly posé par Next d'un côté, `Bearer` rangé
+par le téléphone de l'autre).
+
+**Hermes s'arrête à l'ES2022.** `toSorted` et le reste de la famille
+change-by-copy compilent, passent les tests sous Node, et lèvent
+`undefined is not a function` sur l'appareil. D'où `lib: ["DOM", "ES2022"]` dans
+les tsconfig d'`apps/mobile` et du `tsconfig.native.json` de `@etabli/ui` : le
+crash redevient une erreur de type. `unicorn/no-array-sort` est éteint sur
+`apps/mobile` pour la même raison — il conseille exactement ce qui casse. Un
+`.sort()` sur le retour d'un `.filter()` ne mute rien de partagé.
+
+**Les écrans ne sont pas testés.** Monter React Native sous vitest demande un
+preset et des mocks natifs pour un parcours qui se vérifie à la main. Le `core/`
+l'est : 55 tests dans `apps/mobile`, entrés dans les projets de la suite
+racine.
 
 ## Repos de référence
 

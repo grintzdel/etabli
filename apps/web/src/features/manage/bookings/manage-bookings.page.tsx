@@ -1,3 +1,4 @@
+import { Surface } from '@etabli/ui'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
@@ -9,7 +10,6 @@ import { BookingDeskFilters } from '@/modules/booking/react/components/BookingDe
 import { cancelAtelierBookingAction, manualCheckInAction, markNoShowAction } from '@/server/booking.actions'
 import { manageBookingPort } from '@/server/container'
 import { readSessionToken } from '@/server/session'
-import { Surface } from '@/ui/Surface'
 
 export const metadata: Metadata = {
   title: 'Pointage · Gestion',

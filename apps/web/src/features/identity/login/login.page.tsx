@@ -1,10 +1,10 @@
+import { Surface } from '@etabli/ui'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { emptyAuthFormState } from '@/modules/identity/core/model/session'
 import { LoginForm } from '@/modules/identity/react/components/LoginForm'
 import { loginAction } from '@/server/identity.actions'
-import { Surface } from '@/ui/Surface'
 
 export const metadata: Metadata = {
   title: 'Se connecter',

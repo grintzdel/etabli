@@ -1,6 +1,7 @@
+import { buttonVariants } from '@etabli/ui/web'
+
 import type { DirectoryFilters } from '@/modules/atelier/core/model/atelier'
 import { MACHINE_KIND_LABELS, MACHINE_KINDS } from '@/modules/atelier/core/model/atelier'
-import { buttonVariants } from '@/ui/Button'
 
 export type AtelierDirectoryFiltersProps = {
   readonly filters: DirectoryFilters

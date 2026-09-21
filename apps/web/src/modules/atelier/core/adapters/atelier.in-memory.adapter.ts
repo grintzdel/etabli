@@ -4,6 +4,7 @@ import type {
   AtelierSummary,
   CompleteOnboardingInput,
   DirectoryFilters,
+  MachineDetail,
   OnboardingResult,
 } from '../model/atelier'
 import { AtelierFailureCode, failure } from '../model/atelier'
@@ -51,6 +52,31 @@ export class AtelierInMemoryAdapter implements IAtelierPort {
     const sheet = this.sheets.get(slug)
     if (sheet === undefined) return failure(AtelierFailureCode.NOT_FOUND)
     return { ok: true, value: sheet }
+  }
+
+  async getMachineById(id: string): Promise<AtelierResult<MachineDetail>> {
+    for (const sheet of this.sheets.values()) {
+      const machine = sheet.machines.find((candidate) => candidate.id === id && candidate.status !== 'RETIRED')
+      if (machine === undefined) continue
+
+      return {
+        ok: true,
+        value: {
+          id: machine.id,
+          atelierId: sheet.id,
+          atelierName: sheet.name,
+          atelierSlug: sheet.slug,
+          name: machine.name,
+          description: machine.description,
+          kind: machine.kind,
+          requiresCertification: machine.requiresCertification,
+          slotDurationMinutes: machine.slotDurationMinutes,
+          status: machine.status,
+        },
+      }
+    }
+
+    return failure(AtelierFailureCode.NOT_FOUND)
   }
 
   async completeOnboarding(_token: string, input: CompleteOnboardingInput): Promise<AtelierResult<OnboardingResult>> {

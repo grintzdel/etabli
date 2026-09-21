@@ -1,3 +1,5 @@
+import { buttonVariants } from '@etabli/ui/web'
+
 import type { AdminUsersQuery } from '@/modules/identity/core/model/admin-user'
 import {
   PLATFORM_ROLE_LABELS,
@@ -5,7 +7,6 @@ import {
   USER_STATUS_LABELS,
   USER_STATUSES,
 } from '@/modules/identity/core/model/admin-user'
-import { buttonVariants } from '@/ui/Button'
 
 export type AdminUserFiltersProps = {
   readonly query: AdminUsersQuery

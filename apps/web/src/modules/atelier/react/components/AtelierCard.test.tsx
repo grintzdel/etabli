@@ -30,6 +30,22 @@ describe('AtelierCard', () => {
     expect(screen.getByText('Aucune machine publiée')).toBeInTheDocument()
   })
 
+  it('shows a machine the atelier actually publishes', () => {
+    render(<AtelierCard atelier={summaryFixture({ slug: 'la-forge', machineKinds: ['SEWING'] })} />)
+    expect(screen.getByRole('presentation', { hidden: true })).toHaveAttribute(
+      'src',
+      expect.stringContaining('kind-sewing')
+    )
+  })
+
+  it('falls back to a drawn plate when there is no machine to photograph', () => {
+    render(<AtelierCard atelier={summaryFixture({ slug: 'la-forge', machineCount: 0, machineKinds: [] })} />)
+    expect(screen.getByRole('presentation', { hidden: true })).toHaveAttribute(
+      'src',
+      expect.stringContaining('ateliers%2Fcover-')
+    )
+  })
+
   it('shows the distance only when the search carried a position', () => {
     const { rerender } = render(<AtelierCard atelier={summaryFixture({ distanceKm: null })} />)
     expect(screen.queryByText(/km/)).not.toBeInTheDocument()

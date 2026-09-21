@@ -1,11 +1,11 @@
+import { StatusBadge, Surface } from '@etabli/ui'
 import Image from 'next/image'
 import Link from 'next/link'
 
 import { coverArtFor } from '@/modules/atelier/core/lib/cover-art'
+import { atelierPhotoFor } from '@/modules/atelier/core/lib/machine-photo'
 import type { AtelierSummary } from '@/modules/atelier/core/model/atelier'
 import { formatDistance, MACHINE_KIND_LABELS } from '@/modules/atelier/core/model/atelier'
-import { StatusBadge } from '@/ui/StatusBadge'
-import { Surface } from '@/ui/Surface'
 
 export type AtelierCardProps = {
   readonly atelier: AtelierSummary
@@ -14,10 +14,10 @@ export type AtelierCardProps = {
 export const AtelierCard = ({ atelier }: AtelierCardProps) => (
   <Surface className="flex h-full flex-col gap-4 overflow-hidden p-0">
     <Image
-      src={coverArtFor(atelier.slug)}
+      src={atelierPhotoFor(atelier.slug, atelier.machineKinds) ?? coverArtFor(atelier.slug)}
       alt=""
-      width={1200}
-      height={800}
+      width={1600}
+      height={1067}
       sizes="(min-width: 1024px) 24rem, (min-width: 640px) 45vw, 90vw"
       className="h-40 w-full object-cover"
     />

@@ -1,8 +1,7 @@
+import { StatusBadge, Surface } from '@etabli/ui'
 import Link from 'next/link'
 
 import type { AtelierSummary } from '@/modules/atelier/core/model/atelier'
-import { StatusBadge } from '@/ui/StatusBadge'
-import { Surface } from '@/ui/Surface'
 
 export type MembershipView = {
   readonly atelierId: string

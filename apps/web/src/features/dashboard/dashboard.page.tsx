@@ -1,3 +1,4 @@
+import { Surface } from '@etabli/ui'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
@@ -7,7 +8,6 @@ import { buildOverview } from '@/modules/overview/core/model/overview'
 import { OverviewBoard } from '@/modules/overview/react/components/OverviewBoard'
 import { bookingPort, certificationPort, identityPort } from '@/server/container'
 import { readSessionToken } from '@/server/session'
-import { Surface } from '@/ui/Surface'
 
 const PATH = '/tableau-de-bord'
 

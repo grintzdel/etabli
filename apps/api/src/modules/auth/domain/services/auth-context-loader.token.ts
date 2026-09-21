@@ -1,0 +1,1 @@
+export const AUTH_CONTEXT_LOADER = Symbol('AUTH_CONTEXT_LOADER')

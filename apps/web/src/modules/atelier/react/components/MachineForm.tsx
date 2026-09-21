@@ -1,13 +1,11 @@
 'use client'
 
+import { Button, Surface, TextField } from '@etabli/ui'
 import { useActionState } from 'react'
 
 import { MACHINE_KIND_LABELS, MACHINE_KINDS } from '@/modules/atelier/core/model/atelier'
 import type { MachineFormAction, MachineFormState } from '@/modules/atelier/core/model/machine-form'
 import { MAX_SLOT_MINUTES, MIN_SLOT_MINUTES } from '@/modules/atelier/core/model/machine-form'
-import { Button } from '@/ui/Button'
-import { Surface } from '@/ui/Surface'
-import { TextField } from '@/ui/TextField'
 
 export type MachineFormAtelier = {
   readonly id: string

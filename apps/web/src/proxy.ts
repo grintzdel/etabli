@@ -12,7 +12,6 @@ export const PRIVATE_PREFIXES = [
   '/manage',
   '/habilitations',
   '/reservations',
-  '/machines',
 ]
 
 const isPrivate = (pathname: string): boolean =>

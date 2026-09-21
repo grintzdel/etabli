@@ -1,3 +1,4 @@
+import { Surface } from '@etabli/ui'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
@@ -8,7 +9,6 @@ import { NetworkStatsBoard } from '@/modules/booking/react/components/NetworkSta
 import { StatsPeriodFilter } from '@/modules/booking/react/components/StatsPeriodFilter'
 import { manageBookingPort } from '@/server/container'
 import { readSessionToken } from '@/server/session'
-import { Surface } from '@/ui/Surface'
 
 export const metadata: Metadata = {
   title: 'Statistiques réseau · Administration',

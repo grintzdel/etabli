@@ -5,13 +5,37 @@ import {
   BOOKABLE_MACHINE_ID,
   CERTIFIED_MACHINE_ID,
   MAINTENANCE_MACHINE_ID,
+  OUTSIDE_MACHINE_ID,
   releaseBooking,
   RETIRED_MACHINE_ID,
 } from '@/e2e/fixtures/booking.fixture'
 
-test('the week of a machine is private', async ({ page }) => {
+test('a visitor reads the fiche but not the week', async ({ page }) => {
   await page.goto(`/machines/${BOOKABLE_MACHINE_ID}`)
+
+  await expect(page.getByRole('heading', { name: 'Bambu Lab P1S' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /— Libre$/ })).toHaveCount(0)
+
+  await page
+    .getByRole('main')
+    .getByRole('link', { name: /se connecter/i })
+    .click()
   await expect(page).toHaveURL(new RegExp(`/connexion\\?next=%2Fmachines%2F${BOOKABLE_MACHINE_ID}$`))
+})
+
+test('a member of another atelier is sent to join it, not to a dead end', async ({ page }) => {
+  await signIn(page, 'membre@etabli.test')
+  await page.goto(`/machines/${OUTSIDE_MACHINE_ID}`)
+
+  await expect(page.getByRole('heading', { name: 'Singer 4423 Heavy Duty' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /— Libre$/ })).toHaveCount(0)
+  await expect(page.getByRole('main').getByRole('link', { name: /se connecter/i })).toHaveCount(0)
+
+  await page
+    .getByRole('main')
+    .getByRole('link', { name: /voir l’atelier/i })
+    .click()
+  await expect(page).toHaveURL(/\/ateliers\/atelier-des-canuts$/)
 })
 
 test('a machine out of the parc is indistinguishable from one that never existed', async ({ page }) => {
@@ -41,7 +65,8 @@ test('a member takes a free slot and lands on its booking', async ({ page, reque
 })
 
 test('a machine that demands an habilitation refuses the member who has none', async ({ page }) => {
-  await signIn(page, 'membre@etabli.test')
+  // Théo is a member of the atelier and holds no certification on this machine; the demo member does.
+  await signIn(page, 'theo@etabli.test')
   await page.goto(`/machines/${CERTIFIED_MACHINE_ID}`)
 
   await expect(page.getByText(/cette machine exige une habilitation/i)).toBeVisible()

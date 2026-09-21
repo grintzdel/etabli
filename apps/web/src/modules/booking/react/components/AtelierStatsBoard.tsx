@@ -1,6 +1,7 @@
+import { Surface } from '@etabli/ui'
+
 import type { AtelierStats } from '@/modules/booking/core/model/manage-stats'
 import { formatHours, formatRate } from '@/modules/booking/core/model/manage-stats'
-import { Surface } from '@/ui/Surface'
 
 export type AtelierStatsBoardProps = {
   readonly stats: ReadonlyArray<AtelierStats>

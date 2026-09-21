@@ -1,3 +1,5 @@
+import { StatusBadge } from '@etabli/ui'
+
 import type { AdminUser } from '@/modules/identity/core/model/admin-user'
 import {
   ADMIN_USERS_LIMIT,
@@ -7,7 +9,6 @@ import {
   USER_STATUS_TONES,
 } from '@/modules/identity/core/model/admin-user'
 import type { SettingsFormAction } from '@/modules/identity/core/model/settings'
-import { StatusBadge } from '@/ui/StatusBadge'
 
 import { AdminUserRowAction } from './AdminUserRowAction'
 

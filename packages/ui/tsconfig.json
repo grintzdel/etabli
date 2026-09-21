@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.app-base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "moduleResolution": "Bundler"
+  },
+  "include": ["src/**/*", "scripts/**/*", "vitest.config.ts"],
+  "exclude": ["node_modules", "src/**/*.native.ts", "src/**/*.native.tsx"]
+}

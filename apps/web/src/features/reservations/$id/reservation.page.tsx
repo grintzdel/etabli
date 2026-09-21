@@ -1,3 +1,4 @@
+import { Surface } from '@etabli/ui'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
@@ -8,7 +9,6 @@ import { BookingSummary } from '@/modules/booking/react/components/BookingSummar
 import { cancelBookingAction } from '@/server/booking.actions'
 import { bookingPort } from '@/server/container'
 import { readSessionToken } from '@/server/session'
-import { Surface } from '@/ui/Surface'
 
 export const metadata: Metadata = {
   title: 'Réservation',

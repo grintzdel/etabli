@@ -1,12 +1,11 @@
 'use client'
 
+import { Button, Surface } from '@etabli/ui'
 import { useActionState } from 'react'
 
 import type { AtelierSummary } from '@/modules/atelier/core/model/atelier'
 import { MACHINE_KIND_LABELS, PRACTICES } from '@/modules/atelier/core/model/atelier'
 import type { OnboardingFormAction, OnboardingFormState } from '@/modules/atelier/core/model/onboarding-form'
-import { Button } from '@/ui/Button'
-import { Surface } from '@/ui/Surface'
 
 export type OnboardingFormProps = {
   readonly action: OnboardingFormAction

@@ -1,9 +1,9 @@
+import { StatusBadge } from '@etabli/ui'
 import Link from 'next/link'
 
 import { formatDay, formatMoment, formatRange } from '@/modules/booking/core/lib/format'
 import type { BookingActionState, BookingDetail } from '@/modules/booking/core/model/booking'
 import { STATUS_LABELS, STATUS_TONES } from '@/modules/booking/core/model/booking'
-import { StatusBadge } from '@/ui/StatusBadge'
 
 import { CancelBookingForm } from './CancelBookingForm'
 

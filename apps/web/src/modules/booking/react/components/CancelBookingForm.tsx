@@ -1,9 +1,9 @@
 'use client'
 
+import { Button } from '@etabli/ui'
 import { useActionState } from 'react'
 
 import type { BookingActionState } from '@/modules/booking/core/model/booking'
-import { Button } from '@/ui/Button'
 
 export type CancelBookingFormProps = {
   readonly bookingId: string

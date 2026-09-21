@@ -1,6 +1,7 @@
+import { buttonVariants } from '@etabli/ui/web'
+
 import type { StatsPeriod } from '@/modules/booking/core/model/manage-stats'
 import { PERIOD_LABELS, STATS_PERIODS } from '@/modules/booking/core/model/manage-stats'
-import { buttonVariants } from '@/ui/Button'
 
 export type StatsPeriodFilterProps = {
   readonly period: StatsPeriod

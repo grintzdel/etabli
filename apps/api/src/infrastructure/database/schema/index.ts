@@ -1,0 +1,6 @@
+export * from './ateliers.schema.ts'
+export * from './bookings.schema.ts'
+export * from './certifications.schema.ts'
+export * from './machines.schema.ts'
+export * from './user-preferences.schema.ts'
+export * from './users.schema.ts'

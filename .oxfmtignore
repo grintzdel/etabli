@@ -8,3 +8,4 @@ docs/
 CLAUDE.md
 README.md
 next-env.d.ts
+apps/api/src/infrastructure/database/migrations/

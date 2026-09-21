@@ -54,4 +54,31 @@ describe('AtelierInMemoryAdapter', () => {
     const byKind = await adapter.list({ machineKind: 'SEWING' })
     if (byKind.ok) expect(byKind.value.map((summary) => summary.slug)).toEqual(['lyon'])
   })
+
+  it('finds a machine of a seeded sheet, atelier carried along', async () => {
+    const machine = machineFixture({ name: 'Trotec' })
+    adapter.seed(detailFixture({ slug: 'la-forge', name: 'La Forge', machines: [machine] }))
+
+    const result = await adapter.getMachineById(machine.id)
+    if (!result.ok) throw new Error('the machine lookup failed')
+
+    expect(result.value.name).toBe('Trotec')
+    expect(result.value.atelierName).toBe('La Forge')
+    expect(result.value.atelierSlug).toBe('la-forge')
+  })
+
+  it('withholds a retired machine, like the API does', async () => {
+    const machine = machineFixture({ status: 'RETIRED' })
+    adapter.seed(detailFixture({ machines: [machine] }))
+
+    const result = await adapter.getMachineById(machine.id)
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error.code).toBe('NOT_FOUND')
+  })
+
+  it('fails with NOT_FOUND on a machine no sheet holds', async () => {
+    const result = await adapter.getMachineById('inconnue')
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error.code).toBe('NOT_FOUND')
+  })
 })

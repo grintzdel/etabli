@@ -6,6 +6,7 @@ export * from './application/commands/set-membership-role/set-membership-role.co
 export * from './application/commands/update-machine/update-machine.command'
 export * from './application/ports/member-profile'
 export * from './application/queries/get-atelier-by-slug/get-atelier-by-slug.query'
+export * from './application/queries/get-machine-detail/get-machine-detail.query'
 export * from './application/queries/list-all-ateliers/list-all-ateliers.query'
 export * from './application/queries/list-ateliers/list-ateliers.query'
 export * from './application/queries/list-managed-parcs/list-managed-parcs.query'

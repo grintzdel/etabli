@@ -1,7 +1,7 @@
+import { Button, StatusBadge } from '@etabli/ui'
+
 import type { AdminAtelier, AtelierStatus } from '@/modules/atelier/core/model/atelier'
 import { ATELIER_STATUS_LABELS } from '@/modules/atelier/core/model/atelier'
-import { Button } from '@/ui/Button'
-import { StatusBadge } from '@/ui/StatusBadge'
 
 export type AdminAtelierTableProps = {
   readonly ateliers: ReadonlyArray<AdminAtelier>

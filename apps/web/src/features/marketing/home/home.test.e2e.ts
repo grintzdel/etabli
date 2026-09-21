@@ -11,6 +11,19 @@ test('explains the product in three steps', async ({ page }) => {
   await expect(page.getByRole('list', { name: /fonctionnement/i }).getByRole('listitem')).toHaveCount(3)
 })
 
+test('carries the heading over the photo, not beside it', async ({ page }) => {
+  await page.goto('/')
+  const heading = page.getByRole('heading', { level: 1 })
+  const photo = page.locator('img[src*="hero-atelier"]')
+
+  await expect(photo).toBeVisible()
+
+  const headingBox = await heading.boundingBox()
+  const photoBox = await photo.boundingBox()
+  expect(headingBox!.y).toBeGreaterThanOrEqual(photoBox!.y)
+  expect(headingBox!.y + headingBox!.height).toBeLessThanOrEqual(photoBox!.y + photoBox!.height)
+})
+
 test('offers a way into the atelier directory', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('link', { name: /découvrir les ateliers/i })).toHaveAttribute('href', '/ateliers')

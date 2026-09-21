@@ -1,0 +1,21 @@
+import type { Transactable } from '../../../../infrastructure/database/database.token.ts'
+import type { AuthMembership } from '../../../../shared/domain/auth-user.ts'
+import type { MembershipRole, MembershipStatus } from '../../../../shared/domain/roles.constant.ts'
+import type { MemberAtelier, MembershipEntity } from '../entities/membership.entity.ts'
+
+export interface NewMembership {
+  readonly id: string
+  readonly userId: string
+  readonly atelierId: string
+  readonly role: MembershipRole
+  readonly status: MembershipStatus
+  readonly joinedAt: Date
+}
+
+export interface IMembershipRepository {
+  find(userId: string, atelierId: string, tx?: Transactable): Promise<MembershipEntity | null>
+  insert(membership: NewMembership, tx?: Transactable): Promise<MembershipEntity>
+  listAuthMemberships(userId: string): Promise<ReadonlyArray<AuthMembership>>
+  listMemberAteliers(userId: string): Promise<ReadonlyArray<MemberAtelier>>
+  updateRole(userId: string, atelierId: string, role: MembershipRole): Promise<MembershipEntity | null>
+}

@@ -39,13 +39,22 @@ const seedAtelier = (
     `
   )
 
-const seedMachine = (atelierId: string, name: string, kind: string, status: string) =>
+const seedMachine = (
+  atelierId: string,
+  name: string,
+  kind: string,
+  status: string,
+  id = globalThis.crypto.randomUUID()
+) =>
   runtime.runPromise(
     sql`
-      INSERT INTO machines (id, atelier_id, name, description, kind, requires_certification, slot_duration_minutes, status)
-      VALUES (${globalThis.crypto.randomUUID()}, ${atelierId}, ${name}, 'Une machine du parc', ${kind}, true, 60, ${status})
+      INSERT INTO machines (id, atelier_id, name, description, kind, requires_certification, slot_duration_minutes, status, nfc_tag_id)
+      VALUES (${id}, ${atelierId}, ${name}, 'Une machine du parc', ${kind}, true, 60, ${status}, ${`nfc-${id}`})
     `
   )
+
+const RETIRED_MACHINE = '44444444-4444-4444-8444-444444444444'
+const DRAFT_MACHINE = '55555555-5555-4555-8555-555555555555'
 
 await seedAtelier(FORGE, 'la-forge', 'La Forge', 'Montreuil', 48.8638, 2.4485, 'PUBLISHED')
 await seedAtelier(LYON, 'fabrique-lyonnaise', 'Fabrique Lyonnaise', 'Lyon', 45.764, 4.8357, 'PUBLISHED')
@@ -53,8 +62,9 @@ await seedAtelier(DRAFT, 'brouillon', 'Brouillon', 'Montreuil', 48.86, 2.44, 'DR
 
 await seedMachine(FORGE, 'Trotec Speedy', 'LASER_CUTTER', 'AVAILABLE')
 await seedMachine(FORGE, 'Prusa MK4', 'PRINTER_3D', 'MAINTENANCE')
-await seedMachine(FORGE, 'Fraiseuse hors service', 'CNC_MILL', 'RETIRED')
+await seedMachine(FORGE, 'Fraiseuse hors service', 'CNC_MILL', 'RETIRED', RETIRED_MACHINE)
 await seedMachine(LYON, 'Juki', 'SEWING', 'AVAILABLE')
+await seedMachine(DRAFT, 'Presse en caisse', 'CNC_MILL', 'AVAILABLE', DRAFT_MACHINE)
 
 const get = (path: string) => handler(new Request(`http://localhost${path}`))
 
@@ -131,5 +141,54 @@ describe('GET /ateliers/:slug', () => {
 
   it('answers 404 on a draft atelier', async () => {
     expect((await get('/ateliers/brouillon')).status).toBe(404)
+  })
+})
+
+describe('GET /machines/:id', () => {
+  const machineIdOf = async (name: string): Promise<string> => {
+    const sheet = (await (await get('/ateliers/la-forge')).json()) as {
+      readonly machines: ReadonlyArray<{ readonly id: string; readonly name: string }>
+    }
+    const machine = sheet.machines.find((candidate) => candidate.name === name)
+    if (machine === undefined) throw new Error(`${name} is missing from the sheet`)
+    return machine.id
+  }
+
+  it('answers the fiche of a machine in service, atelier named', async () => {
+    const response = await get(`/machines/${await machineIdOf('Trotec Speedy')}`)
+    expect(response.status).toBe(200)
+
+    const fiche = (await response.json()) as Record<string, unknown>
+    expect(fiche['name']).toBe('Trotec Speedy')
+    expect(fiche['atelierName']).toBe('La Forge')
+    expect(fiche['atelierSlug']).toBe('la-forge')
+    expect(fiche['slotDurationMinutes']).toBe(60)
+  })
+
+  it('keeps the NFC tag out of the fiche', async () => {
+    const response = await get(`/machines/${await machineIdOf('Trotec Speedy')}`)
+    expect(await response.json()).not.toHaveProperty('nfcTagId')
+  })
+
+  it('shows a machine under maintenance, since the fiche is not a booking', async () => {
+    const response = await get(`/machines/${await machineIdOf('Prusa MK4')}`)
+    expect(response.status).toBe(200)
+    expect((await response.json())['status']).toBe('MAINTENANCE')
+  })
+
+  it('answers 404 on a retired machine', async () => {
+    expect((await get(`/machines/${RETIRED_MACHINE}`)).status).toBe(404)
+  })
+
+  it('answers 404 on a machine whose atelier is a draft', async () => {
+    expect((await get(`/machines/${DRAFT_MACHINE}`)).status).toBe(404)
+  })
+
+  it('answers 404 on a machine that never existed', async () => {
+    expect((await get('/machines/66666666-6666-4666-8666-666666666666')).status).toBe(404)
+  })
+
+  it('answers 400 on an id that is not a uuid', async () => {
+    expect((await get('/machines/pas-un-uuid')).status).toBe(400)
   })
 })

@@ -146,6 +146,20 @@ export const AtelierDetailSchema = Schema.Struct({
 })
 export type AtelierDetail = Schema.Schema.Type<typeof AtelierDetailSchema>
 
+export const MachineDetailSchema = Schema.Struct({
+  id: MachineId,
+  atelierId: AtelierId,
+  atelierName: Schema.String,
+  atelierSlug: Slug,
+  name: Schema.String,
+  description: Schema.String,
+  kind: MachineKindSchema,
+  requiresCertification: Schema.Boolean,
+  slotDurationMinutes: Schema.Int,
+  status: MachineStatusSchema,
+})
+export type MachineDetail = Schema.Schema.Type<typeof MachineDetailSchema>
+
 export const ListAteliersParamsSchema = Schema.Struct({
   city: Schema.optional(Schema.Trim.pipe(Schema.minLength(1))),
   machineKind: Schema.optional(MachineKindSchema),
@@ -189,6 +203,19 @@ export const toAtelierDetail = (atelier: Atelier, machines: ReadonlyArray<Machin
       slotDurationMinutes: machine.slotDurationMinutes,
       status: machine.status,
     })),
+})
+
+export const toMachineDetail = (machine: Machine, atelier: Atelier): MachineDetail => ({
+  id: machine.id,
+  atelierId: atelier.id,
+  atelierName: atelier.name,
+  atelierSlug: atelier.slug,
+  name: machine.name,
+  description: machine.description,
+  kind: machine.kind,
+  requiresCertification: machine.requiresCertification,
+  slotDurationMinutes: machine.slotDurationMinutes,
+  status: machine.status,
 })
 
 export const Practice = Schema.Array(Schema.Trim.pipe(Schema.minLength(1)))

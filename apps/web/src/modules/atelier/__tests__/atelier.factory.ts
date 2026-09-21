@@ -2,6 +2,7 @@ import type {
   AdminAtelier,
   AtelierDetail,
   AtelierSummary,
+  MachineDetail,
   ManagedMachine,
   PublicMachine,
 } from '@/modules/atelier/core/model/atelier'
@@ -12,6 +13,23 @@ export const machineFixture = (overrides: Partial<PublicMachine> = {}): PublicMa
   counter += 1
   return {
     id: `00000000-0000-4000-8000-${String(counter).padStart(12, '0')}`,
+    name: `Machine ${counter}`,
+    description: 'Une machine du parc',
+    kind: 'LASER_CUTTER',
+    requiresCertification: true,
+    slotDurationMinutes: 60,
+    status: 'AVAILABLE',
+    ...overrides,
+  }
+}
+
+export const machineDetailFixture = (overrides: Partial<MachineDetail> = {}): MachineDetail => {
+  counter += 1
+  return {
+    id: `50000000-0000-4000-8000-${String(counter).padStart(12, '0')}`,
+    atelierId: `10000000-0000-4000-8000-${String(counter).padStart(12, '0')}`,
+    atelierName: `Atelier ${counter}`,
+    atelierSlug: `atelier-${counter}`,
     name: `Machine ${counter}`,
     description: 'Une machine du parc',
     kind: 'LASER_CUTTER',

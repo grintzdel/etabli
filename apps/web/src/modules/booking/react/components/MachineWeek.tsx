@@ -1,5 +1,6 @@
 'use client'
 
+import { Button } from '@etabli/ui'
 import { keepPreviousData, QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useActionState, useEffect, useState } from 'react'
 
@@ -7,7 +8,6 @@ import { fetchAvailability } from '@/modules/booking/core/lib/fetch-availability
 import { formatDay, formatRange } from '@/modules/booking/core/lib/format'
 import { groupSlotsByDay } from '@/modules/booking/core/lib/slots'
 import type { BookingActionState, MachineAvailability } from '@/modules/booking/core/model/booking'
-import { Button } from '@/ui/Button'
 
 import { SlotGrid } from './SlotGrid'
 

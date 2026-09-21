@@ -57,12 +57,27 @@ exclusif, la présence est prouvée par NFC.**
 
 `pnpm db:seed` insère ces comptes de façon idempotente. **Mot de passe commun : `etabli-2026`.**
 
+Le seed pose aussi 16 habilitations et 20 réservations — à venir, pointées, non honorée, annulée —
+pour que le tableau de bord, les files de validation et les statistiques ouvrent sur des chiffres.
+Chaque compte actif a de quoi montrer quelque chose, l'administrateur comme les fabmanagers.
+
+**Les créneaux sont datés relativement à maintenant** : un `db:seed` les réécrit pour que le
+« prochain créneau » soit toujours devant. C'est la seule partie du seed qui remplace au lieu
+d'ignorer les conflits.
+
+Deux créneaux sont ancrés sur l'horloge et non sur la grille, pour que le **pointage** soit
+réellement ouvert au moment de la démonstration : la fenêtre court de 15 minutes avant le créneau à
+30 minutes après son début. Reséedez juste avant de démontrer.
+
 | E-mail | Rôle | À quoi il sert |
 |---|---|---|
-| `admin@etabli.test` | Administrateur plateforme | Tout `/admin/*` |
-| `fabmanager.forge@etabli.test` | Fabmanager — La Forge | Tout `/manage/*` sur un atelier |
+| `admin@etabli.test` | Administrateur plateforme, 2 ateliers | Tout `/admin/*`, et un tableau de bord garni : créneaux à venir, **pointage ouvert**, 1 demande en attente |
+| `fabmanager.forge@etabli.test` | Fabmanager — La Forge | Tout `/manage/*` sur un atelier, 3 demandes dans sa file |
 | `fabmanager.lyon@etabli.test` | Fabmanager — deux ateliers | Vérifier le cloisonnement multi-atelier |
-| `membre@etabli.test` | Membre habilité | Parcours de réservation complet |
+| `membre@etabli.test` | Membre habilité, 2 ateliers | Parcours complet : créneaux à venir, **pointage ouvert**, historique, 1 demande en attente |
+| `lea@etabli.test` | Membre — La Forge | Une habilitation accordée, une en attente, une révoquée |
+| `theo@etabli.test` | Membre — 2 ateliers | Membre sans habilitation sur la découpe laser |
+| `manon@etabli.test` | Membre — Copeaux & Cie | Alimente la file de son fabmanager |
 | `nouveau@etabli.test` | Membre sans onboarding | Voir la redirection vers `/bienvenue` |
 | `suspendu@etabli.test` | Compte suspendu | Voir le refus de connexion |
 
@@ -85,6 +100,22 @@ pnpm run dev                  # API sur :3001, web sur :3000
 | `API_URL` | Où le web joint l'API (`http://localhost:3001` en dev) |
 | `COOKIE_SECURE` | `true` en production |
 | `NEXT_PUBLIC_SITE_URL` | Base des URLs canoniques, du sitemap et de l'Open Graph |
+
+### Les deux implémentations de l'API
+
+`pnpm run dev` lance l'API Effect (`packages/server`). La v2 NestJS tient les mêmes 38 routes et
+se lance à sa place :
+
+```bash
+pnpm run db:migrate:api
+pnpm run db:seed:api
+pnpm run dev:api        # sur le même port, avec pnpm run dev:web à côté
+```
+
+Sa conception est dans `docs/superpowers/specs/2026-09-15-etabli-api-nestjs-design.md`. Deux routes
+y changent de nom — `PATCH /me/profile` au lieu de `PATCH /auth/me`, et `POST /certifications/request`
+au lieu de `POST /certifications`. **Le web est câblé sur la v1** : le basculer demande d'ajuster
+ces deux chemins dans `packages/contract`.
 
 ### Vérifier
 
@@ -118,6 +149,7 @@ pnpm run db:test:down
 | `packages/server` | `HttpApi` Effect, Layers, migrator, serveur Node (`src/main.ts`) |
 | `packages/test-utils` | client SQL pglite pour les tests d'intégration |
 | `apps/web` | application Next.js — App Router, Server Components, Server Actions |
+| `apps/api` | seconde implémentation de l'API, en NestJS, Drizzle et Zod (voir ci-dessous) |
 | `scripts/` | `generate-cover-art.py` — les planches de l'annuaire |
 
 Le préfixe à quatre chiffres des migrations porte l'ordre global, tous packages confondus : un
@@ -264,6 +296,10 @@ refus, la contrainte d'exclusion `gist` qui double la règle 2, la traduction du
 
 ## Limites connues
 
+- **Deux implémentations de l'API coexistent.** `packages/server` (Effect) est celle que le web
+  interroge ; `apps/api` (NestJS, Drizzle, Zod) tient les mêmes routes et ses propres 255 tests, mais
+  aucun écran ne s'y branche encore. Deux back-ends à maintenir pour un seul produit : à trancher
+  avant le rendu, et à savoir défendre en soutenance si les deux restent.
 - **Isolation des E2E.** Le Postgres de test accumule d'un run à l'autre ; il faut `db:test:down`
   puis `db:test:up` entre deux campagnes. Non corrigé.
 - **Pas de révocation de session.** Changer de mot de passe réémet le jeton de l'auteur du

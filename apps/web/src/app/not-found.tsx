@@ -1,7 +1,6 @@
+import { buttonVariants } from '@etabli/ui/web'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-
-import { buttonVariants } from '@/ui/Button'
 
 export const metadata: Metadata = {
   title: 'Page introuvable',

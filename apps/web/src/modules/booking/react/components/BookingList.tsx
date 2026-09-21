@@ -1,9 +1,9 @@
+import { StatusBadge } from '@etabli/ui'
 import Link from 'next/link'
 
 import { formatDay, formatRange } from '@/modules/booking/core/lib/format'
 import type { BookingDetail } from '@/modules/booking/core/model/booking'
 import { STATUS_LABELS, STATUS_TONES } from '@/modules/booking/core/model/booking'
-import { StatusBadge } from '@/ui/StatusBadge'
 
 export type BookingListProps = {
   readonly bookings: ReadonlyArray<BookingDetail>

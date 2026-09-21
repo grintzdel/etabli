@@ -2,6 +2,14 @@ packages:
   - 'packages/*'
   - 'apps/*'
 
-onlyBuiltDependencies:
-  - esbuild
-  - lefthook
+allowBuilds:
+  '@parcel/watcher': true
+  '@scarf/scarf': false
+  '@swc/core': true
+  esbuild: true
+  lefthook: true
+  msgpackr-extract: true
+
+minimumReleaseAgeExclude:
+  - is-core-module
+  - node-releases
