@@ -10,6 +10,7 @@
     "db:generate": "pnpm --filter @etabli/api run db:generate",
     "db:migrate": "pnpm --filter @etabli/api run db:migrate",
     "db:migrate:test": "pnpm --filter @etabli/api run db:migrate:test",
+    "db:reset:test": "pnpm --filter @etabli/api run db:reset:test",
     "db:seed": "pnpm --filter @etabli/api run db:seed",
     "db:seed:test": "pnpm --filter @etabli/api run db:seed:test",
     "db:test:down": "docker compose down",

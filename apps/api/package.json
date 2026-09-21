@@ -8,6 +8,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file-if-exists=../../.env src/infrastructure/database/migrate.ts",
     "db:migrate:test": "tsx --env-file=../../.env.test src/infrastructure/database/migrate.ts",
+    "db:reset:test": "tsx --env-file=../../.env.test src/infrastructure/database/reset.cli.ts",
     "db:seed": "tsx --env-file-if-exists=../../.env src/infrastructure/database/seed.cli.ts",
     "db:seed:test": "tsx --env-file=../../.env.test src/infrastructure/database/seed.cli.ts",
     "dev": "nest start --watch",

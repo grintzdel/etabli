@@ -24,15 +24,24 @@ Playwright pointent tous dessus. `packages/server`, les quatre `packages/bc-*`
 et `packages/test-utils` ont été supprimés avec Effect : il n'y a plus qu'une
 implémentation du back, et plus une ligne d'Effect dans le dépôt.
 
-`pnpm check` est vert : 659 tests unitaires, `next build`. Les 103 E2E
+`pnpm check` est vert : 664 tests unitaires, `next build`. Les 103 E2E
 Playwright passent — **contre `apps/api`, depuis la bascule** — mais **ne
 tournent pas dans `pnpm verify`, sur décision de l'auteur** — `pnpm db:test:up`
-puis `pnpm test:e2e` pour les lancer. Le
-conteneur de test tourne sur un `tmpfs` : `pnpm db:test:down` puis `db:test:up`
-suffit à repartir d'une base vierge, il n'y a pas de volume à supprimer. Sans
-cette remise à zéro la base **accumule** d'un run à l'autre, et des tests sans
-rapport tombent sur des créneaux épuisés ou un annuaire saturé d'« Atelier
-E2E ». Défaut d'isolation connu, non corrigé.
+puis `pnpm test:e2e` pour les lancer.
+
+**Le `globalSetup` de Playwright vide la base avant de la semer** : il enchaîne
+`db:migrate:test`, `db:reset:test`, `db:seed:test`. Chaque campagne repart donc
+du même état, et il n'y a plus de `db:test:down` à penser entre deux runs. Sans
+ce `TRUNCATE`, la base **accumulait** d'un run à l'autre — comptes `e2e-*`,
+créneaux pris, « Atelier E2E » — jusqu'à faire tomber des tests sans rapport sur
+des créneaux épuisés ou un annuaire saturé.
+
+La liste des tables vidées est **dérivée du schéma Drizzle** (`isTable` +
+`getTableName`), jamais écrite à la main : une table neuve entre dans le reset
+sans que personne ait à y penser, et `reset.spec.ts` fige la liste pour que
+l'ajout soit vu. `assertResettable` refuse toute URL dont l'hôte n'est pas
+local, **avant d'ouvrir la connexion** : `db:reset:test` ne peut pas partir sur
+Neon.
 
 Ce qui existe, domaine par domaine — les modules d'`apps/api` :
 
@@ -71,10 +80,11 @@ contexts. Sept modules — `auth`, `user`, `atelier`,
 `membership`, `machine`, `certification`, `booking` — plus `health`, pour les
 38 routes du §4 de la spec.
 
-`pnpm --filter @etabli/api test` : 270 tests, trois étages (unitaires sur stubs
+`pnpm --filter @etabli/api test` : 275 tests, trois étages (unitaires sur stubs
 et `FixedClock`, intégration des repositories sur PGlite, bout en bout HTTP via
-supertest). Pas de Docker : chaque suite monte sa propre base en mémoire, ce qui
-supprime structurellement le défaut d'isolation que gardent les E2E Playwright.
+supertest). Pas de Docker : chaque suite monte sa propre base en mémoire, donc
+l'isolation y est structurelle, là où les E2E Playwright la tiennent d'un
+`TRUNCATE` au `globalSetup`.
 
 **NestJS 12 est ESM-only.** `apps/api` est donc en `"type": "module"`, en
 `module: NodeNext`, et les imports relatifs portent leur extension. On les écrit
