@@ -1,5 +1,5 @@
+import { errorCodeOf } from '@etabli/api-client'
 import { ApiErrorCode } from '@etabli/contract'
-import { errorCodeOf } from '@etabli/shared/http'
 
 import { IdentityFailureCode } from '../model/session'
 

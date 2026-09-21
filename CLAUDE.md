@@ -389,7 +389,7 @@ Elle parle à **`apps/api`**. `pnpm build:packages`, puis `pnpm dev:api` et
 
 **Le refus se lit dans le corps, pas dans le statut.** L'API nomme ses erreurs
 `code` (`NFC_TAG_MISMATCH`). `errorCodeOf` — désormais dans
-`@etabli/shared/http` — le lit et ne retombe sur le statut que faute de mieux :
+`@etabli/api-client` — le lit et ne retombe sur le statut que faute de mieux :
 cinq règles métier se partagent le 409, le statut ne suffit donc pas à écrire
 une phrase. La v1 nommait ses erreurs `_tag` (`NfcTagMismatchError`) ; cette
 branche et les clés `*Error` des tables `BY_CODE` sont **supprimées** — plus
@@ -444,14 +444,15 @@ preset et des mocks natifs pour un parcours qui se vérifie à la main. Le `core
 ne l'est plus non plus depuis le balayage des adapters : restent 11 tests dans
 `apps/mobile`, sur les modèles et sur `slots`.
 
-## Adapters — `@etabli/shared/http`
+## Adapters — `@etabli/api-client`
 
-Le web et le mobile ne parlent plus à `fetch` directement. `@etabli/shared/http`
-est un sous-chemin **sans aucune dépendance**, exporté par `tsdown` et consommé
-par les deux apps. C'est désormais **tout** ce que `@etabli/shared` contient :
-les sept autres sous-chemins — `schema`, `errors`, `auth-context`, `time`, `id`,
+Le web et le mobile ne parlent plus à `fetch` directement. `@etabli/api-client`
+est un package **sans aucune dépendance**, exporté par `tsdown` et consommé par
+les deux apps. Il s'appelait `@etabli/shared` et portait huit sous-chemins ;
+sept d'entre eux — `schema`, `errors`, `auth-context`, `time`, `id`,
 `type-level`, `migrations` — sont partis avec la v1, qui en était le seul
-consommateur.
+consommateur. Ne restait que `http`, c'est-à-dire le client d'API : le package
+porte donc son nom, et son unique export est la racine.
 
 `createApiClient({ baseUrl, messages, failureOf, cache? })` rend un objet à une
 seule méthode, `call<A>(path, request?)`, qui retourne un `Result<A, C>`. Il
@@ -473,7 +474,7 @@ traité comme injoignable lui aussi.
 **Chaque port a exactement deux adapters** : `<x>.http.adapter.ts` et
 `<x>.in-memory.adapter.ts`. Plus de `*.adapter.test.ts` — les 117 tests
 d'adapters ont été supprimés sur décision de l'auteur, et seul le client
-générique est testé (17 tests dans `packages/shared/src/http/`). Les tables
+générique est testé (17 tests dans `packages/api-client/src/`). Les tables
 `BY_CODE`, elles, sont couvertes — cf. « Codes d'erreur » ci-dessous.
 
 ### Codes d'erreur — ce qui est tranché

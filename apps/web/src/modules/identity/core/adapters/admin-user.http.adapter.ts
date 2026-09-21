@@ -1,5 +1,5 @@
+import { createApiClient, type ApiClient } from '@etabli/api-client'
 import { buildPath, routes } from '@etabli/contract'
-import { createApiClient, type ApiClient } from '@etabli/shared/http'
 
 import { identityFailureOf } from '../lib/identity-failure'
 import type { AdminUser, AdminUsersQuery, UpdateAdminUser } from '../model/admin-user'

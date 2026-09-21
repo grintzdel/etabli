@@ -1,4 +1,4 @@
-import { makeFailure, type Failure, type Result } from '@etabli/shared/http'
+import { makeFailure, type Failure, type Result } from '@etabli/api-client'
 
 export interface GeoPoint {
   readonly latitude: number

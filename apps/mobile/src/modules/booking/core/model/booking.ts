@@ -1,3 +1,4 @@
+import { makeFailure, type Failure, type Result } from '@etabli/api-client'
 import type {
   AvailabilitySlot,
   BookingDetail,
@@ -7,7 +8,6 @@ import type {
   MachineAvailability,
   SlotReason,
 } from '@etabli/contract'
-import { makeFailure, type Failure, type Result } from '@etabli/shared/http'
 
 export type {
   AvailabilitySlot,

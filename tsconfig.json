@@ -8,7 +8,7 @@
       "path": "./packages/contract"
     },
     {
-      "path": "./packages/shared"
+      "path": "./packages/api-client"
     }
   ]
 }

@@ -1,4 +1,4 @@
-import type { Result } from '@etabli/shared/http'
+import type { Result } from '@etabli/api-client'
 import { useMutation, useQuery, type UseMutationResult, type UseQueryResult } from '@tanstack/react-query'
 
 import { useSession } from '../../../identity/ui/hooks/use-session'
