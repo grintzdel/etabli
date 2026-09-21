@@ -6,8 +6,7 @@ import type {
   MachineStatus,
   PublicMachine,
 } from '@etabli/contract'
-
-import type { Result } from '../../../shared/core/http/result'
+import { makeFailure, type Failure, type Result } from '@etabli/shared/http'
 
 export type { AtelierDetail, AtelierSummary, MachineDetail, MachineKind, MachineStatus, PublicMachine }
 
@@ -21,12 +20,9 @@ export const AtelierFailureCode = {
 } as const
 export type AtelierFailureCode = (typeof AtelierFailureCode)[keyof typeof AtelierFailureCode]
 
-export interface AtelierFailure {
-  readonly code: AtelierFailureCode
-  readonly message: string
-}
+export type AtelierFailure = Failure<AtelierFailureCode>
 
-export type AtelierResult<A> = Result<A, AtelierFailure>
+export type AtelierResult<A> = Result<A, AtelierFailureCode>
 
 export const FAILURE_MESSAGES: Readonly<Record<AtelierFailureCode, string>> = {
   INVALID_FILTER: 'Ces critères de recherche ne sont pas valides.',
@@ -35,10 +31,7 @@ export const FAILURE_MESSAGES: Readonly<Record<AtelierFailureCode, string>> = {
   UNREACHABLE: 'L’annuaire est momentanément indisponible.',
 }
 
-export const failure = (code: AtelierFailureCode): AtelierResult<never> => ({
-  ok: false,
-  error: { code, message: FAILURE_MESSAGES[code] },
-})
+export const failure = makeFailure(FAILURE_MESSAGES)
 
 export interface DirectoryPoint {
   readonly latitude: number

@@ -1,8 +1,0 @@
-{
-  "extends": "../../tsconfig.pkg-base.json",
-  "compilerOptions": {
-    "rootDir": "${configDir}"
-  },
-  "include": ["src/**/*", "api/**/*"],
-  "references": [{ "path": "../contract" }, { "path": "../shared" }, { "path": "../test-utils" }]
-}

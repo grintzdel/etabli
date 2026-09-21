@@ -2,22 +2,22 @@ import * as SecureStore from 'expo-secure-store'
 
 import type { ISessionStorePort } from './session-store.port'
 
-const KEY = 'etabli.session.token'
-
 export class SessionStoreSecureStoreAdapter implements ISessionStorePort {
+  private readonly key = 'etabli.session.token'
+
   async read(): Promise<string | null> {
     try {
-      return await SecureStore.getItemAsync(KEY)
+      return await SecureStore.getItemAsync(this.key)
     } catch {
       return null
     }
   }
 
   async write(token: string): Promise<void> {
-    await SecureStore.setItemAsync(KEY, token)
+    await SecureStore.setItemAsync(this.key, token)
   }
 
   async clear(): Promise<void> {
-    await SecureStore.deleteItemAsync(KEY)
+    await SecureStore.deleteItemAsync(this.key)
   }
 }

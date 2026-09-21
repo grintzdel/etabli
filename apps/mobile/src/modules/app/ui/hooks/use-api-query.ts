@@ -1,11 +1,11 @@
+import type { Result } from '@etabli/shared/http'
 import { useMutation, useQuery, type UseMutationResult, type UseQueryResult } from '@tanstack/react-query'
 
 import { useSession } from '../../../identity/ui/hooks/use-session'
-import type { Failure, Result } from '../../../shared/core/http/result'
 
 const EXPIRED = 'UNAUTHORIZED'
 
-const unwrap = async <A>(pending: Promise<Result<A, Failure>>, onExpired: () => void): Promise<A> => {
+const unwrap = async <A>(pending: Promise<Result<A, string>>, onExpired: () => void): Promise<A> => {
   const result = await pending
   if (result.ok) return result.value
   if (result.error.code === EXPIRED) onExpired()
@@ -14,7 +14,7 @@ const unwrap = async <A>(pending: Promise<Result<A, Failure>>, onExpired: () => 
 
 export const usePublicQuery = <A>(
   queryKey: ReadonlyArray<unknown>,
-  run: () => Promise<Result<A, Failure>>,
+  run: () => Promise<Result<A, string>>,
   enabled = true
 ): UseQueryResult<A, Error> => {
   const { signOut } = useSession()
@@ -23,7 +23,7 @@ export const usePublicQuery = <A>(
 
 export const useApiQuery = <A>(
   queryKey: ReadonlyArray<unknown>,
-  run: (token: string) => Promise<Result<A, Failure>>,
+  run: (token: string) => Promise<Result<A, string>>,
   enabled = true
 ): UseQueryResult<A, Error> => {
   const { token, signOut } = useSession()
@@ -39,7 +39,7 @@ export const useApiQuery = <A>(
 }
 
 export const useApiMutation = <A, V>(
-  run: (token: string, variables: V) => Promise<Result<A, Failure>>,
+  run: (token: string, variables: V) => Promise<Result<A, string>>,
   onSuccess?: (value: A) => void
 ): UseMutationResult<A, Error, V> => {
   const { token, signOut } = useSession()

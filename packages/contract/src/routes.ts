@@ -16,6 +16,7 @@ export const routes = {
     complete: '/onboarding/complete',
   },
   me: {
+    profile: '/me/profile',
     preferences: '/me/preferences',
     ateliers: '/me/ateliers',
   },
@@ -32,7 +33,7 @@ export const routes = {
     checkIn: '/bookings/:id/check-in',
   },
   certifications: {
-    request: '/certifications',
+    request: '/certifications/request',
     mine: '/certifications/mine',
   },
   manage: {

@@ -1,9 +1,12 @@
 import { buildPath, routes } from '@etabli/contract'
+import { createApiClient, type ApiClient } from '@etabli/shared/http'
 
-import { requestAtelier } from '../lib/atelier-http'
+import { atelierFailureOf } from '../lib/atelier-failure'
 import {
   DIRECTORY_RADIUS_KM,
+  FAILURE_MESSAGES,
   type AtelierDetail,
+  type AtelierFailureCode,
   type AtelierResult,
   type AtelierSummary,
   type DirectoryPoint,
@@ -12,26 +15,30 @@ import {
 import type { IAtelierPort } from '../ports/atelier.port'
 
 export class AtelierHttpAdapter implements IAtelierPort {
-  constructor(private readonly baseUrl: string) {}
+  private readonly http: ApiClient<AtelierFailureCode>
+
+  constructor(baseUrl: string) {
+    this.http = createApiClient({ baseUrl, messages: FAILURE_MESSAGES, failureOf: atelierFailureOf })
+  }
 
   list(point: DirectoryPoint | null): Promise<AtelierResult<ReadonlyArray<AtelierSummary>>> {
-    const query =
-      point === null
-        ? undefined
-        : {
-            lat: String(point.latitude),
-            lng: String(point.longitude),
-            radiusKm: String(DIRECTORY_RADIUS_KM),
-          }
-
-    return requestAtelier<ReadonlyArray<AtelierSummary>>(this.baseUrl, routes.ateliers.list, { query })
+    return this.http.call<ReadonlyArray<AtelierSummary>>(routes.ateliers.list, {
+      query:
+        point === null
+          ? undefined
+          : {
+              lat: String(point.latitude),
+              lng: String(point.longitude),
+              radiusKm: String(DIRECTORY_RADIUS_KM),
+            },
+    })
   }
 
   getBySlug(slug: string): Promise<AtelierResult<AtelierDetail>> {
-    return requestAtelier<AtelierDetail>(this.baseUrl, buildPath(routes.ateliers.getBySlug, { slug }))
+    return this.http.call<AtelierDetail>(buildPath(routes.ateliers.getBySlug, { slug }))
   }
 
   getMachineById(id: string): Promise<AtelierResult<MachineDetail>> {
-    return requestAtelier<MachineDetail>(this.baseUrl, buildPath(routes.machines.getById, { id }))
+    return this.http.call<MachineDetail>(buildPath(routes.machines.getById, { id }))
   }
 }

@@ -3,6 +3,7 @@ export const SESSION_COOKIE = 'etabli_session'
 export const PASSWORD_MIN_LENGTH = 8
 
 import type { CurrentUser, LoginInput, RegisterInput, Session } from '@etabli/contract'
+import { makeFailure, type Failure, type Result } from '@etabli/shared/http'
 
 export type { CurrentUser, LoginInput, RegisterInput, Session }
 
@@ -20,14 +21,9 @@ export const IdentityFailureCode = {
 } as const
 export type IdentityFailureCode = (typeof IdentityFailureCode)[keyof typeof IdentityFailureCode]
 
-export interface IdentityFailure {
-  readonly code: IdentityFailureCode
-  readonly message: string
-}
+export type IdentityFailure = Failure<IdentityFailureCode>
 
-export type IdentityResult<A> =
-  | { readonly ok: true; readonly value: A }
-  | { readonly ok: false; readonly error: IdentityFailure }
+export type IdentityResult<A> = Result<A, IdentityFailureCode>
 
 export const FAILURE_MESSAGES: Readonly<Record<IdentityFailureCode, string>> = {
   INVALID_INPUT: 'Vérifiez les informations saisies.',
@@ -42,10 +38,7 @@ export const FAILURE_MESSAGES: Readonly<Record<IdentityFailureCode, string>> = {
   UNREACHABLE: 'Le service est momentanément indisponible.',
 }
 
-export const failure = (code: IdentityFailureCode): IdentityResult<never> => ({
-  ok: false,
-  error: { code, message: FAILURE_MESSAGES[code] },
-})
+export const failure = makeFailure(FAILURE_MESSAGES)
 
 export interface AuthFormState {
   readonly error: string | null

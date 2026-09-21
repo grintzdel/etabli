@@ -4,37 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs"
-    },
-    "./schema": {
-      "types": "./dist/schema/index.d.mts",
-      "import": "./dist/schema/index.mjs"
-    },
-    "./errors": {
-      "types": "./dist/errors/index.d.mts",
-      "import": "./dist/errors/index.mjs"
-    },
-    "./auth-context": {
-      "types": "./dist/auth-context/index.d.mts",
-      "import": "./dist/auth-context/index.mjs"
-    },
-    "./time": {
-      "types": "./dist/time/index.d.mts",
-      "import": "./dist/time/index.mjs"
-    },
-    "./id": {
-      "types": "./dist/id/index.d.mts",
-      "import": "./dist/id/index.mjs"
-    },
-    "./type-level": {
-      "types": "./dist/type-level/index.d.mts",
-      "import": "./dist/type-level/index.mjs"
-    },
-    "./migrations": {
-      "types": "./dist/migrations/index.d.mts",
-      "import": "./dist/migrations/index.mjs"
+    "./http": {
+      "types": "./dist/http/index.d.mts",
+      "import": "./dist/http/index.mjs"
     }
   },
   "scripts": {
@@ -42,12 +14,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "@effect/platform": "^0.97.2",
-    "effect": "^3.22.2"
-  },
   "devDependencies": {
-    "@effect/vitest": "^0.30.0",
     "@types/node": "^22.10.2",
     "tsdown": "^0.23.0",
     "typescript": "^5.9.3",

@@ -11,7 +11,9 @@
     "db:seed": "tsx --env-file-if-exists=../../.env src/infrastructure/database/seed.cli.ts",
     "db:seed:test": "tsx --env-file=../../.env.test src/infrastructure/database/seed.cli.ts",
     "dev": "nest start --watch",
+    "dev:test": "pnpm run build && node --env-file=../../.env.test dist/main.js",
     "start": "node dist/main.js",
+    "start:test": "node --env-file=../../.env.test dist/main.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

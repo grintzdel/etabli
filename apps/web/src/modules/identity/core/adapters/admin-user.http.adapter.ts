@@ -1,34 +1,32 @@
 import { buildPath, routes } from '@etabli/contract'
+import { createApiClient, type ApiClient } from '@etabli/shared/http'
 
-import { requestIdentity } from '../lib/identity-http'
+import { identityFailureOf } from '../lib/identity-failure'
 import type { AdminUser, AdminUsersQuery, UpdateAdminUser } from '../model/admin-user'
-import type { IdentityResult } from '../model/session'
+import type { IdentityFailureCode, IdentityResult } from '../model/session'
+import { FAILURE_MESSAGES } from '../model/session'
 import type { IAdminUserPort } from '../ports/admin-user.port'
 
-const queryString = (query: AdminUsersQuery): string => {
-  const params = new URLSearchParams()
-  if (query.search !== undefined) params.set('search', query.search)
-  if (query.platformRole !== undefined) params.set('platformRole', query.platformRole)
-  if (query.status !== undefined) params.set('status', query.status)
-  const serialized = params.toString()
-  return serialized.length === 0 ? '' : `?${serialized}`
-}
-
 export class AdminUserHttpAdapter implements IAdminUserPort {
-  constructor(private readonly baseUrl: string) {}
+  private readonly http: ApiClient<IdentityFailureCode>
+
+  constructor(baseUrl: string) {
+    this.http = createApiClient({
+      baseUrl,
+      messages: FAILURE_MESSAGES,
+      failureOf: identityFailureOf,
+      cache: 'no-store',
+    })
+  }
 
   list(token: string, query: AdminUsersQuery): Promise<IdentityResult<ReadonlyArray<AdminUser>>> {
-    return requestIdentity<ReadonlyArray<AdminUser>>(this.baseUrl, `${routes.admin.users}${queryString(query)}`, {
-      method: 'GET',
-      headers: { authorization: `Bearer ${token}` },
+    return this.http.call<ReadonlyArray<AdminUser>>(routes.admin.users, {
+      token,
+      query: { search: query.search, platformRole: query.platformRole, status: query.status },
     })
   }
 
   update(token: string, id: string, patch: UpdateAdminUser): Promise<IdentityResult<AdminUser>> {
-    return requestIdentity<AdminUser>(this.baseUrl, buildPath(routes.admin.user, { id }), {
-      method: 'PATCH',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-      body: JSON.stringify(patch),
-    })
+    return this.http.call<AdminUser>(buildPath(routes.admin.user, { id }), { method: 'PATCH', token, body: patch })
   }
 }

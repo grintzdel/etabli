@@ -17,33 +17,39 @@ bout, de l'atelier au créneau réservé ; le fabmanager tient le pointage, le
 no-show, l'annulation, le tag NFC et les statistiques de ses ateliers ;
 l'administrateur plateforme tient les ateliers, les comptes, les rôles et le
 tableau réseau. L'application mobile Expo porte le parcours membre jusqu'au
-pointage NFC. Prochaine étape : le jalon 7, la production.
+pointage NFC.
 
-`pnpm check` est vert : 1 207 tests unitaires, `next build`. Les 95 E2E
-Playwright passent mais **ne tournent plus dans `pnpm verify`, sur décision de
-l'auteur** — `pnpm db:test:up` puis `pnpm test:e2e` pour les lancer. Le
+**Le backend est `apps/api` (v2, NestJS).** `pnpm dev`, les seeds et les E2E
+Playwright pointent tous dessus. `packages/server`, les quatre `packages/bc-*`
+et `packages/test-utils` ont été supprimés avec Effect : il n'y a plus qu'une
+implémentation du back, et plus une ligne d'Effect dans le dépôt.
+
+`pnpm check` est vert : 559 tests unitaires, `next build`. Les 103 E2E
+Playwright passent — **contre `apps/api`, depuis la bascule** — mais **ne
+tournent pas dans `pnpm verify`, sur décision de l'auteur** — `pnpm db:test:up`
+puis `pnpm test:e2e` pour les lancer. Le
 conteneur de test tourne sur un `tmpfs` : `pnpm db:test:down` puis `db:test:up`
 suffit à repartir d'une base vierge, il n'y a pas de volume à supprimer. Sans
 cette remise à zéro la base **accumule** d'un run à l'autre, et des tests sans
 rapport tombent sur des créneaux épuisés ou un annuaire saturé d'« Atelier
 E2E ». Défaut d'isolation connu, non corrigé.
 
-Ce qui existe, package par package :
+Ce qui existe, domaine par domaine — les modules d'`apps/api` :
 
-- `bc-identity` — inscription, connexion, `GET /auth/me`, bcrypt, jose,
-  `AuthMiddleware`, cookie httpOnly posé par Next, `proxy.ts`. Et les paramètres :
-  `PATCH /auth/me` (nom affiché, pratiques), `POST /auth/password`,
-  `GET`/`PATCH /me/preferences`, `GET /me/ateliers`, migration `0006`, et le
+- `auth` / `user` — inscription, connexion, `GET /auth/me`, bcrypt, jose,
+  garde d'authentification, cookie httpOnly posé par Next, `proxy.ts`. Et les
+  paramètres : `PATCH /me/profile` (nom affiché, pratiques), `POST /auth/password`,
+  `GET`/`PATCH /me/preferences`, `GET /me/ateliers`, et le
   back-office plateforme : `GET /admin/users`, `PATCH /admin/users/:id`
-- `bc-atelier` — ateliers, adhésions, machines ; annuaire public et fiche avec
+- `atelier` / `membership` / `machine` — ateliers, adhésions, machines ; annuaire public et fiche avec
   `use cache` / `cacheTag` ; `GET /machines/:id`, la fiche publique d'une
   machine ; onboarding persisté ; routes `/admin/ateliers` et
   `/manage/machines` ; `PATCH /admin/ateliers/:atelierId/members/:userId` pour
   nommer un fabmanager
-- `bc-certification` — demander, accorder, révoquer ; file de validation
+- `certification` — demander, accorder, révoquer ; file de validation
   fabmanager ; l'habilitation porte sur **une machine**, pas sur un type — écart
   assumé au §9 de la spec
-- `bc-booking` — domaine, migration `0005`, repository, et le parcours membre
+- `booking` — domaine, repository, et le parcours membre
   complet : `GET /machines/:id/availability`, `POST /bookings`, `GET /bookings`,
   `GET /bookings/:id`, `POST /bookings/:id/cancel`, `POST /bookings/:id/check-in`.
   Côté fabmanager, `GET /manage/bookings`, `POST /manage/bookings/:id/check-in`
@@ -55,20 +61,20 @@ Ce qui existe, package par package :
   tient le pointage, le no-show et l'annulation de la journée, et `/manage/stats`
   comme `/admin/stats` mesurent l'occupation.
 
-## API v2 — `apps/api` (NestJS)
+## L'API — `apps/api` (NestJS)
 
-Seconde implémentation du back, sur la branche `feat/api-nestjs`, décrite par
-`docs/superpowers/specs/2026-09-15-etabli-api-nestjs-design.md`. Elle remplace
-fonctionnellement `packages/server` et les quatre `packages/bc-*`, qui restent
-en place et inertes. NestJS 12, Drizzle, Zod, clean architecture port & adapter,
-sans Effect.ts ni bounded contexts. Sept modules — `auth`, `user`, `atelier`,
+Le back, sur la branche `feat/api-nestjs`, décrit par
+`docs/superpowers/specs/2026-09-15-etabli-api-nestjs-design.md`. Il a remplacé
+`packages/server` et les quatre `packages/bc-*`, supprimés depuis. NestJS 12,
+Drizzle, Zod, clean architecture port & adapter, sans Effect.ts ni bounded
+contexts. Sept modules — `auth`, `user`, `atelier`,
 `membership`, `machine`, `certification`, `booking` — plus `health`, pour les
 38 routes du §4 de la spec.
 
-`pnpm --filter @etabli/api test` : 255 tests, trois étages (unitaires sur stubs
+`pnpm --filter @etabli/api test` : 268 tests, trois étages (unitaires sur stubs
 et `FixedClock`, intégration des repositories sur PGlite, bout en bout HTTP via
 supertest). Pas de Docker : chaque suite monte sa propre base en mémoire, ce qui
-supprime structurellement le défaut d'isolation des 95 E2E de la v1.
+supprime structurellement le défaut d'isolation que gardent les E2E Playwright.
 
 **NestJS 12 est ESM-only.** `apps/api` est donc en `"type": "module"`, en
 `module: NodeNext`, et les imports relatifs portent leur extension. On les écrit
@@ -93,9 +99,10 @@ La contrainte d'exclusion `bookings_no_overlap` et `btree_gist` vivent dans une
 migration écrite à la main, `0001`, que `drizzle-kit generate --custom` a
 ordonnée après les sept tables. `domain_events` n'est pas reprise.
 
-Scripts : `pnpm dev:api`, `pnpm db:migrate:api`, `pnpm db:seed:api`,
-`pnpm db:generate:api` (et leurs variantes `:test:api`). Le seed v1 est porté à
-l'identique — neuf ateliers, sept comptes, mot de passe `etabli-2026`.
+Scripts : `pnpm dev:api`, `pnpm db:migrate`, `pnpm db:seed`, `pnpm db:generate`
+(et leurs variantes `:test`) — ils portaient un suffixe `:api` tant que la v1
+occupait les noms courts. Le seed v1 est porté à l'identique — neuf ateliers,
+sept comptes, mot de passe `etabli-2026`.
 
 Neon est branché et à jour des six migrations. Sur une machine neuve : copier
 `.env.example` en `.env` et y mettre l'URL *pooled* du projet Neon. `pg` émet un
@@ -107,11 +114,6 @@ le `globalSetup` de Playwright l'appelle. `E2E_SKIP_SEED=1` le désactive.
 `compose.yaml` lance un `postgres:18-alpine` sur `:5433`. Playwright ne réutilise
 jamais un serveur déjà sur `:3001` : un `pnpm dev` qui traîne est branché sur
 Neon, et le réutiliser ferait tourner les E2E contre la base de développement.
-
-Les contextes ne se dépendent pas. Chacun déclare un port pour ce qu'il attend
-d'un autre — `MembershipLookup`, `MemberProfile`, `MemberAteliers`,
-`MachineDirectory`, `MemberDirectory`, `MachineCatalog` — et
-`packages/server/src/layers/` les branche. Le Tag `AuthMiddleware` et `AccountSuspendedError` vivent dans `shared`.
 
 ### Paramètres — ce qui est tranché
 
@@ -204,7 +206,7 @@ celui qui tient la machine. Un créneau déjà pointé reste hors d'atteinte des
 deux côtés.
 
 Le cloisonnement est balayé route par route par
-`packages/server/src/http/tenancy.test.ts` : **404** sur une ressource d'un
+`apps/api/src/tenancy.e2e.spec.ts` : **404** sur une ressource d'un
 autre atelier, collection vide sur une liste, **403** sur les routes `/admin/*`.
 Le §7 disait « 403 » partout ; la lettre a été corrigée, pas l'intention — 403
 sur une ressource avouerait qu'elle existe.
@@ -212,7 +214,7 @@ sur une ressource avouerait qu'elle existe.
 Trois adapters web rendaient un refus comme une panne, faute d'un code
 d'échec : le 403 côté réservation, le 409 d'un tag NFC déjà porté, le 404 d'une
 demande d'habilitation qui n'est pas la sienne. Tous trois lisent maintenant le
-`_tag` du corps avant le statut. **Quand une route gagne une erreur typée,
+code du corps avant le statut. **Quand une route gagne une erreur typée,
 l'adapter qui l'appelle doit gagner son code** — sans quoi le message affiché
 parle d'indisponibilité.
 
@@ -238,11 +240,6 @@ derrière une frontière. La page passe de `ƒ` à `◐`.
 
 Le `nfcTagId` ne sort pas : la fiche publique a son propre DTO, et un test le
 fige des deux côtés.
-
-La route est écrite **deux fois**, dans `packages/bc-atelier` (v1) et dans
-`apps/api` (v2). `pnpm dev` et Playwright bootent encore v1 : n'ajouter la
-route qu'à la v2 l'aurait laissée absente de tout ce qui tourne. À la bascule,
-seule la v1 est à retirer.
 
 ### Photographies marketing — ce qui est tranché
 
@@ -279,10 +276,9 @@ La contrainte d'exclusion `bookings_no_overlap` est en base, sous
 `btree_gist` : la règle 2 est donc garantie deux fois, comme le veut le §5 de la
 spec. Le repository SQL traduit la violation `23P01` en `BookingOverlapError`.
 
-`@effect/sql-pg` tourne sur `pg` en TCP et `SqlClient.withTransaction` est
-disponible : **aucun changement de driver n'est nécessaire** pour les écritures
-multi-instructions. La limite « pas de transaction » de `neon-http` vient des
-règles Drizzle globales et ne s'applique pas ici.
+Drizzle tourne sur `pg` en TCP, donc `db.transaction()` est disponible pour les
+écritures multi-instructions. La limite « pas de transaction » de `neon-http`
+vient des règles Drizzle globales et ne s'applique pas ici.
 
 Les horaires d'ouverture sont des constantes (`8h`–`22h`, `Europe/Paris`) tant
 que le §7 les garde en v1.1. Les créneaux sont calculés en heure locale de
@@ -331,7 +327,7 @@ création comme à la modification, pour ne pas rendre un 500 sur un doublon.
 Reposer sur une machine le tag qu'elle porte déjà passe. Aucun écran ne s'en
 sert encore : le formulaire de `/manage/machines` ne crée que.
 
-Le `BookingHttpAdapter` lit le `_tag` du corps d'erreur, pas seulement le
+Le `BookingHttpAdapter` lit le `code` du corps d'erreur, pas seulement le
 status : cinq refus se partagent le 409, et le §11 demande que chaque règle
 porte son propre message. Le status ne sert plus que de repli.
 
@@ -373,22 +369,22 @@ Application Expo / React Native décrite par
 web en petit : elle existe pour le NFC et pour la position. Sept écrans, deux
 layouts, de la connexion au `CHECKED_IN`.
 
-Elle parle à **`apps/api`** (v2). `pnpm build:packages`, puis `pnpm dev:api` et
-`pnpm dev:mobile`. `pnpm dev` boote la v1 sur le même port — les deux servent
-les mêmes routes, et les adapters lisent les deux formes de refus, donc le
-parcours tient des deux côtés.
+Elle parle à **`apps/api`**. `pnpm build:packages`, puis `pnpm dev:api` et
+`pnpm dev:mobile` — ou `pnpm dev`, qui lance les trois.
 
 `src/app/` ne porte que des coquilles, comme les routes du web : un import de
 `src/features/`, et rien d'autre. Tout vit dans `src/modules/<module>/{core,ui}`.
 
 ### Ce qui est tranché
 
-**Le refus se lit dans le corps, pas dans le statut.** La v2 nomme ses erreurs
-`code` (`NFC_TAG_MISMATCH`), la v1 les nommait `_tag` (`NfcTagMismatchError`).
-`errorCodeOf` lit les deux et ne retombe sur le statut que faute de mieux — cinq
-règles métier se partagent le 409, le statut ne suffit donc pas à écrire une
-phrase. Le §8 de la conception ne parlait que de `_tag` : il a été écrit contre
-la v1, et la lettre a été élargie, pas l'intention.
+**Le refus se lit dans le corps, pas dans le statut.** L'API nomme ses erreurs
+`code` (`NFC_TAG_MISMATCH`). `errorCodeOf` — désormais dans
+`@etabli/shared/http` — le lit et ne retombe sur le statut que faute de mieux :
+cinq règles métier se partagent le 409, le statut ne suffit donc pas à écrire
+une phrase. La v1 nommait ses erreurs `_tag` (`NfcTagMismatchError`) ; cette
+branche et les clés `*Error` des tables `BY_CODE` sont **supprimées** — plus
+aucun serveur n'émet cette forme, et les captures d'écran de la spec mobile la
+montrent encore à tort.
 
 **Le token vit dans `expo-secure-store`**, le trousseau du système, jamais dans
 `AsyncStorage` qui écrit en clair. Lu une fois au démarrage : présent, on entre
@@ -435,8 +431,95 @@ crash redevient une erreur de type. `unicorn/no-array-sort` est éteint sur
 
 **Les écrans ne sont pas testés.** Monter React Native sous vitest demande un
 preset et des mocks natifs pour un parcours qui se vérifie à la main. Le `core/`
-l'est : 55 tests dans `apps/mobile`, entrés dans les projets de la suite
-racine.
+ne l'est plus non plus depuis le balayage des adapters : restent 11 tests dans
+`apps/mobile`, sur les modèles et sur `slots`.
+
+## Adapters — `@etabli/shared/http`
+
+Le web et le mobile ne parlent plus à `fetch` directement. `@etabli/shared/http`
+est un sous-chemin **sans aucune dépendance**, exporté par `tsdown` et consommé
+par les deux apps. C'est désormais **tout** ce que `@etabli/shared` contient :
+les sept autres sous-chemins — `schema`, `errors`, `auth-context`, `time`, `id`,
+`type-level`, `migrations` — sont partis avec la v1, qui en était le seul
+consommateur.
+
+`createApiClient({ baseUrl, messages, failureOf, cache? })` rend un objet à une
+seule méthode, `call<A>(path, request?)`, qui retourne un `Result<A, C>`. Il
+tient l'URL, la query string (les paramètres `undefined` tombent), `accept`, le
+`content-type` conditionnel, le `Bearer`, et la traduction d'un échec en
+`{ code, message }`. `cache` se règle par client et s'écrase par appel — la
+stratégie de prerender du web en dépend : les GET publics de l'annuaire restent
+cachables, seul l'onboarding force `no-store`.
+
+**Le client ne connaît aucun code métier.** Chaque adapter lui passe son
+`failureOf(status, body)` et sa table de messages ; le vocabulaire d'échec reste
+la propriété du module. `Result<A, C>` est paramétré par le **code**, et chaque
+modèle dérive le sien : `export const failure = makeFailure(FAILURE_MESSAGES)`.
+
+Un réseau qui ne répond pas est un statut `0` : `failureOf(0, null)` retombe sur
+`UNREACHABLE` dans tous les modules. Un 2xx dont le corps n'est pas du JSON est
+traité comme injoignable lui aussi.
+
+**Chaque port a exactement deux adapters** : `<x>.http.adapter.ts` et
+`<x>.in-memory.adapter.ts`. Plus de `*.adapter.test.ts` — les 117 tests
+d'adapters ont été supprimés sur décision de l'auteur, et seul le client
+générique est testé (17 tests dans `packages/shared/src/http/`). Ce qui n'est
+plus couvert, ce sont les tables `BY_CODE` : si l'API renomme une erreur, le
+mapping retombe silencieusement sur `UNREACHABLE` et l'écran affiche
+« momentanément indisponible » au lieu du vrai refus.
+
+Les in-memory adapters n'ont **aucun consommateur** aujourd'hui : les tests qui
+restent portent sur les modèles et sur des composants purs. Ils ne sont pas
+câblés dans `container.ts` ni dans `dependencies.ts` — l'in-memory ne vit pas
+dans le code de prod.
+
+**Un fichier d'adapter ne contient que sa classe d'adapter.** Le `failureOf` et
+sa table `BY_CODE` vivent dans `core/lib/<module>-failure.ts`, partagés ou non —
+quand un module en a plusieurs, le fichier exporte plusieurs fonctions
+(`atelierFailureOf`, `adminAtelierFailureOf`, `manageMachineFailureOf`). Ce qui
+est du calcul pur part aussi en `core/lib/` (`distance.ts` pour le haversine de
+l'annuaire mobile, `nfc-manager-module.ts` pour le `require` sous `try`). Ce qui
+ne sert qu'à une seule classe et n'a pas de sens hors d'elle devient un membre
+privé — `onDate`, `matches`, la clé du trousseau. Seule exception restante :
+l'`interface Account` des deux in-memory adapters d'identity, qui est le type de
+leur argument de constructeur et n'émet aucun code.
+
+## Bascule v1 → v2 — ce qui est tranché
+
+Le web et les E2E parlent à `apps/api`. `scripts/dev.sh` lance `dev:api`, le
+`globalSetup` de Playwright appelle `db:migrate:test` puis `db:seed:test`,
+et `playwright.config.ts` boote `@etabli/api`.
+
+**Deux routes ont bougé, dans le contract, donc des deux côtés à la fois.**
+`routes.me.profile` (`/me/profile`) remplace le `PATCH /auth/me` — v1 comme v2 le
+servent désormais là — et `routes.certifications.request` vaut
+`/certifications/request`. `GET /auth/me` n'a pas bougé. La v1 dérivant sa table de
+routes du contract, la constante suffit à déplacer les deux serveurs.
+
+**Le seed v2 n'était pas le portage à l'identique annoncé.** Il lui manquait
+trois comptes (`lea`, `theo`, `manon`), cinq adhésions, et **les deux tables
+entières** : 16 habilitations et 20 réservations. Un E2E le prouvait — celui qui
+demande à Théo de se heurter à une machine qu'il n'est pas habilité à prendre.
+Tout est porté.
+
+**Le seed est en deux temps.** `seed(db)` pose les ateliers, machines, comptes et
+adhésions ; `seedDemo(db)` pose les habilitations et les créneaux. La CLI appelle
+les deux ; `seeded-app.harness.ts` n'appelle que `seed`, parce que les specs de
+l'API ont été écrites contre une base sans état métier préexistant et qu'un
+créneau déjà pris y ferait répondre 409 là où elles attendent 201.
+
+**Les créneaux du seed sont relatifs à `now`**, donc `seedDemo` les supprime et
+les réinsère à chaque passage au lieu de garder la démo d'hier.
+
+**La v1 est supprimée** : `packages/server`, les quatre `packages/bc-*` et
+`packages/test-utils` — 266 fichiers, 15 976 lignes, 548 tests. `effect` et
+`@effect/platform` ne sont plus dans aucun `package.json`. Les scripts racine
+`db:migrate`, `db:seed`, `db:seed:test`, `db:generate` reprennent les noms
+courts que la v1 occupait, et `dev:server` n'existe plus.
+
+L'ordre comptait : la bascule d'abord, la suppression ensuite. C'est ce qui a
+fait tomber le trou du seed — avec la v1 encore là pour servir de comparaison.
+Supprimer d'abord aurait rendu les 103 E2E rouges sans rien à confronter.
 
 ## Repos de référence
 
@@ -444,7 +527,9 @@ Deux repos locaux servent de modèle. Les consulter plutôt que d'inventer.
 
 **Backend — `/Users/maoudin/Desktop/Developer/kairos-crm/monorepo`**
 Un package pnpm par bounded context (`packages/bc-*`), agrégés par
-`packages/server`. Lire `packages/bc-client/src/` en entier : c'est le gabarit.
+`packages/server`. Lire `packages/bc-client/src/` en entier : c'était le gabarit
+de la v1. **Il ne l'est plus** — le back d'Établi est `apps/api`, en NestJS et
+sans Effect. Ce qui suit décrit kairos, pas ce dépôt.
 
 - `domain/` — schemas Effect, ids brandés via `Schema.brand`, `errors.ts` en
   `Data.TaggedError`, constants en objets `as const`

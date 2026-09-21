@@ -6,6 +6,7 @@ import type {
   MachineAvailability,
   SlotReason,
 } from '@etabli/contract'
+import { makeFailure, type Failure, type Result } from '@etabli/shared/http'
 
 export type { AvailabilitySlot, BookingDetail, BookingStatus, CreateBooking, MachineAvailability, SlotReason }
 
@@ -27,14 +28,9 @@ export const BookingFailureCode = {
 } as const
 export type BookingFailureCode = (typeof BookingFailureCode)[keyof typeof BookingFailureCode]
 
-export interface BookingFailure {
-  readonly code: BookingFailureCode
-  readonly message: string
-}
+export type BookingFailure = Failure<BookingFailureCode>
 
-export type BookingResult<A> =
-  | { readonly ok: true; readonly value: A }
-  | { readonly ok: false; readonly error: BookingFailure }
+export type BookingResult<A> = Result<A, BookingFailureCode>
 
 export const FAILURE_MESSAGES: Readonly<Record<BookingFailureCode, string>> = {
   MACHINE_NOT_BOOKABLE: 'Cette machine n’existe pas, ou ne fait pas partie de vos ateliers.',
@@ -54,10 +50,7 @@ export const FAILURE_MESSAGES: Readonly<Record<BookingFailureCode, string>> = {
   UNREACHABLE: 'Les réservations sont momentanément indisponibles.',
 }
 
-export const failure = (code: BookingFailureCode): BookingResult<never> => ({
-  ok: false,
-  error: { code, message: FAILURE_MESSAGES[code] },
-})
+export const failure = makeFailure(FAILURE_MESSAGES)
 
 export const STATUS_LABELS: Readonly<Record<BookingStatus, string>> = {
   CONFIRMED: 'Confirmée',

@@ -1,7 +1,10 @@
 import { buildPath, routes } from '@etabli/contract'
+import { createApiClient, type ApiClient } from '@etabli/shared/http'
 
+import { atelierFailureOf } from '../lib/atelier-failure'
 import type {
   AtelierDetail,
+  AtelierFailureCode,
   AtelierResult,
   AtelierSummary,
   CompleteOnboardingInput,
@@ -9,58 +12,35 @@ import type {
   MachineDetail,
   OnboardingResult,
 } from '../model/atelier'
-import { AtelierFailureCode, failure } from '../model/atelier'
+import { FAILURE_MESSAGES } from '../model/atelier'
 import type { IAtelierPort } from '../ports/atelier.port'
 
-const codeOf = (status: number): AtelierFailureCode => {
-  if (status === 404) return AtelierFailureCode.NOT_FOUND
-  if (status === 400) return AtelierFailureCode.INVALID_FILTER
-  if (status === 401 || status === 403) return AtelierFailureCode.UNAUTHORIZED
-  return AtelierFailureCode.UNREACHABLE
-}
-
 export class AtelierHttpAdapter implements IAtelierPort {
-  constructor(private readonly baseUrl: string) {}
+  private readonly http: ApiClient<AtelierFailureCode>
 
-  private async call<A>(path: string, init?: RequestInit): Promise<AtelierResult<A>> {
-    let response: Response
-    try {
-      response = await fetch(`${this.baseUrl}${path}`, init)
-    } catch {
-      return failure(AtelierFailureCode.UNREACHABLE)
-    }
-
-    if (!response.ok) return failure(codeOf(response.status))
-
-    try {
-      return { ok: true, value: (await response.json()) as A }
-    } catch {
-      return failure(AtelierFailureCode.UNREACHABLE)
-    }
+  constructor(baseUrl: string) {
+    this.http = createApiClient({ baseUrl, messages: FAILURE_MESSAGES, failureOf: atelierFailureOf })
   }
 
   list(filters: DirectoryFilters): Promise<AtelierResult<ReadonlyArray<AtelierSummary>>> {
-    const query = new URLSearchParams()
-    if (filters.city !== undefined) query.set('city', filters.city)
-    if (filters.machineKind !== undefined) query.set('machineKind', filters.machineKind)
-    const suffix = query.size === 0 ? '' : `?${query.toString()}`
-
-    return this.call<ReadonlyArray<AtelierSummary>>(`${routes.ateliers.list}${suffix}`)
+    return this.http.call<ReadonlyArray<AtelierSummary>>(routes.ateliers.list, {
+      query: { city: filters.city, machineKind: filters.machineKind },
+    })
   }
 
   getBySlug(slug: string): Promise<AtelierResult<AtelierDetail>> {
-    return this.call<AtelierDetail>(buildPath(routes.ateliers.getBySlug, { slug }))
+    return this.http.call<AtelierDetail>(buildPath(routes.ateliers.getBySlug, { slug }))
   }
 
   getMachineById(id: string): Promise<AtelierResult<MachineDetail>> {
-    return this.call<MachineDetail>(buildPath(routes.machines.getById, { id }))
+    return this.http.call<MachineDetail>(buildPath(routes.machines.getById, { id }))
   }
 
   completeOnboarding(token: string, input: CompleteOnboardingInput): Promise<AtelierResult<OnboardingResult>> {
-    return this.call<OnboardingResult>(routes.onboarding.complete, {
+    return this.http.call<OnboardingResult>(routes.onboarding.complete, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-      body: JSON.stringify(input),
+      token,
+      body: input,
       cache: 'no-store',
     })
   }

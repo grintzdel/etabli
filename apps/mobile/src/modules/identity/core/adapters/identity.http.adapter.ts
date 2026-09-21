@@ -1,17 +1,29 @@
 import { routes } from '@etabli/contract'
+import { createApiClient, type ApiClient } from '@etabli/shared/http'
 
-import { requestIdentity } from '../lib/identity-http'
-import type { CurrentUser, IdentityResult, LoginInput, Session } from '../model/session'
+import { identityFailureOf } from '../lib/identity-failure'
+import {
+  FAILURE_MESSAGES,
+  type CurrentUser,
+  type IdentityFailureCode,
+  type IdentityResult,
+  type LoginInput,
+  type Session,
+} from '../model/session'
 import type { IIdentityPort } from '../ports/identity.port'
 
 export class IdentityHttpAdapter implements IIdentityPort {
-  constructor(private readonly baseUrl: string) {}
+  private readonly http: ApiClient<IdentityFailureCode>
+
+  constructor(baseUrl: string) {
+    this.http = createApiClient({ baseUrl, messages: FAILURE_MESSAGES, failureOf: identityFailureOf })
+  }
 
   login(input: LoginInput): Promise<IdentityResult<Session>> {
-    return requestIdentity<Session>(this.baseUrl, routes.auth.login, { method: 'POST', body: input })
+    return this.http.call<Session>(routes.auth.login, { method: 'POST', body: input })
   }
 
   me(token: string): Promise<IdentityResult<CurrentUser>> {
-    return requestIdentity<CurrentUser>(this.baseUrl, routes.auth.me, { token })
+    return this.http.call<CurrentUser>(routes.auth.me, { token })
   }
 }
