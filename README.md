@@ -29,6 +29,7 @@ exclusif, la présence est prouvée par NFC.**
 - Page d'accueil, `/fonctionnalites`, `/faq` — prérendues, `sitemap.xml` et `robots.txt`
 - `/ateliers` — annuaire filtrable par ville et par type de machine
 - `/ateliers/[slug]` — fiche d'un atelier et parc publié
+- `/machines/[id]` — fiche d'une machine ; la semaine réservable n'ouvre qu'aux membres de l'atelier
 
 ### Membre
 
@@ -36,7 +37,7 @@ exclusif, la présence est prouvée par NFC.**
 - **Onboarding** (`/bienvenue`) — rejoindre un atelier et déclarer ses pratiques ; sans lui, rien n'est réservable
 - `/tableau-de-bord` — prochain créneau, compteurs, habilitations en attente
 - `/habilitations` — demander l'accès à une machine, suivre la décision
-- `/machines/[id]` — calendrier de la semaine, réservation d'un créneau
+- Sur `/machines/[id]`, le calendrier de la semaine et la réservation d'un créneau
 - `/reservations` et `/reservations/[id]` — liste, détail, annulation
 - `/compte` et `/parametres` — nom affiché, pratiques, mot de passe, thème, atelier par défaut
 
@@ -52,6 +53,12 @@ exclusif, la présence est prouvée par NFC.**
 - `/admin/ateliers` — ouvrir, publier, refermer un atelier ; nommer un fabmanager
 - `/admin/utilisateurs` — rôles plateforme, suspension, filtres
 - `/admin/stats` — tableau réseau, atelier le plus chargé en tête
+
+### Mobile — le parcours membre
+
+Trois onglets et trois écrans de détail : l'annuaire trié par distance, les réservations, le compte ;
+puis la fiche d'un atelier, la semaine d'une machine, et le détail d'un créneau — où le **pointage
+NFC** se fait. Voir [L'application mobile](#lapplication-mobile--nfc-et-position).
 
 ## Comptes de démonstration
 
@@ -90,7 +97,7 @@ pnpm install
 cp .env.example .env          # URL du pooler Neon + JWT_SECRET
 pnpm run db:migrate
 pnpm run db:seed              # comptes et ateliers de démonstration
-pnpm run dev                  # API sur :3001, web sur :3000
+pnpm run dev                  # API :3001, web :3000, et Expo au premier plan
 ```
 
 | Variable | Rôle |
@@ -101,26 +108,24 @@ pnpm run dev                  # API sur :3001, web sur :3000
 | `COOKIE_SECURE` | `true` en production |
 | `NEXT_PUBLIC_SITE_URL` | Base des URLs canoniques, du sitemap et de l'Open Graph |
 
-### Les deux implémentations de l'API
+Seules `DATABASE_URL` et `JWT_SECRET` sont obligatoires côté API ; les autres ont une valeur par
+défaut de développement.
 
-`pnpm run dev` lance l'API Effect (`packages/server`). La v2 NestJS tient les mêmes 38 routes et
-se lance à sa place :
+### L'application mobile
 
-```bash
-pnpm run db:migrate:api
-pnpm run db:seed:api
-pnpm run dev:api        # sur le même port, avec pnpm run dev:web à côté
-```
+`pnpm run dev` lance les trois — Expo reste au premier plan, parce qu'il n'imprime son QR code que
+s'il tient un TTY. Un téléphone sur le wifi ne joint pas `localhost` : copier
+`apps/mobile/.env.example` en `apps/mobile/.env` et y mettre l'adresse IP de la machine
+(`ipconfig getifaddr en0` sur macOS).
 
-Sa conception est dans `docs/superpowers/specs/2026-09-15-etabli-api-nestjs-design.md`. Deux routes
-y changent de nom — `PATCH /me/profile` au lieu de `PATCH /auth/me`, et `POST /certifications/request`
-au lieu de `POST /certifications`. **Le web est câblé sur la v1** : le basculer demande d'ajuster
-ces deux chemins dans `packages/contract`.
+| Variable | Rôle |
+|---|---|
+| `EXPO_PUBLIC_API_URL` | Où le téléphone joint l'API — une IP du réseau local, pas `localhost` |
 
 ### Vérifier
 
 ```bash
-pnpm run check      # build des packages, format, lint, typecheck, 830 tests unitaires
+pnpm run check      # build des packages, format, lint, typecheck, 664 tests unitaires
 pnpm run verify     # check + next build
 ```
 
@@ -141,35 +146,43 @@ pnpm run db:test:down
 
 | Chemin | Rôle |
 |---|---|
-| `packages/contract` | types TypeScript purs et table de routes — aucune dépendance |
-| `packages/shared` | primitives Effect : identifiants brandés, `AuthContext`, `Clock`, migrations |
-| `packages/bc-identity` | comptes, session, préférences, back-office utilisateurs |
-| `packages/bc-atelier` | ateliers, adhésions, machines, onboarding |
-| `packages/bc-certification` | demande, octroi, révocation d'habilitation |
-| `packages/bc-booking` | disponibilités, réservation, check-in, no-show, statistiques |
-| `packages/server` | `HttpApi` Effect, Layers, migrator, serveur Node (`src/main.ts`) |
-| `packages/test-utils` | client SQL pglite pour les tests d'intégration |
+| `packages/contract` | types TypeScript purs, table de routes et `ApiErrorCode` — aucune dépendance |
+| `packages/api-client` | le client HTTP des deux apps : `createApiClient`, `Result`, `errorCodeOf` — aucune dépendance |
+| `packages/ui` | design system partagé web et natif — composants, tokens, thème |
+| `apps/api` | l'API : NestJS, Drizzle, Zod, clean architecture port & adapter |
 | `apps/web` | application Next.js — App Router, Server Components, Server Actions |
-| `apps/api` | seconde implémentation de l'API, en NestJS, Drizzle et Zod (voir ci-dessous) |
-| `scripts/` | `generate-cover-art.py` — les planches de l'annuaire |
+| `apps/mobile` | application Expo / React Native — le NFC et la position |
+| `scripts/` | `dev.sh`, et les deux scripts Python des visuels de l'annuaire |
 
-Le préfixe à quatre chiffres des migrations porte l'ordre global, tous packages confondus : un
-doublon fait échouer le démarrage.
+Les migrations vivent dans `apps/api/src/infrastructure/database/migrations/` et sont numérotées par
+`drizzle-kit`. `0001` est écrite à la main : `drizzle-kit generate --custom` l'a ordonnée après les
+sept tables, parce qu'une contrainte d'exclusion ne se déduit pas du schéma TypeScript.
 
 ## Choix d'architecture
 
-### Un package par bounded context
+### Un module par domaine, quatre couches chacun
 
-Les contextes ne se dépendent pas. Chacun déclare un port pour ce qu'il attend d'un autre —
-`MembershipLookup`, `MemberProfile`, `MemberAteliers`, `MachineDirectory`, `MachineCatalog` — et
-`packages/server/src/layers/` les branche. Ajouter un contexte ne modifie aucun des autres.
+`apps/api` est un NestJS de sept modules — `auth`, `user`, `atelier`, `membership`, `machine`,
+`certification`, `booking` — qui portent les 38 routes de la spec, plus `health`. Chaque module est coupé en
+`domain/` (entités, erreurs, interface de repository), `application/` (un use-case par opération),
+`infrastructure/` (l'implémentation Drizzle) et `presentation/` (contrôleur et DTO). Le domaine ne
+connaît que son interface ; l'injection Nest branche l'implémentation sur un token. Une règle métier
+ne vit jamais dans un contrôleur.
 
-### Effect.ts de bout en bout côté serveur
+### Zod est le seul langage de schéma
 
-Commands et queries retournent un `Effect` dont le canal d'erreur est explicite dans la signature :
-les refus métier sont dans le type, pas dans un `throw`. `HttpApiEndpoint.addError(E, { status })`
-projette chaque `TaggedError` sur son statut HTTP, une seule fois, à l'endroit où la route est
-déclarée. SQL brut via `@effect/sql-pg`, aucun ORM.
+Entrée comme sortie. Les DTO de requête sont validés par `ZodValidationPipe` via `@ZodBody`,
+`@ZodQuery` et `@UuidParam` ; les DTO de réponse sont un schéma plus un mapper, et Swagger est
+alimenté par `z.toJSONSchema()`. `apps/api/src/response-contract.e2e.spec.ts` parse la réponse de
+chaque route contre son schéma, **clés en trop comprises** : une fuite de champ fait rougir la CI.
+
+### Un code d'erreur, trois côtés
+
+`ApiErrorCode` vit dans `packages/contract` : l'API l'émet dans le corps, le web et le mobile le
+traduisent en français. Un renommage casse donc la compilation des deux clients au lieu de les
+laisser retomber en silence sur « service indisponible ». Deux garde-fous
+(`apps/api/src/api-error-code.spec.ts`) interdisent un `code:` écrit en dur hors du contract, et
+une entrée du contract que plus rien n'émet.
 
 ### Le web ne contient aucune logique métier
 
@@ -180,7 +193,7 @@ interdit React et Next dans `core/`, les composants dans `features/`, et tout cy
 
 ### Server Components par défaut
 
-17 fichiers sur 102 portent `'use client'` — les formulaires, le calendrier, et les quatre error
+17 fichiers sur 100 portent `'use client'` — les formulaires, le calendrier, et les deux error
 boundaries que React impose côté client. **Le calendrier est la seule zone interactive du produit, et
 la seule justification du seul Route Handler** :
 `/api/machines/[id]/availability` est le BFF qui détient le cookie `httpOnly`, que React Query
@@ -206,19 +219,25 @@ coquille prérendue.
 | Groupe | Coquille | Rendu |
 |---|---|---|
 | `(marketing)` | `SiteShell` — navigation publique, pied de page | `◐` PPR |
-| `(auth)` | mot-logo seul, aucune session lue | `○` statique |
+| `(auth)` | mot-logo seul, aucune session lue | `○` statique, sauf `/connexion` qui lit `?next=` |
 | `(app)` | `AppShell` — navigation membre selon le rôle | `ƒ` dynamique |
+
+Deux pages d'`(app)` échappent au `ƒ` et restent en `◐` : `/machines/[id]` et `/reservations/[id]`
+gardent une coquille prérendue et ne mettent derrière un `Suspense` que la part qui lit la session.
+C'est ce qui permet à la fiche machine, publique, de rendre un **vrai 404** quand la machine est
+retirée — et non un 200 portant un corps 404.
 
 ### L'autorisation est serveur, jamais un bouton masqué
 
 `proxy.ts` redirige les préfixes privés sans cookie — c'est du confort, pas de la sécurité. La
-vraie barrière est dans les commands et queries : `ForbiddenError` levé sur l'`AuthContext`, et un
-balayage route par route (`packages/server/src/http/tenancy.test.ts`) qui assert **404** sur une
-ressource d'un autre atelier — un 403 avouerait qu'elle existe — et **403** sur `/admin/*`.
+vraie barrière est dans l'API : `JwtAuthGuard` et `RolesGuard` devant les routes, et le cloisonnement
+par atelier vérifié dans chaque use-case. Un balayage route par route
+(`apps/api/src/tenancy.e2e.spec.ts`) assert **404** sur une ressource d'un autre atelier — un 403
+avouerait qu'elle existe — et **403** sur `/admin/*`.
 
 ## Modèle de données
 
-Six migrations, ordre global, PostgreSQL.
+Deux migrations, PostgreSQL.
 
 ```
 users ──────┬── memberships ──── ateliers ──── machines
@@ -230,7 +249,7 @@ users ──────┬── memberships ──── ateliers ────
 
 | Table | Colonnes notables | Contraintes |
 |---|---|---|
-| `users` | `email citext`, `password_hash`, `platform_role`, `practice text[]`, `onboarding_completed_at`, `status` | `email` unique |
+| `users` | `email text`, `password_hash`, `platform_role`, `practice text[]`, `onboarding_completed_at`, `status` | `email` unique — normalisé en minuscules par le schéma Zod, d'où `text` et non `citext` |
 | `ateliers` | `slug`, `city`, `latitude`/`longitude numeric(9,6)`, `status` | `slug` unique, index sur les coordonnées |
 | `memberships` | `user_id`, `atelier_id`, `role`, `status` | unique `(user_id, atelier_id)` |
 | `machines` | `kind`, `requires_certification`, `slot_duration_minutes`, `status`, `nfc_tag_id` | `nfc_tag_id` unique **sur tout le réseau** |
@@ -251,17 +270,25 @@ CONSTRAINT bookings_no_overlap EXCLUDE USING gist (
 `COMPLETED` n'est **jamais écrit** : c'est un prédicat dérivé — pointée, et sa fin passée — projeté
 dans les read models. Aucun ordonnanceur, aucun `GET` qui écrit.
 
-## La suite mobile — NFC et géolocalisation
+## L'application mobile — NFC et position
 
-Le web prépare l'application React Native ; les deux capacités natives sont déjà en base.
+`apps/mobile` n'est pas le web en petit : elle existe pour les deux capacités que le navigateur n'a
+pas. Sept écrans et deux layouts, de la connexion au créneau pointé. Sa conception est dans
+`docs/superpowers/specs/2026-09-17-etabli-mobile-design.md`.
 
-- **NFC** — `machines.nfc_tag_id` est unique sur tout le réseau. Le check-in membre n'accepte qu'un
-  `nfcTagId` : une machine sans tag ne peut pas être pointée. Aujourd'hui le navigateur ne sait pas
-  lire un tag, donc c'est le fabmanager qui pointe à la place du membre depuis `/manage/bookings`.
-  **L'application mobile lira le tag directement** — c'est exactement le trou qu'elle comble.
-- **Géolocalisation** — `ateliers.latitude`/`longitude` portent un index, et l'annuaire calcule déjà
-  une distance quand la requête porte une position (`AtelierCard` l'affiche). Sur mobile, l'annuaire
-  ouvrira sur les ateliers autour de soi plutôt que sur une liste.
+- **NFC** — `machines.nfc_tag_id` est unique sur tout le réseau, et le check-in membre n'accepte
+  qu'un `nfcTagId` : une machine sans tag ne peut pas être pointée. Le navigateur ne lit pas un tag,
+  donc sur le web c'est le fabmanager qui pointe depuis `/manage/bookings` ; **le téléphone lit le
+  tag directement.** Le port a deux implémentations et l'écran ignore laquelle il tient :
+  `nfc-manager` sur appareil, une saisie manuelle du tag partout ailleurs — Expo Go n'embarque pas le
+  module natif, et la démonstration ne doit pas dépendre d'un compte développeur Apple.
+- **Position** — `ateliers.latitude`/`longitude` portent un index, et l'annuaire trie par distance
+  quand la requête porte une position. **La refuser n'est pas une erreur** : sans elle, l'annuaire
+  appelle `GET /ateliers` sans coordonnées, la liste n'est simplement plus triée, et l'écran le dit
+  avec un bouton pour réessayer.
+
+Le token vit dans `expo-secure-store` — le trousseau du système — jamais dans `AsyncStorage`, qui
+écrit en clair.
 
 ## Usage de l'IA
 
@@ -272,8 +299,8 @@ Le web prépare l'application React Native ; les deux capacités natives sont d�
 assistant pendant le live coding, conformément à la règle.
 
 **Tâches confiées** — conception initiale (spec produit et modèle de données, relue puis figée dans
-`docs/superpowers/specs/`), écriture des packages de bounded context, des migrations, des
-composants, des tests. Revue de conformité du repo au sujet. Le pilotage — quoi construire, dans
+`docs/superpowers/specs/`), écriture des modules de l'API, des migrations, des composants, des
+tests. Revue de conformité du repo au sujet. Le pilotage — quoi construire, dans
 quel ordre, avec quels arbitrages — est resté humain.
 
 **Décisions de l'IA corrigées ou refusées** :
@@ -281,14 +308,14 @@ quel ordre, avec quels arbitrages — est resté humain.
 1. **403 partout sur les ressources d'un autre atelier.** La spec générée disait 403. Refusé : un
    403 avoue que la ressource existe. Corrigé en **404 sur une ressource, 403 sur `/admin/*`**, et
    la spec a été réécrite en ce sens. C'est un choix de sécurité, pas de style.
-2. **Une colonne `email_notifications` dans les préférences.** Refusée : rien n'envoie d'e-mail dans
-   la v1, et le sujet condamne explicitement le réglage qui ne modifie rien. Elle reviendra avec le
+2. **Une colonne `email_notifications` dans les préférences.** Refusée : rien n'envoie d'e-mail
+   aujourd'hui, et le sujet condamne explicitement le réglage qui ne modifie rien. Elle reviendra avec le
    premier envoi.
 3. **Le `DependenciesProvider` React repris du repo de référence.** Refusé : les adapters ne tournent
    que côté serveur ici, il n'y a pas de conteneur d'injection à porter dans le navigateur.
 4. **Le TDD strict (E2E rouge d'abord).** Levé après le jalon 1, décision assumée : le coût de
-   maintenir 95 E2E rouges en parallèle de la conception ne se payait pas. Les E2E ont ensuite été
-   sorties de `pnpm verify` — elles tournent à la demande.
+   maintenir une centaine d'E2E rouges en parallèle de la conception ne se payait pas. Les E2E ont
+   ensuite été sorties de `pnpm verify` — elles tournent à la demande.
 
 **Partie que j'explique intégralement** — le parcours de réservation, de `GET /machines/:id/availability`
 au créneau en base : le calcul des créneaux en heure locale de l'atelier, les sept règles métier du
@@ -297,20 +324,22 @@ refus, la contrainte d'exclusion `gist` qui double la règle 2, la traduction du
 
 ## Limites connues
 
-- **Deux implémentations de l'API coexistent.** `packages/server` (Effect) est celle que le web
-  interroge ; `apps/api` (NestJS, Drizzle, Zod) tient les mêmes routes et ses propres 255 tests, mais
-  aucun écran ne s'y branche encore. Deux back-ends à maintenir pour un seul produit : à trancher
-  avant le rendu, et à savoir défendre en soutenance si les deux restent.
 - **Pas de révocation de session.** Changer de mot de passe réémet le jeton de l'auteur du
   changement, mais les jetons des autres appareils restent valides jusqu'à expiration. Dit à
   l'écran, figé par un test.
-- **Le check-in membre n'est pas faisable depuis le web.** Le navigateur ne lit pas le NFC ; le
-  pointage passe par le fabmanager en attendant l'application mobile.
+- **Le check-in membre n'est pas faisable depuis le web.** Le navigateur ne lit pas le NFC ; sur le
+  web, le pointage passe par le fabmanager. C'est l'application mobile qui lit le tag.
 - **Horaires d'ouverture constants** (8h–22h, `Europe/Paris`) pour tous les ateliers. Par atelier en v1.1.
 - **Aucun e-mail.** Pas de confirmation de réservation, pas de relance, pas de réinitialisation de
-  mot de passe.
-- **Les planches de l'annuaire sont générées**, pas photographiées : aucune image n'est sous licence
-  pour ce projet. `scripts/generate-cover-art.py` les redessine à l'identique.
+  mot de passe. C'est aussi pourquoi il n'y a pas de préférence de notification : un réglage qui ne
+  modifie rien n'a pas à exister.
+- **Les écrans mobiles ne sont pas testés.** Monter React Native sous vitest demande un preset et des
+  mocks natifs pour un parcours qui se vérifie à la main ; seuls les modèles et le calcul des
+  créneaux le sont.
+- **Les visuels sont sous licence Pexels** (usage commercial, sans attribution obligatoire ;
+  `apps/web/public/marketing/LICENSES.md` crédite quand même). Un atelier qui ne publie aucune
+  machine n'a pas de type à photographier : sa carte retombe sur une planche dessinée par
+  `scripts/generate-cover-art.py`.
 - **Pas de pagination** sur l'annuaire ni sur les listes d'administration : filtres et plafond
   seulement. Suffisant à l'échelle de la démonstration.
 
@@ -318,15 +347,17 @@ refus, la contrainte d'exclusion `gist` qui double la règle 2, la traduction du
 
 Le monorepo se déploie en deux cibles.
 
-1. **API** — `packages/server` est un serveur Node long-running (`pnpm --filter @etabli/server run build`
-   puis `node dist/src/main.mjs`). Il n'a pas d'adaptateur serverless : viser Railway, Render, Fly ou
-   un conteneur, pas les Functions Vercel. Variables requises : `DATABASE_URL`, `JWT_SECRET`,
-   `COOKIE_SECURE=true`, `COOKIE_DOMAIN`, `PORT`.
+1. **API** — `apps/api` est un serveur Node long-running (`pnpm --filter @etabli/api run build`
+   puis `node apps/api/dist/main.js`). Il n'a pas d'adaptateur serverless : viser Railway, Render,
+   Fly ou un conteneur, pas les Functions Vercel. Variables requises : `DATABASE_URL` et
+   `JWT_SECRET` ; `PORT` vaut 3001 par défaut.
 2. **Web** — `apps/web`, projet Vercel, racine `apps/web`. Variables requises : `API_URL`
    (l'URL publique de l'API), `NEXT_PUBLIC_SITE_URL`, `COOKIE_SECURE=true`.
 
-Le cookie de session est posé par Next sur son propre domaine : si l'API est sur un autre domaine,
-`COOKIE_DOMAIN` doit couvrir les deux, ou l'API doit être servie derrière le même domaine.
+Le cookie de session est posé par Next sur son propre domaine, sans option `domain` : il ne quitte
+jamais le web. C'est le serveur Next qui lit le jeton et le passe à l'API en `Bearer`, donc l'API
+peut vivre sur un autre domaine sans rien partager. `COOKIE_DOMAIN` est encore validée par le schéma
+d'environnement de l'API mais n'est lue nulle part — à retirer.
 
 Les migrations tournent hors du build : `pnpm run db:migrate` avec le `DATABASE_URL` de production,
 puis `pnpm run db:seed` pour les comptes de démonstration.
@@ -335,6 +366,10 @@ Une fois déployé, reporter les deux URLs en tête de ce README.
 
 ## Tests
 
-830 tests unitaires et d'intégration dans `pnpm check`, 95 E2E Playwright à la demande. Les tests
+664 tests unitaires et d'intégration dans `pnpm check`, 103 E2E Playwright à la demande. Les tests
 sont colocalisés ; les E2E portent l'extension `.test.e2e.ts` et vivent à côté de la page couverte.
-Les repositories sont testés sur pglite, les routes HTTP sur un Postgres réel.
+
+`apps/api` en porte 275, sur trois étages : unitaires sur stubs et horloge figée, intégration des
+repositories sur PGlite, bout en bout HTTP via supertest. Pas de Docker — chaque suite monte sa
+propre base en mémoire, donc l'isolation y est structurelle, là où les E2E Playwright la tiennent
+d'un `TRUNCATE` au `globalSetup`.
