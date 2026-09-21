@@ -1,64 +1,47 @@
 import { buildPath, routes } from '@etabli/contract'
+import { createApiClient, type ApiClient } from '@etabli/shared/http'
 
 import type {
   AdminAtelier,
+  AtelierFailureCode,
   AtelierMembership,
   AtelierResult,
   CreateAtelierInput,
   SetAtelierStatusInput,
   SetMembershipRoleInput,
 } from '../model/atelier'
-import { AtelierFailureCode, failure } from '../model/atelier'
+import { FAILURE_MESSAGES } from '../model/atelier'
 import type { IAdminAtelierPort } from '../ports/admin-atelier.port'
 
-const codeOf = (status: number): AtelierFailureCode => {
-  if (status === 400) return AtelierFailureCode.INVALID_FILTER
-  if (status === 401) return AtelierFailureCode.UNAUTHORIZED
-  if (status === 403) return AtelierFailureCode.FORBIDDEN
-  if (status === 404) return AtelierFailureCode.NOT_FOUND
-  if (status === 409) return AtelierFailureCode.SLUG_TAKEN
-  return AtelierFailureCode.UNREACHABLE
+const failureOf = (status: number): AtelierFailureCode => {
+  if (status === 400) return 'INVALID_FILTER'
+  if (status === 401) return 'UNAUTHORIZED'
+  if (status === 403) return 'FORBIDDEN'
+  if (status === 404) return 'NOT_FOUND'
+  if (status === 409) return 'SLUG_TAKEN'
+  return 'UNREACHABLE'
 }
 
 export class AdminAtelierHttpAdapter implements IAdminAtelierPort {
-  constructor(private readonly baseUrl: string) {}
+  private readonly http: ApiClient<AtelierFailureCode>
 
-  private async call<A>(path: string, token: string, init?: RequestInit): Promise<AtelierResult<A>> {
-    let response: Response
-    try {
-      response = await fetch(`${this.baseUrl}${path}`, {
-        ...init,
-        headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-        cache: 'no-store',
-      })
-    } catch {
-      return failure(AtelierFailureCode.UNREACHABLE)
-    }
-
-    if (!response.ok) return failure(codeOf(response.status))
-
-    try {
-      return { ok: true, value: (await response.json()) as A }
-    } catch {
-      return failure(AtelierFailureCode.UNREACHABLE)
-    }
+  constructor(baseUrl: string) {
+    this.http = createApiClient({ baseUrl, messages: FAILURE_MESSAGES, failureOf, cache: 'no-store' })
   }
 
   list(token: string): Promise<AtelierResult<ReadonlyArray<AdminAtelier>>> {
-    return this.call<ReadonlyArray<AdminAtelier>>(routes.admin.ateliers, token)
+    return this.http.call<ReadonlyArray<AdminAtelier>>(routes.admin.ateliers, { token })
   }
 
   create(token: string, input: CreateAtelierInput): Promise<AtelierResult<AdminAtelier>> {
-    return this.call<AdminAtelier>(routes.admin.ateliers, token, {
-      method: 'POST',
-      body: JSON.stringify(input),
-    })
+    return this.http.call<AdminAtelier>(routes.admin.ateliers, { method: 'POST', token, body: input })
   }
 
   setStatus(token: string, id: string, input: SetAtelierStatusInput): Promise<AtelierResult<AdminAtelier>> {
-    return this.call<AdminAtelier>(buildPath(routes.admin.atelier, { id }), token, {
+    return this.http.call<AdminAtelier>(buildPath(routes.admin.atelier, { id }), {
       method: 'PATCH',
-      body: JSON.stringify(input),
+      token,
+      body: input,
     })
   }
 
@@ -68,9 +51,10 @@ export class AdminAtelierHttpAdapter implements IAdminAtelierPort {
     userId: string,
     input: SetMembershipRoleInput
   ): Promise<AtelierResult<AtelierMembership>> {
-    return this.call<AtelierMembership>(buildPath(routes.admin.atelierMember, { atelierId, userId }), token, {
+    return this.http.call<AtelierMembership>(buildPath(routes.admin.atelierMember, { atelierId, userId }), {
       method: 'PATCH',
-      body: JSON.stringify(input),
+      token,
+      body: input,
     })
   }
 }

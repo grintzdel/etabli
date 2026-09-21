@@ -38,11 +38,11 @@ const register = async (): Promise<string> => {
   return session.token
 }
 
-const patch = (body: unknown, token?: string) => send('PATCH', '/auth/me', body, token)
+const patch = (body: unknown, token?: string) => send('PATCH', '/me/profile', body, token)
 
 const read = async (response: Response) => (await response.json()) as Record<string, unknown>
 
-describe('PATCH /auth/me', () => {
+describe('PATCH /me/profile', () => {
   it('renames the member and answers the fresh session view', async () => {
     const token = await register()
 

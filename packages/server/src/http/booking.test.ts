@@ -213,7 +213,7 @@ const checkIn = (id: string, payload: unknown, token?: string) =>
   send('POST', `/bookings/${id}/check-in`, payload, token)
 
 const grantCertification = async (machineId: string, member: string, fabmanager: string): Promise<void> => {
-  const requested = await send('POST', '/certifications', { machineId }, member)
+  const requested = await send('POST', '/certifications/request', { machineId }, member)
   const { id } = (await requested.json()) as { id: string }
   await send('POST', `/manage/certifications/${id}/grant`, undefined, fabmanager)
 }

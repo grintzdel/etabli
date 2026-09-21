@@ -1,4 +1,4 @@
-import type { Result } from '../../../shared/core/http/result'
+import { makeFailure, type Failure, type Result } from '@etabli/shared/http'
 
 export interface GeoPoint {
   readonly latitude: number
@@ -11,19 +11,13 @@ export const LocationFailureCode = {
 } as const
 export type LocationFailureCode = (typeof LocationFailureCode)[keyof typeof LocationFailureCode]
 
-export interface LocationFailure {
-  readonly code: LocationFailureCode
-  readonly message: string
-}
+export type LocationFailure = Failure<LocationFailureCode>
 
-export type LocationResult<A> = Result<A, LocationFailure>
+export type LocationResult<A> = Result<A, LocationFailureCode>
 
 export const FAILURE_MESSAGES: Readonly<Record<LocationFailureCode, string>> = {
   PERMISSION_DENIED: 'Sans votre position, l’annuaire n’est pas trié par distance.',
   UNAVAILABLE: 'Votre position n’a pas pu être lue. L’annuaire n’est pas trié par distance.',
 }
 
-export const failure = (code: LocationFailureCode): LocationResult<never> => ({
-  ok: false,
-  error: { code, message: FAILURE_MESSAGES[code] },
-})
+export const failure = makeFailure(FAILURE_MESSAGES)

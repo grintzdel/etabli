@@ -18,6 +18,7 @@ import type {
   SetMembershipRoleInput,
   UpdateMachineInput,
 } from '@etabli/contract'
+import { makeFailure, type Failure, type Result } from '@etabli/shared/http'
 
 export type {
   AdminAtelier,
@@ -67,14 +68,9 @@ export const AtelierFailureCode = {
 } as const
 export type AtelierFailureCode = (typeof AtelierFailureCode)[keyof typeof AtelierFailureCode]
 
-export interface AtelierFailure {
-  readonly code: AtelierFailureCode
-  readonly message: string
-}
+export type AtelierFailure = Failure<AtelierFailureCode>
 
-export type AtelierResult<A> =
-  | { readonly ok: true; readonly value: A }
-  | { readonly ok: false; readonly error: AtelierFailure }
+export type AtelierResult<A> = Result<A, AtelierFailureCode>
 
 export const FAILURE_MESSAGES: Readonly<Record<AtelierFailureCode, string>> = {
   INVALID_FILTER: 'Ces critères de recherche ne sont pas valides.',
@@ -86,10 +82,7 @@ export const FAILURE_MESSAGES: Readonly<Record<AtelierFailureCode, string>> = {
   UNREACHABLE: "L'annuaire est momentanément indisponible.",
 }
 
-export const failure = (code: AtelierFailureCode): AtelierResult<never> => ({
-  ok: false,
-  error: { code, message: FAILURE_MESSAGES[code] },
-})
+export const failure = makeFailure(FAILURE_MESSAGES)
 
 export interface DirectoryFilters {
   readonly city?: string

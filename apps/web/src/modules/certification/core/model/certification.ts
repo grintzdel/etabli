@@ -4,6 +4,7 @@ import type {
   MyCertification,
   MyCertificationStatus,
 } from '@etabli/contract'
+import { makeFailure, type Failure, type Result } from '@etabli/shared/http'
 
 export type { CertificationRequest, CertificationStatus, MyCertification, MyCertificationStatus }
 
@@ -16,14 +17,9 @@ export const CertificationFailureCode = {
 } as const
 export type CertificationFailureCode = (typeof CertificationFailureCode)[keyof typeof CertificationFailureCode]
 
-export interface CertificationFailure {
-  readonly code: CertificationFailureCode
-  readonly message: string
-}
+export type CertificationFailure = Failure<CertificationFailureCode>
 
-export type CertificationResult<A> =
-  | { readonly ok: true; readonly value: A }
-  | { readonly ok: false; readonly error: CertificationFailure }
+export type CertificationResult<A> = Result<A, CertificationFailureCode>
 
 export const FAILURE_MESSAGES: Readonly<Record<CertificationFailureCode, string>> = {
   NOT_CERTIFIABLE: 'Cette machine ne peut pas recevoir de demande d’habilitation.',
@@ -33,10 +29,7 @@ export const FAILURE_MESSAGES: Readonly<Record<CertificationFailureCode, string>
   UNREACHABLE: 'Les habilitations sont momentanément indisponibles.',
 }
 
-export const failure = (code: CertificationFailureCode): CertificationResult<never> => ({
-  ok: false,
-  error: { code, message: FAILURE_MESSAGES[code] },
-})
+export const failure = makeFailure(FAILURE_MESSAGES)
 
 export const MY_STATUS_LABELS: Readonly<Record<MyCertificationStatus, string>> = {
   NONE: 'Non demandée',

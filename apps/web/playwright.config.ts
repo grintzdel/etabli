@@ -28,9 +28,7 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
     {
-      command: process.env.CI
-        ? 'pnpm --filter @etabli/server run start:test'
-        : 'pnpm --filter @etabli/server run dev:test',
+      command: process.env.CI ? 'pnpm --filter @etabli/api run start:test' : 'pnpm --filter @etabli/api run dev:test',
       url: `http://localhost:${apiPort}/health`,
       // Never reuse: a running `pnpm dev` on this port is wired to Neon, and
       // reusing it would silently run the suite against the development database.

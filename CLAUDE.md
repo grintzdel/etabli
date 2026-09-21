@@ -17,11 +17,16 @@ bout, de l'atelier au créneau réservé ; le fabmanager tient le pointage, le
 no-show, l'annulation, le tag NFC et les statistiques de ses ateliers ;
 l'administrateur plateforme tient les ateliers, les comptes, les rôles et le
 tableau réseau. L'application mobile Expo porte le parcours membre jusqu'au
-pointage NFC. Prochaine étape : le jalon 7, la production.
+pointage NFC.
 
-`pnpm check` est vert : 1 207 tests unitaires, `next build`. Les 95 E2E
-Playwright passent mais **ne tournent plus dans `pnpm verify`, sur décision de
-l'auteur** — `pnpm db:test:up` puis `pnpm test:e2e` pour les lancer. Le
+**Le backend qui tourne est `apps/api` (v2, NestJS).** `pnpm dev`, les seeds et
+les E2E Playwright pointent tous dessus. `packages/server` et les quatre
+`packages/bc-*` sont inertes et attendent d'être supprimés avec Effect.
+
+`pnpm check` est vert : 1 107 tests unitaires, `next build`. Les 103 E2E
+Playwright passent — **contre `apps/api`, depuis la bascule** — mais **ne
+tournent pas dans `pnpm verify`, sur décision de l'auteur** — `pnpm db:test:up`
+puis `pnpm test:e2e` pour les lancer. Le
 conteneur de test tourne sur un `tmpfs` : `pnpm db:test:down` puis `db:test:up`
 suffit à repartir d'une base vierge, il n'y a pas de volume à supprimer. Sans
 cette remise à zéro la base **accumule** d'un run à l'autre, et des tests sans
@@ -385,10 +390,11 @@ parcours tient des deux côtés.
 
 **Le refus se lit dans le corps, pas dans le statut.** La v2 nomme ses erreurs
 `code` (`NFC_TAG_MISMATCH`), la v1 les nommait `_tag` (`NfcTagMismatchError`).
-`errorCodeOf` lit les deux et ne retombe sur le statut que faute de mieux — cinq
-règles métier se partagent le 409, le statut ne suffit donc pas à écrire une
-phrase. Le §8 de la conception ne parlait que de `_tag` : il a été écrit contre
-la v1, et la lettre a été élargie, pas l'intention.
+`errorCodeOf` — désormais dans `@etabli/shared/http` — lit les deux et ne
+retombe sur le statut que faute de mieux : cinq règles métier se partagent le
+409, le statut ne suffit donc pas à écrire une phrase. Le §8 de la conception ne
+parlait que de `_tag` : il a été écrit contre la v1, et la lettre a été élargie,
+pas l'intention.
 
 **Le token vit dans `expo-secure-store`**, le trousseau du système, jamais dans
 `AsyncStorage` qui écrit en clair. Lu une fois au démarrage : présent, on entre
@@ -435,8 +441,76 @@ crash redevient une erreur de type. `unicorn/no-array-sort` est éteint sur
 
 **Les écrans ne sont pas testés.** Monter React Native sous vitest demande un
 preset et des mocks natifs pour un parcours qui se vérifie à la main. Le `core/`
-l'est : 55 tests dans `apps/mobile`, entrés dans les projets de la suite
-racine.
+ne l'est plus non plus depuis le balayage des adapters : restent 11 tests dans
+`apps/mobile`, sur les modèles et sur `slots`.
+
+## Adapters — `@etabli/shared/http`
+
+Le web et le mobile ne parlent plus à `fetch` directement. `@etabli/shared/http`
+est un sous-chemin **sans aucune dépendance** — pas d'Effect, contrairement au
+reste de `shared/`, qui reste un paquet serveur — exporté par `tsdown` et
+consommé par les deux apps.
+
+`createApiClient({ baseUrl, messages, failureOf, cache? })` rend un objet à une
+seule méthode, `call<A>(path, request?)`, qui retourne un `Result<A, C>`. Il
+tient l'URL, la query string (les paramètres `undefined` tombent), `accept`, le
+`content-type` conditionnel, le `Bearer`, et la traduction d'un échec en
+`{ code, message }`. `cache` se règle par client et s'écrase par appel — la
+stratégie de prerender du web en dépend : les GET publics de l'annuaire restent
+cachables, seul l'onboarding force `no-store`.
+
+**Le client ne connaît aucun code métier.** Chaque adapter lui passe son
+`failureOf(status, body)` et sa table de messages ; le vocabulaire d'échec reste
+la propriété du module. `Result<A, C>` est paramétré par le **code**, et chaque
+modèle dérive le sien : `export const failure = makeFailure(FAILURE_MESSAGES)`.
+
+Un réseau qui ne répond pas est un statut `0` : `failureOf(0, null)` retombe sur
+`UNREACHABLE` dans tous les modules. Un 2xx dont le corps n'est pas du JSON est
+traité comme injoignable lui aussi.
+
+**Chaque port a exactement deux adapters** : `<x>.http.adapter.ts` et
+`<x>.in-memory.adapter.ts`. Plus de `*.adapter.test.ts` — les 117 tests
+d'adapters ont été supprimés sur décision de l'auteur, et seul le client
+générique est testé (17 tests dans `packages/shared/src/http/`). Ce qui n'est
+plus couvert, ce sont les tables `BY_CODE` : si l'API renomme une erreur, le
+mapping retombe silencieusement sur `UNREACHABLE` et l'écran affiche
+« momentanément indisponible » au lieu du vrai refus.
+
+Les in-memory adapters n'ont **aucun consommateur** aujourd'hui : les tests qui
+restent portent sur les modèles et sur des composants purs. Ils ne sont pas
+câblés dans `container.ts` ni dans `dependencies.ts` — l'in-memory ne vit pas
+dans le code de prod.
+
+Une table de mapping partagée par plusieurs adapters d'un même module vit dans
+`core/lib/<module>-failure.ts` (identity, booking côté web). Ailleurs, le
+`failureOf` est dans le fichier de l'adapter.
+
+## Bascule v1 → v2 — ce qui est tranché
+
+Le web et les E2E parlent à `apps/api`. `scripts/dev.sh` lance `dev:api`, le
+`globalSetup` de Playwright appelle `db:migrate:test:api` puis `db:seed:test:api`,
+et `playwright.config.ts` boote `@etabli/api`.
+
+**Deux routes ont bougé, dans le contract, donc des deux côtés à la fois.**
+`routes.me.profile` (`/me/profile`) remplace le `PATCH /auth/me` — v1 comme v2 le
+servent désormais là — et `routes.certifications.request` vaut
+`/certifications/request`. `GET /auth/me` n'a pas bougé. La v1 dérivant sa table de
+routes du contract, la constante suffit à déplacer les deux serveurs.
+
+**Le seed v2 n'était pas le portage à l'identique annoncé.** Il lui manquait
+trois comptes (`lea`, `theo`, `manon`), cinq adhésions, et **les deux tables
+entières** : 16 habilitations et 20 réservations. Un E2E le prouvait — celui qui
+demande à Théo de se heurter à une machine qu'il n'est pas habilité à prendre.
+Tout est porté.
+
+**Le seed est en deux temps.** `seed(db)` pose les ateliers, machines, comptes et
+adhésions ; `seedDemo(db)` pose les habilitations et les créneaux. La CLI appelle
+les deux ; `seeded-app.harness.ts` n'appelle que `seed`, parce que les specs de
+l'API ont été écrites contre une base sans état métier préexistant et qu'un
+créneau déjà pris y ferait répondre 409 là où elles attendent 201.
+
+**Les créneaux du seed sont relatifs à `now`**, donc `seedDemo` les supprime et
+les réinsère à chaque passage au lieu de garder la démo d'hier.
 
 ## Repos de référence
 

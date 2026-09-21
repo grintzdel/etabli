@@ -73,7 +73,7 @@ export const identityApiGroup = HttpApiGroup.make('identity')
   )
   .add(HttpApiEndpoint.get('me', routes.auth.me).addSuccess(CurrentUserSchema).middleware(AuthMiddleware))
   .add(
-    HttpApiEndpoint.patch('updateProfile', routes.auth.me)
+    HttpApiEndpoint.patch('updateProfile', routes.me.profile)
       .setPayload(UpdateProfileSchema)
       .addSuccess(CurrentUserSchema)
       .middleware(AuthMiddleware)

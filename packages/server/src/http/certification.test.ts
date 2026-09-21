@@ -87,11 +87,11 @@ const addMachine = async (
   return { id: body.id, fabmanager }
 }
 
-const request = (machineId: string, token: string) => send('POST', '/certifications', { machineId }, token)
+const request = (machineId: string, token: string) => send('POST', '/certifications/request', { machineId }, token)
 const mine = (token: string) => send('GET', '/certifications/mine', undefined, token)
 const queue = (token: string) => send('GET', '/manage/certifications', undefined, token)
 
-describe('POST /certifications', () => {
+describe('POST /certifications/request', () => {
   it('records a pending request on a machine of the atelier the member joined', async () => {
     const machine = await addMachine(FORGE, 'Trotec')
     const member = await join(FORGE, 'MEMBER')

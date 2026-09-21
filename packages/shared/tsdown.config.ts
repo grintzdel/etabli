@@ -3,6 +3,7 @@ import { defineConfig } from 'tsdown'
 export default defineConfig({
   entry: [
     'src/index.ts',
+    'src/http/index.ts',
     'src/schema/index.ts',
     'src/errors/index.ts',
     'src/auth-context/index.ts',

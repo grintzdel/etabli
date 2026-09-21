@@ -1,32 +1,33 @@
 import { routes } from '@etabli/contract'
+import { createApiClient, type ApiClient } from '@etabli/shared/http'
 
-import { requestIdentity } from '../lib/identity-http'
+import { identityFailureOf } from '../lib/identity-failure'
 import type { MemberAtelier, UpdatePreferencesInput, UserPreferences } from '../model/preferences'
-import type { IdentityResult } from '../model/session'
+import type { IdentityFailureCode, IdentityResult } from '../model/session'
+import { FAILURE_MESSAGES } from '../model/session'
 import type { IPreferencesPort } from '../ports/preferences.port'
 
 export class PreferencesHttpAdapter implements IPreferencesPort {
-  constructor(private readonly baseUrl: string) {}
+  private readonly http: ApiClient<IdentityFailureCode>
+
+  constructor(baseUrl: string) {
+    this.http = createApiClient({
+      baseUrl,
+      messages: FAILURE_MESSAGES,
+      failureOf: identityFailureOf,
+      cache: 'no-store',
+    })
+  }
 
   get(token: string): Promise<IdentityResult<UserPreferences>> {
-    return requestIdentity<UserPreferences>(this.baseUrl, routes.me.preferences, {
-      method: 'GET',
-      headers: { authorization: `Bearer ${token}` },
-    })
+    return this.http.call<UserPreferences>(routes.me.preferences, { token })
   }
 
   myAteliers(token: string): Promise<IdentityResult<ReadonlyArray<MemberAtelier>>> {
-    return requestIdentity<ReadonlyArray<MemberAtelier>>(this.baseUrl, routes.me.ateliers, {
-      method: 'GET',
-      headers: { authorization: `Bearer ${token}` },
-    })
+    return this.http.call<ReadonlyArray<MemberAtelier>>(routes.me.ateliers, { token })
   }
 
   update(token: string, patch: UpdatePreferencesInput): Promise<IdentityResult<UserPreferences>> {
-    return requestIdentity<UserPreferences>(this.baseUrl, routes.me.preferences, {
-      method: 'PATCH',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-      body: JSON.stringify(patch),
-    })
+    return this.http.call<UserPreferences>(routes.me.preferences, { method: 'PATCH', token, body: patch })
   }
 }
