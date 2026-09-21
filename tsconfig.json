@@ -8,25 +8,7 @@
       "path": "./packages/contract"
     },
     {
-      "path": "./packages/bc-atelier"
-    },
-    {
-      "path": "./packages/bc-booking"
-    },
-    {
-      "path": "./packages/bc-certification"
-    },
-    {
-      "path": "./packages/bc-identity"
-    },
-    {
       "path": "./packages/shared"
-    },
-    {
-      "path": "./packages/test-utils"
-    },
-    {
-      "path": "./packages/server"
     }
   ]
 }
