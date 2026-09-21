@@ -13,8 +13,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@etabli/api-client": "workspace:*",
     "@etabli/contract": "workspace:*",
-    "@etabli/shared": "workspace:*",
     "@etabli/ui": "workspace:*",
     "@expo-google-fonts/barlow-condensed": "^0.4.1",
     "@expo-google-fonts/inter": "^0.4.1",

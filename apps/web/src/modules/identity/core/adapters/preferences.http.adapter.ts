@@ -1,5 +1,5 @@
+import { createApiClient, type ApiClient } from '@etabli/api-client'
 import { routes } from '@etabli/contract'
-import { createApiClient, type ApiClient } from '@etabli/shared/http'
 
 import { identityFailureOf } from '../lib/identity-failure'
 import type { MemberAtelier, UpdatePreferencesInput, UserPreferences } from '../model/preferences'

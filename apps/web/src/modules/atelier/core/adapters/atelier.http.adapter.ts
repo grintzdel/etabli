@@ -1,5 +1,5 @@
+import { createApiClient, type ApiClient } from '@etabli/api-client'
 import { buildPath, routes } from '@etabli/contract'
-import { createApiClient, type ApiClient } from '@etabli/shared/http'
 
 import { atelierFailureOf } from '../lib/atelier-failure'
 import type {

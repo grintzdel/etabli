@@ -1,3 +1,4 @@
+import { makeFailure, type Failure, type Result } from '@etabli/api-client'
 import type {
   AdminAtelier,
   AtelierDetail,
@@ -18,7 +19,6 @@ import type {
   SetMembershipRoleInput,
   UpdateMachineInput,
 } from '@etabli/contract'
-import { makeFailure, type Failure, type Result } from '@etabli/shared/http'
 
 export type {
   AdminAtelier,

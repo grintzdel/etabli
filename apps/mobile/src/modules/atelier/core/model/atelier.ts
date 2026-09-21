@@ -1,3 +1,4 @@
+import { makeFailure, type Failure, type Result } from '@etabli/api-client'
 import type {
   AtelierDetail,
   AtelierSummary,
@@ -6,7 +7,6 @@ import type {
   MachineStatus,
   PublicMachine,
 } from '@etabli/contract'
-import { makeFailure, type Failure, type Result } from '@etabli/shared/http'
 
 export type { AtelierDetail, AtelierSummary, MachineDetail, MachineKind, MachineStatus, PublicMachine }
 

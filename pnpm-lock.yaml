@@ -275,12 +275,12 @@ importers:
 
   apps/mobile:
     dependencies:
+      '@etabli/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@etabli/contract':
         specifier: workspace:*
         version: link:../../packages/contract
-      '@etabli/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
       '@etabli/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -384,12 +384,12 @@ importers:
 
   apps/web:
     dependencies:
+      '@etabli/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@etabli/contract':
         specifier: workspace:*
         version: link:../../packages/contract
-      '@etabli/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
       '@etabli/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -446,8 +446,11 @@ importers:
         specifier: ^3.2.7
         version: 3.2.7(@types/node@22.20.2)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.32.0)(supports-color@8.1.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.1)
 
-  packages/contract:
+  packages/api-client:
     devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.20.2
       tsdown:
         specifier: ^0.23.0
         version: 0.23.0(tsx@4.23.13)(typescript@5.9.3)
@@ -458,11 +461,8 @@ importers:
         specifier: ^3.2.7
         version: 3.2.7(@types/node@22.20.2)(jiti@2.7.0)(jsdom@30.0.1(@noble/hashes@1.8.0))(lightningcss@1.32.0)(supports-color@8.1.1)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.1)
 
-  packages/shared:
+  packages/contract:
     devDependencies:
-      '@types/node':
-        specifier: ^22.10.2
-        version: 22.20.2
       tsdown:
         specifier: ^0.23.0
         version: 0.23.0(tsx@4.23.13)(typescript@5.9.3)

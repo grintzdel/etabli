@@ -2,8 +2,8 @@ export const SESSION_COOKIE = 'etabli_session'
 
 export const PASSWORD_MIN_LENGTH = 8
 
+import { makeFailure, type Failure, type Result } from '@etabli/api-client'
 import type { CurrentUser, LoginInput, RegisterInput, Session } from '@etabli/contract'
-import { makeFailure, type Failure, type Result } from '@etabli/shared/http'
 
 export type { CurrentUser, LoginInput, RegisterInput, Session }
 
