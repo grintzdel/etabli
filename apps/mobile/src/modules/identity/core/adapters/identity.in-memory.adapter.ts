@@ -1,12 +1,6 @@
-import type { CurrentUser, IdentityResult, LoginInput, Session } from '../model/session'
+import type { Account, CurrentUser, IdentityResult, LoginInput, Session } from '../model/session'
 import { failure } from '../model/session'
 import type { IIdentityPort } from '../ports/identity.port'
-
-interface Account {
-  readonly password: string
-  readonly user: CurrentUser
-  readonly suspended?: boolean
-}
 
 export class IdentityInMemoryAdapter implements IIdentityPort {
   private readonly accounts = new Map<string, Account>()

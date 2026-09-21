@@ -1,12 +1,7 @@
 import type { ChangePasswordInput, UpdateProfileInput } from '../model/profile'
-import type { CurrentUser, IdentityResult, LoginInput, RegisterInput, Session } from '../model/session'
+import type { Account, CurrentUser, IdentityResult, LoginInput, RegisterInput, Session } from '../model/session'
 import { failure, IdentityFailureCode } from '../model/session'
 import type { IIdentityPort } from '../ports/identity.port'
-
-interface Account {
-  password: string
-  user: CurrentUser
-}
 
 export class IdentityInMemoryAdapter implements IIdentityPort {
   private readonly accounts = new Map<string, Account>()

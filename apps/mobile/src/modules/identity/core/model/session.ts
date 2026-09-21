@@ -16,6 +16,12 @@ export type IdentityFailure = Failure<IdentityFailureCode>
 
 export type IdentityResult<A> = Result<A, IdentityFailureCode>
 
+export interface Account {
+  readonly password: string
+  readonly user: CurrentUser
+  readonly suspended?: boolean
+}
+
 export const FAILURE_MESSAGES: Readonly<Record<IdentityFailureCode, string>> = {
   INVALID_INPUT: 'Vérifiez les informations saisies.',
   INVALID_CREDENTIALS: 'Adresse e-mail ou mot de passe incorrect.',
