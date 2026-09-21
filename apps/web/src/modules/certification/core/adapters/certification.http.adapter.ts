@@ -1,6 +1,7 @@
 import { buildPath, routes } from '@etabli/contract'
-import { createApiClient, errorCodeOf, type ApiClient } from '@etabli/shared/http'
+import { createApiClient, type ApiClient } from '@etabli/shared/http'
 
+import { certificationFailureOf } from '../lib/certification-failure'
 import type {
   CertificationFailureCode,
   CertificationRequest,
@@ -10,22 +11,16 @@ import type {
 import { FAILURE_MESSAGES } from '../model/certification'
 import type { ICertificationPort } from '../ports/certification.port'
 
-const UNKNOWN = new Set(['CertificationUnknownError', 'CERTIFICATION_UNKNOWN'])
-
-const failureOf = (status: number, body: unknown): CertificationFailureCode => {
-  const code = errorCodeOf(body)
-  if (code !== undefined && UNKNOWN.has(code)) return 'CERTIFICATION_UNKNOWN'
-  if (status === 401) return 'UNAUTHORIZED'
-  if (status === 404) return 'NOT_CERTIFIABLE'
-  if (status === 409) return 'ALREADY_REQUESTED'
-  return 'UNREACHABLE'
-}
-
 export class CertificationHttpAdapter implements ICertificationPort {
   private readonly http: ApiClient<CertificationFailureCode>
 
   constructor(baseUrl: string) {
-    this.http = createApiClient({ baseUrl, messages: FAILURE_MESSAGES, failureOf, cache: 'no-store' })
+    this.http = createApiClient({
+      baseUrl,
+      messages: FAILURE_MESSAGES,
+      failureOf: certificationFailureOf,
+      cache: 'no-store',
+    })
   }
 
   private async send(path: string, token: string, body?: unknown): Promise<CertificationResult<void>> {

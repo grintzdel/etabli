@@ -3,16 +3,6 @@ import type { IdentityResult } from '../model/session'
 import { failure, IdentityFailureCode } from '../model/session'
 import type { IAdminUserPort } from '../ports/admin-user.port'
 
-const matches = (user: AdminUser, query: AdminUsersQuery): boolean => {
-  const needle = query.search?.trim().toLowerCase()
-  if (needle !== undefined && needle.length > 0) {
-    const haystack = `${user.email} ${user.displayName}`.toLowerCase()
-    if (!haystack.includes(needle)) return false
-  }
-  if (query.platformRole !== undefined && user.platformRole !== query.platformRole) return false
-  return query.status === undefined || user.status === query.status
-}
-
 export class AdminUserInMemoryAdapter implements IAdminUserPort {
   private readonly users = new Map<string, AdminUser>()
 
@@ -25,7 +15,17 @@ export class AdminUserInMemoryAdapter implements IAdminUserPort {
 
   async list(token: string, query: AdminUsersQuery): Promise<IdentityResult<ReadonlyArray<AdminUser>>> {
     if (!this.admins.has(token)) return failure(IdentityFailureCode.FORBIDDEN)
-    return { ok: true, value: [...this.users.values()].filter((user) => matches(user, query)) }
+    return { ok: true, value: [...this.users.values()].filter((user) => this.matches(user, query)) }
+  }
+
+  private matches(user: AdminUser, query: AdminUsersQuery): boolean {
+    const needle = query.search?.trim().toLowerCase()
+    if (needle !== undefined && needle.length > 0) {
+      const haystack = `${user.email} ${user.displayName}`.toLowerCase()
+      if (!haystack.includes(needle)) return false
+    }
+    if (query.platformRole !== undefined && user.platformRole !== query.platformRole) return false
+    return query.status === undefined || user.status === query.status
   }
 
   async update(token: string, id: string, patch: UpdateAdminUser): Promise<IdentityResult<AdminUser>> {

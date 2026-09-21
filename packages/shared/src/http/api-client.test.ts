@@ -154,17 +154,10 @@ describe('errorCodeOf', () => {
     expect(errorCodeOf({ code: 'NFC_TAG_MISMATCH' })).toBe('NFC_TAG_MISMATCH')
   })
 
-  it('falls back on the v1 tag', () => {
-    expect(errorCodeOf({ _tag: 'NfcTagMismatchError' })).toBe('NfcTagMismatchError')
-  })
-
-  it('prefers the code when a body carries both', () => {
-    expect(errorCodeOf({ code: 'UNAUTHORIZED', _tag: 'UnauthorizedError' })).toBe('UNAUTHORIZED')
-  })
-
   it('reads nothing out of a body that names no error', () => {
     expect(errorCodeOf(null)).toBeUndefined()
     expect(errorCodeOf('nope')).toBeUndefined()
     expect(errorCodeOf({ message: 'nope' })).toBeUndefined()
+    expect(errorCodeOf({ _tag: 'NfcTagMismatchError' })).toBeUndefined()
   })
 })

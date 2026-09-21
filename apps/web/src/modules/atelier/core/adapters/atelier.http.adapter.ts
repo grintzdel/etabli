@@ -1,6 +1,7 @@
 import { buildPath, routes } from '@etabli/contract'
 import { createApiClient, type ApiClient } from '@etabli/shared/http'
 
+import { atelierFailureOf } from '../lib/atelier-failure'
 import type {
   AtelierDetail,
   AtelierFailureCode,
@@ -14,18 +15,11 @@ import type {
 import { FAILURE_MESSAGES } from '../model/atelier'
 import type { IAtelierPort } from '../ports/atelier.port'
 
-const failureOf = (status: number): AtelierFailureCode => {
-  if (status === 404) return 'NOT_FOUND'
-  if (status === 400) return 'INVALID_FILTER'
-  if (status === 401 || status === 403) return 'UNAUTHORIZED'
-  return 'UNREACHABLE'
-}
-
 export class AtelierHttpAdapter implements IAtelierPort {
   private readonly http: ApiClient<AtelierFailureCode>
 
   constructor(baseUrl: string) {
-    this.http = createApiClient({ baseUrl, messages: FAILURE_MESSAGES, failureOf })
+    this.http = createApiClient({ baseUrl, messages: FAILURE_MESSAGES, failureOf: atelierFailureOf })
   }
 
   list(filters: DirectoryFilters): Promise<AtelierResult<ReadonlyArray<AtelierSummary>>> {

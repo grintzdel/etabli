@@ -3,14 +3,6 @@ import { errorCodeOf } from '@etabli/shared/http'
 import { IdentityFailureCode } from '../model/session'
 
 const BY_CODE: Readonly<Record<string, IdentityFailureCode>> = {
-  EmailAlreadyTakenError: IdentityFailureCode.EMAIL_TAKEN,
-  InvalidCredentialsError: IdentityFailureCode.INVALID_CREDENTIALS,
-  AccountSuspendedError: IdentityFailureCode.ACCOUNT_SUSPENDED,
-  UnauthorizedError: IdentityFailureCode.UNAUTHORIZED,
-  PreferredAtelierNotJoinedError: IdentityFailureCode.PREFERRED_ATELIER_NOT_JOINED,
-  ForbiddenError: IdentityFailureCode.FORBIDDEN,
-  UserUnknownError: IdentityFailureCode.USER_UNKNOWN,
-  AdminSelfLockoutError: IdentityFailureCode.SELF_LOCKOUT,
   EMAIL_ALREADY_TAKEN: IdentityFailureCode.EMAIL_TAKEN,
   INVALID_CREDENTIALS: IdentityFailureCode.INVALID_CREDENTIALS,
   ACCOUNT_SUSPENDED: IdentityFailureCode.ACCOUNT_SUSPENDED,

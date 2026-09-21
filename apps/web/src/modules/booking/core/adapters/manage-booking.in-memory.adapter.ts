@@ -5,9 +5,6 @@ import type { AtelierStats, AtelierStatsQuery, NetworkStats } from '../model/man
 import { DEFAULT_STATS_PERIOD } from '../model/manage-stats'
 import type { IManageBookingPort } from '../ports/manage-booking.port'
 
-const onDate = (booking: AtelierBooking, date: string | undefined): boolean =>
-  date === undefined || booking.startAt.slice(0, 10) === date
-
 export class ManageBookingInMemoryAdapter implements IManageBookingPort {
   private readonly bookings = new Map<string, AtelierBooking>()
 
@@ -48,10 +45,14 @@ export class ManageBookingInMemoryAdapter implements IManageBookingPort {
       value: [...this.bookings.values()].filter(
         (booking) =>
           owned.includes(booking.atelierId) &&
-          onDate(booking, query.date) &&
+          this.onDate(booking, query.date) &&
           (query.status === undefined || booking.status === query.status)
       ),
     }
+  }
+
+  private onDate(booking: AtelierBooking, date: string | undefined): boolean {
+    return date === undefined || booking.startAt.slice(0, 10) === date
   }
 
   async checkIn(token: string, id: string): Promise<BookingResult<AtelierBooking>> {

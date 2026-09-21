@@ -3,18 +3,6 @@ import { errorCodeOf } from '@etabli/shared/http'
 import { BookingFailureCode } from '../model/booking'
 
 const BY_CODE: Readonly<Record<string, BookingFailureCode>> = {
-  MachineNotBookableError: BookingFailureCode.MACHINE_NOT_BOOKABLE,
-  MachineUnavailableError: BookingFailureCode.MACHINE_UNAVAILABLE,
-  MissingCertificationError: BookingFailureCode.MISSING_CERTIFICATION,
-  SlotInThePastError: BookingFailureCode.SLOT_IN_THE_PAST,
-  BookingOverlapError: BookingFailureCode.SLOT_TAKEN,
-  BookingUnknownError: BookingFailureCode.BOOKING_UNKNOWN,
-  BookingNotCancellableError: BookingFailureCode.NOT_CANCELLABLE,
-  BookingNotCheckInableError: BookingFailureCode.NOT_CHECK_INABLE,
-  CheckInWindowClosedError: BookingFailureCode.CHECK_IN_WINDOW_CLOSED,
-  BookingNotMarkableAsNoShowError: BookingFailureCode.NOT_MARKABLE_AS_NO_SHOW,
-  NfcTagMismatchError: BookingFailureCode.NFC_TAG_MISMATCH,
-  ForbiddenError: BookingFailureCode.FORBIDDEN,
   MACHINE_NOT_BOOKABLE: BookingFailureCode.MACHINE_NOT_BOOKABLE,
   MACHINE_UNAVAILABLE: BookingFailureCode.MACHINE_UNAVAILABLE,
   MISSING_CERTIFICATION: BookingFailureCode.MISSING_CERTIFICATION,

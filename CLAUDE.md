@@ -327,7 +327,7 @@ création comme à la modification, pour ne pas rendre un 500 sur un doublon.
 Reposer sur une machine le tag qu'elle porte déjà passe. Aucun écran ne s'en
 sert encore : le formulaire de `/manage/machines` ne crée que.
 
-Le `BookingHttpAdapter` lit le `_tag` du corps d'erreur, pas seulement le
+Le `BookingHttpAdapter` lit le `code` du corps d'erreur, pas seulement le
 status : cinq refus se partagent le 409, et le §11 demande que chaque règle
 porte son propre message. Le status ne sert plus que de repli.
 
@@ -378,12 +378,13 @@ Elle parle à **`apps/api`**. `pnpm build:packages`, puis `pnpm dev:api` et
 ### Ce qui est tranché
 
 **Le refus se lit dans le corps, pas dans le statut.** L'API nomme ses erreurs
-`code` (`NFC_TAG_MISMATCH`) ; la v1 les nommait `_tag` (`NfcTagMismatchError`).
-`errorCodeOf` — désormais dans `@etabli/shared/http` — lit **les deux** et ne
-retombe sur le statut que faute de mieux : cinq règles métier se partagent le
-409, le statut ne suffit donc pas à écrire une phrase. La branche `_tag` ne sert
-plus depuis la suppression de la v1, mais elle ne coûte rien et documente la
-forme que les captures d'écran de la spec montrent encore.
+`code` (`NFC_TAG_MISMATCH`). `errorCodeOf` — désormais dans
+`@etabli/shared/http` — le lit et ne retombe sur le statut que faute de mieux :
+cinq règles métier se partagent le 409, le statut ne suffit donc pas à écrire
+une phrase. La v1 nommait ses erreurs `_tag` (`NfcTagMismatchError`) ; cette
+branche et les clés `*Error` des tables `BY_CODE` sont **supprimées** — plus
+aucun serveur n'émet cette forme, et les captures d'écran de la spec mobile la
+montrent encore à tort.
 
 **Le token vit dans `expo-secure-store`**, le trousseau du système, jamais dans
 `AsyncStorage` qui écrit en clair. Lu une fois au démarrage : présent, on entre
@@ -472,9 +473,16 @@ restent portent sur les modèles et sur des composants purs. Ils ne sont pas
 câblés dans `container.ts` ni dans `dependencies.ts` — l'in-memory ne vit pas
 dans le code de prod.
 
-Une table de mapping partagée par plusieurs adapters d'un même module vit dans
-`core/lib/<module>-failure.ts` (identity, booking côté web). Ailleurs, le
-`failureOf` est dans le fichier de l'adapter.
+**Un fichier d'adapter ne contient que sa classe d'adapter.** Le `failureOf` et
+sa table `BY_CODE` vivent dans `core/lib/<module>-failure.ts`, partagés ou non —
+quand un module en a plusieurs, le fichier exporte plusieurs fonctions
+(`atelierFailureOf`, `adminAtelierFailureOf`, `manageMachineFailureOf`). Ce qui
+est du calcul pur part aussi en `core/lib/` (`distance.ts` pour le haversine de
+l'annuaire mobile, `nfc-manager-module.ts` pour le `require` sous `try`). Ce qui
+ne sert qu'à une seule classe et n'a pas de sens hors d'elle devient un membre
+privé — `onDate`, `matches`, la clé du trousseau. Seule exception restante :
+l'`interface Account` des deux in-memory adapters d'identity, qui est le type de
+leur argument de constructeur et n'émet aucun code.
 
 ## Bascule v1 → v2 — ce qui est tranché
 
