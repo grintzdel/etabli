@@ -512,9 +512,11 @@ quand un module en a plusieurs, le fichier exporte plusieurs fonctions
 est du calcul pur part aussi en `core/lib/` (`distance.ts` pour le haversine de
 l'annuaire mobile, `nfc-manager-module.ts` pour le `require` sous `try`). Ce qui
 ne sert qu'à une seule classe et n'a pas de sens hors d'elle devient un membre
-privé — `onDate`, `matches`, la clé du trousseau. Seule exception restante :
-l'`interface Account` des deux in-memory adapters d'identity, qui est le type de
-leur argument de constructeur et n'émet aucun code.
+privé — `onDate`, `matches`, la clé du trousseau. La règle n'a plus d'exception :
+l'`interface Account` des deux in-memory adapters d'identity est descendue dans
+`core/model/session.ts`, où vivent déjà `CurrentUser` et `LoginInput` — qui porte
+lui aussi un mot de passe. `core/lib/` ne prend que du calcul, or un type n'en
+est pas.
 
 ## Bascule v1 → v2 — ce qui est tranché
 
