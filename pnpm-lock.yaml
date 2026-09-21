@@ -193,6 +193,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@etabli/contract':
+        specifier: workspace:*
+        version: link:../../packages/contract
       '@nestjs/common':
         specifier: ^12.0.3
         version: 12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@8.1.1)
