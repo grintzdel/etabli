@@ -128,13 +128,14 @@ Les E2E Playwright tournent à part, contre le Postgres de test :
 
 ```bash
 pnpm run db:test:up     # postgres:18-alpine sur :5433, tmpfs
-pnpm run test:e2e       # 95 scénarios
+pnpm run test:e2e       # 103 scénarios
 pnpm run db:test:down
 ```
 
-> Le conteneur de test tourne sur un `tmpfs` : un `db:test:down` puis `db:test:up` repart d'une base
-> vierge. **Sans cette remise à zéro la base accumule d'un run à l'autre** et des tests sans rapport
-> tombent sur des créneaux épuisés. Défaut d'isolation connu, voir [Limites](#limites-connues).
+> Le `globalSetup` de Playwright enchaîne `db:migrate:test`, `db:reset:test` et `db:seed:test` :
+> chaque campagne repart du même état, sans `db:test:down` à penser entre deux runs. La liste des
+> tables vidées est dérivée du schéma Drizzle, et `db:reset:test` refuse toute base dont l'hôte
+> n'est pas local.
 
 ## Organisation
 
@@ -300,8 +301,6 @@ refus, la contrainte d'exclusion `gist` qui double la règle 2, la traduction du
   interroge ; `apps/api` (NestJS, Drizzle, Zod) tient les mêmes routes et ses propres 255 tests, mais
   aucun écran ne s'y branche encore. Deux back-ends à maintenir pour un seul produit : à trancher
   avant le rendu, et à savoir défendre en soutenance si les deux restent.
-- **Isolation des E2E.** Le Postgres de test accumule d'un run à l'autre ; il faut `db:test:down`
-  puis `db:test:up` entre deux campagnes. Non corrigé.
 - **Pas de révocation de session.** Changer de mot de passe réémet le jeton de l'auteur du
   changement, mais les jetons des autres appareils restent valides jusqu'à expiration. Dit à
   l'écran, figé par un test.
