@@ -1,3 +1,4 @@
+import { ApiErrorCode } from '@etabli/contract'
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common'
 
 import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
@@ -17,7 +18,8 @@ export class UpdateProfileUsecase {
 
   async execute(user: AuthUser, body: UpdateProfileBody): Promise<CurrentUser> {
     const updated = await this.userRepository.updateProfile(user.id, body, this.clock.now())
-    if (updated === null) throw new UnauthorizedException({ code: 'UNAUTHORIZED', message: 'Session expirée' })
+    if (updated === null)
+      throw new UnauthorizedException({ code: ApiErrorCode.UNAUTHORIZED, message: 'Session expirée' })
 
     return toCurrentUser(updated, user.memberships)
   }

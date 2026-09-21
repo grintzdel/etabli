@@ -1,3 +1,4 @@
+import { ApiErrorCode } from '@etabli/contract'
 import { errorCodeOf } from '@etabli/shared/http'
 
 import type { AtelierFailureCode } from '../model/atelier'
@@ -19,7 +20,7 @@ export const adminAtelierFailureOf = (status: number): AtelierFailureCode => {
 }
 
 export const manageMachineFailureOf = (status: number, body: unknown): AtelierFailureCode => {
-  if (errorCodeOf(body) === 'MACHINE_NFC_TAG_TAKEN') return 'NFC_TAG_TAKEN'
+  if (errorCodeOf(body) === ApiErrorCode.MACHINE_NFC_TAG_TAKEN) return 'NFC_TAG_TAKEN'
   if (status === 400) return 'INVALID_FILTER'
   if (status === 401) return 'UNAUTHORIZED'
   if (status === 403) return 'FORBIDDEN'

@@ -1,3 +1,4 @@
+import { ApiErrorCode } from '@etabli/contract'
 import { type CanActivate, type ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
@@ -18,7 +19,7 @@ export class RolesGuard implements CanActivate {
 
     const { user } = context.switchToHttp().getRequest<{ user?: AuthUser }>()
     if (user === undefined || !required.includes(user.platformRole)) {
-      throw new ForbiddenException({ code: 'FORBIDDEN', message: 'Ce geste demande un autre rôle' })
+      throw new ForbiddenException({ code: ApiErrorCode.FORBIDDEN, message: 'Ce geste demande un autre rôle' })
     }
 
     return true

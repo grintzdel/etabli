@@ -24,7 +24,7 @@ Playwright pointent tous dessus. `packages/server`, les quatre `packages/bc-*`
 et `packages/test-utils` ont été supprimés avec Effect : il n'y a plus qu'une
 implémentation du back, et plus une ligne d'Effect dans le dépôt.
 
-`pnpm check` est vert : 559 tests unitaires, `next build`. Les 103 E2E
+`pnpm check` est vert : 659 tests unitaires, `next build`. Les 103 E2E
 Playwright passent — **contre `apps/api`, depuis la bascule** — mais **ne
 tournent pas dans `pnpm verify`, sur décision de l'auteur** — `pnpm db:test:up`
 puis `pnpm test:e2e` pour les lancer. Le
@@ -71,7 +71,7 @@ contexts. Sept modules — `auth`, `user`, `atelier`,
 `membership`, `machine`, `certification`, `booking` — plus `health`, pour les
 38 routes du §4 de la spec.
 
-`pnpm --filter @etabli/api test` : 268 tests, trois étages (unitaires sur stubs
+`pnpm --filter @etabli/api test` : 270 tests, trois étages (unitaires sur stubs
 et `FixedClock`, intégration des repositories sur PGlite, bout en bout HTTP via
 supertest). Pas de Docker : chaque suite monte sa propre base en mémoire, ce qui
 supprime structurellement le défaut d'isolation que gardent les E2E Playwright.
@@ -463,10 +463,31 @@ traité comme injoignable lui aussi.
 **Chaque port a exactement deux adapters** : `<x>.http.adapter.ts` et
 `<x>.in-memory.adapter.ts`. Plus de `*.adapter.test.ts` — les 117 tests
 d'adapters ont été supprimés sur décision de l'auteur, et seul le client
-générique est testé (17 tests dans `packages/shared/src/http/`). Ce qui n'est
-plus couvert, ce sont les tables `BY_CODE` : si l'API renomme une erreur, le
-mapping retombe silencieusement sur `UNREACHABLE` et l'écran affiche
-« momentanément indisponible » au lieu du vrai refus.
+générique est testé (17 tests dans `packages/shared/src/http/`). Les tables
+`BY_CODE`, elles, sont couvertes — cf. « Codes d'erreur » ci-dessous.
+
+### Codes d'erreur — ce qui est tranché
+
+**`ApiErrorCode` vit dans `@etabli/contract`**, et les trois côtés le lisent :
+l'API l'émet, le web et le mobile le traduisent. Un code n'est plus une chaîne
+répétée en trois exemplaires sans lien, donc **un renommage côté API casse la
+compilation des deux clients** au lieu de les laisser retomber en silence sur
+`UNREACHABLE`. C'est ce que `apps/api` gagne en dépendant du contract.
+
+Deux garde-fous dans `apps/api/src/api-error-code.spec.ts` : aucun fichier de
+`src/` ne nomme un `code:` en dur hors du contract — sinon une erreur neuve
+échappe aux clients ; et chaque membre d'`ApiErrorCode` est bien émis quelque
+part — sinon une entrée morte survit à la suppression de son erreur.
+
+Les tables `BY_CODE` sont typées `Partial<Record<ApiErrorCode, …>>` : la clé est
+vérifiée, la valeur reste le vocabulaire du module. Chacune a son test colocalisé
+(`<module>-failure.test.ts`) qui fige la traduction, la précédence du code sur le
+statut, l'échelle de repli par statut, et le `0` du réseau injoignable.
+
+**Reste ouvert :** un code *ajouté* au contract n'oblige aucun client à le
+traiter — le `Partial` l'autorise, et l'écran retombe sur le statut. C'est le
+comportement voulu la plupart du temps ; exiger l'exhaustivité coûterait
+210 lignes d'`undefined` pour des codes qui ne concernent pas le module.
 
 Les in-memory adapters n'ont **aucun consommateur** aujourd'hui : les tests qui
 restent portent sur les modèles et sur des composants purs. Ils ne sont pas

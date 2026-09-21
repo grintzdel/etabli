@@ -1,25 +1,26 @@
+import { ApiErrorCode } from '@etabli/contract'
 import { errorCodeOf } from '@etabli/shared/http'
 
 import type { BookingFailureCode } from '../model/booking'
 
-const BY_CODE: Readonly<Record<string, BookingFailureCode>> = {
-  MACHINE_NOT_BOOKABLE: 'MACHINE_NOT_BOOKABLE',
-  MACHINE_UNAVAILABLE: 'MACHINE_UNAVAILABLE',
-  MISSING_CERTIFICATION: 'MISSING_CERTIFICATION',
-  SLOT_IN_THE_PAST: 'SLOT_IN_THE_PAST',
-  BOOKING_OVERLAP: 'SLOT_TAKEN',
-  BOOKING_UNKNOWN: 'BOOKING_UNKNOWN',
-  BOOKING_NOT_CANCELLABLE: 'NOT_CANCELLABLE',
-  BOOKING_NOT_CHECK_INABLE: 'NOT_CHECK_INABLE',
-  CHECK_IN_WINDOW_CLOSED: 'CHECK_IN_WINDOW_CLOSED',
-  NFC_TAG_MISMATCH: 'NFC_TAG_MISMATCH',
-  VALIDATION_FAILED: 'INVALID_INPUT',
-  UNAUTHORIZED: 'UNAUTHORIZED',
+const BY_CODE: Readonly<Partial<Record<ApiErrorCode, BookingFailureCode>>> = {
+  [ApiErrorCode.MACHINE_NOT_BOOKABLE]: 'MACHINE_NOT_BOOKABLE',
+  [ApiErrorCode.MACHINE_UNAVAILABLE]: 'MACHINE_UNAVAILABLE',
+  [ApiErrorCode.MISSING_CERTIFICATION]: 'MISSING_CERTIFICATION',
+  [ApiErrorCode.SLOT_IN_THE_PAST]: 'SLOT_IN_THE_PAST',
+  [ApiErrorCode.BOOKING_OVERLAP]: 'SLOT_TAKEN',
+  [ApiErrorCode.BOOKING_UNKNOWN]: 'BOOKING_UNKNOWN',
+  [ApiErrorCode.BOOKING_NOT_CANCELLABLE]: 'NOT_CANCELLABLE',
+  [ApiErrorCode.BOOKING_NOT_CHECK_INABLE]: 'NOT_CHECK_INABLE',
+  [ApiErrorCode.CHECK_IN_WINDOW_CLOSED]: 'CHECK_IN_WINDOW_CLOSED',
+  [ApiErrorCode.NFC_TAG_MISMATCH]: 'NFC_TAG_MISMATCH',
+  [ApiErrorCode.VALIDATION_FAILED]: 'INVALID_INPUT',
+  [ApiErrorCode.UNAUTHORIZED]: 'UNAUTHORIZED',
 }
 
 export const bookingFailureOf = (status: number, body: unknown): BookingFailureCode => {
   const code = errorCodeOf(body)
-  const mapped = code === undefined ? undefined : BY_CODE[code]
+  const mapped = code === undefined ? undefined : BY_CODE[code as ApiErrorCode]
   if (mapped !== undefined) return mapped
   if (status === 400) return 'INVALID_INPUT'
   if (status === 401) return 'UNAUTHORIZED'

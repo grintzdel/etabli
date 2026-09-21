@@ -1,3 +1,4 @@
+import { ApiErrorCode } from '@etabli/contract'
 import { BadRequestException, type PipeTransform } from '@nestjs/common'
 import type { ZodType } from 'zod'
 
@@ -9,7 +10,7 @@ export class ZodValidationPipe<A> implements PipeTransform<unknown, A> {
     if (result.success) return result.data
 
     throw new BadRequestException({
-      code: 'VALIDATION_FAILED',
+      code: ApiErrorCode.VALIDATION_FAILED,
       message: 'Requête invalide',
       errors: result.error.flatten().fieldErrors,
     })
