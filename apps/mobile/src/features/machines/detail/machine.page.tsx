@@ -7,6 +7,8 @@ import { MACHINE_KIND_LABELS, MACHINE_STATUS_LABELS, MACHINE_STATUS_TONES } from
 import { useMachine } from '@/modules/atelier/ui/hooks/use-machine'
 import { SlotGrid } from '@/modules/booking/ui/components/SlotGrid'
 import { useMachineWeek } from '@/modules/booking/ui/hooks/use-machine-week'
+import { MY_STATUS_LABELS, MY_STATUS_TONES } from '@/modules/certification/core/model/certification'
+import { useMachineCertification } from '@/modules/certification/ui/hooks/use-machine-certification'
 import { Loader } from '@/modules/shared/ui/components/Loader'
 import { Notice } from '@/modules/shared/ui/components/Notice'
 import { Screen } from '@/modules/shared/ui/components/Screen'
@@ -16,6 +18,7 @@ export const MachinePage = ({ id }: { readonly id: string }) => {
   const router = useRouter()
   const { machine, isPending, error } = useMachine(id)
   const week = useMachineWeek(id, (booking) => router.push(`/bookings/${booking.id}`))
+  const certification = useMachineCertification(id)
 
   return (
     <Screen>
@@ -41,6 +44,26 @@ export const MachinePage = ({ id }: { readonly id: string }) => {
               </View>
             </View>
           </Surface>
+
+          {certification.status === null ? null : (
+            <Surface>
+              <View style={styles.facts}>
+                <Text variant="label">Habilitation</Text>
+                <View style={styles.footer}>
+                  <StatusBadge
+                    tone={MY_STATUS_TONES[certification.status]}
+                    label={MY_STATUS_LABELS[certification.status]}
+                  />
+                  {certification.canRequest ? (
+                    <Button size="sm" disabled={certification.isRequesting} onPress={certification.request}>
+                      {certification.isRequesting ? 'Envoi…' : 'Demander'}
+                    </Button>
+                  ) : null}
+                </View>
+                {certification.error === null ? null : <Notice tone="danger" message={certification.error} />}
+              </View>
+            </Surface>
+          )}
         </>
       )}
 
@@ -71,5 +94,6 @@ export const MachinePage = ({ id }: { readonly id: string }) => {
 const styles = StyleSheet.create({
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2] },
   facts: { gap: spacing[3] },
+  footer: { alignItems: 'center', flexDirection: 'row', gap: spacing[3], justifyContent: 'space-between' },
   nav: { flexDirection: 'row', gap: spacing[3], justifyContent: 'space-between' },
 })

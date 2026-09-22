@@ -442,6 +442,17 @@ QR** : `expo-camera` tourne dans Expo Go, sans compte développeur Apple, là o�
 le NFC ne s'exerçait jamais hors d'un development build et retombait en réalité
 sur la saisie manuelle.
 
+**Le port d'habilitation mobile ne porte que `mine` et `request`.** Accorder et
+révoquer sont des gestes de fabmanager, et la file de validation avec ; le mobile
+est le parcours membre, il n'a rien à en faire.
+
+**La demande se pose sur la fiche machine, et l'écran se tait quand l'API
+refuserait.** `GET /certifications/mine` ne rend que les machines des ateliers du
+demandeur : une machine absente de cette liste est une machine dont on n'est pas
+membre, donc `request` serait refusé. La fiche n'affiche alors aucun bouton
+plutôt qu'un bouton qui échoue. L'écran `/habilitations`, poussé depuis Compte,
+reste la vue d'ensemble.
+
 **TanStack Query vit à la racine.** C'est le second consommateur annoncé : sur
 le web le `QueryClient` ne sort pas de `MachineWeek`, ici tous les écrans lisent
 le réseau. Pas de Redux, pas de hors-ligne.
