@@ -1,6 +1,14 @@
+import type { PathParams, PathTemplate } from './path-template'
+
 type RouteNode = string | { readonly [key: string]: RouteNode }
 
-export const routes = {
+type Templated<T> = T extends string
+  ? [PathParams<T>] extends [never]
+    ? T
+    : PathTemplate<PathParams<T>>
+  : { readonly [K in keyof T]: Templated<T[K]> }
+
+const rawRoutes = {
   health: '/health',
   ateliers: {
     list: '/ateliers',
@@ -57,6 +65,8 @@ export const routes = {
     stats: '/admin/stats',
   },
 } as const satisfies RouteNode
+
+export const routes = rawRoutes as unknown as Templated<typeof rawRoutes>
 
 export const flattenRoutes = (node: RouteNode, prefix = ''): ReadonlyArray<readonly [string, string]> => {
   if (typeof node === 'string') return [[prefix, node]]

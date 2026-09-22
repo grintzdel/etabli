@@ -39,3 +39,26 @@ describe('routes', () => {
     expect(buildPath(routes.ateliers.getBySlug, { slug: 'montreuil' })).toBe('/ateliers/montreuil')
   })
 })
+
+const send = (path: string): string => path
+
+describe('route templates', () => {
+  it('lets a parameterless route reach the transport directly', () => {
+    expect(send(routes.bookings.list)).toBe('/bookings')
+  })
+
+  it('keeps a parameterised route away from the transport', () => {
+    // @ts-expect-error a template must be resolved by buildPath before it is sent
+    expect(send(routes.bookings.getById)).toBe('/bookings/:id')
+  })
+
+  it('names the parameter a template expects', () => {
+    // @ts-expect-error the parameter is 'id', not 'bookingId'
+    expect(() => buildPath(routes.bookings.getById, { bookingId: 'b-1' })).toThrow()
+  })
+
+  it('requires every parameter of a two-segment template', () => {
+    // @ts-expect-error 'userId' is missing
+    expect(() => buildPath(routes.admin.atelierMember, { atelierId: 'a-1' })).toThrow()
+  })
+})
