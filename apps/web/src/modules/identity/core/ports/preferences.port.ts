@@ -2,7 +2,7 @@ import type { MemberAtelier, UpdatePreferencesInput, UserPreferences } from '../
 import type { IdentityResult } from '../model/session'
 
 export interface IPreferencesPort {
-  get(token: string): Promise<IdentityResult<UserPreferences>>
-  update(token: string, patch: UpdatePreferencesInput): Promise<IdentityResult<UserPreferences>>
-  myAteliers(token: string): Promise<IdentityResult<ReadonlyArray<MemberAtelier>>>
+  get(): Promise<IdentityResult<UserPreferences>>
+  update(patch: UpdatePreferencesInput): Promise<IdentityResult<UserPreferences>>
+  myAteliers(): Promise<IdentityResult<ReadonlyArray<MemberAtelier>>>
 }

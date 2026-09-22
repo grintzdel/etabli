@@ -9,7 +9,7 @@ import { AdminUserFilters } from '@/modules/identity/react/components/AdminUserF
 import { AdminUserTable } from '@/modules/identity/react/components/AdminUserTable'
 import { setMembershipRoleAction, updateAdminUserAction } from '@/server/admin-users.actions'
 import { adminUserPort } from '@/server/container'
-import { readSessionToken } from '@/server/session'
+import { requireSession } from '@/server/session'
 
 export const metadata: Metadata = {
   title: 'Utilisateurs · Administration',
@@ -19,11 +19,10 @@ export const metadata: Metadata = {
 type SearchParams = Promise<Readonly<Record<string, string | ReadonlyArray<string> | undefined>>>
 
 const Users = async ({ searchParams }: { readonly searchParams: SearchParams }) => {
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/admin/utilisateurs')
+  await requireSession('/admin/utilisateurs')
 
   const query = parseAdminUsersQuery(await searchParams)
-  const result = await adminUserPort.list(token, query)
+  const result = await adminUserPort.list(query)
   if (!result.ok) {
     if (result.error.code === IdentityFailureCode.UNAUTHORIZED) redirect('/connexion?next=/admin/utilisateurs')
     return (

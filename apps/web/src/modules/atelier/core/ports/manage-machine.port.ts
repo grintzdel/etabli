@@ -7,8 +7,8 @@ import type {
 } from '../model/atelier'
 
 export interface IManageMachinePort {
-  listParcs(token: string): Promise<AtelierResult<ReadonlyArray<ManagedParc>>>
-  create(token: string, input: CreateMachineInput): Promise<AtelierResult<ManagedMachine>>
-  update(token: string, id: string, input: UpdateMachineInput): Promise<AtelierResult<ManagedMachine>>
-  regenerateCheckInToken(token: string, id: string): Promise<AtelierResult<ManagedMachine>>
+  listParcs(): Promise<AtelierResult<ReadonlyArray<ManagedParc>>>
+  create(input: CreateMachineInput): Promise<AtelierResult<ManagedMachine>>
+  update(id: string, input: UpdateMachineInput): Promise<AtelierResult<ManagedMachine>>
+  regenerateCheckInToken(id: string): Promise<AtelierResult<ManagedMachine>>
 }

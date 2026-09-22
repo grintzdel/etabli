@@ -9,7 +9,7 @@ import { BookingDesk } from '@/modules/booking/react/components/BookingDesk'
 import { BookingDeskFilters } from '@/modules/booking/react/components/BookingDeskFilters'
 import { cancelAtelierBookingAction, manualCheckInAction, markNoShowAction } from '@/server/booking.actions'
 import { manageBookingPort } from '@/server/container'
-import { readSessionToken } from '@/server/session'
+import { requireSession } from '@/server/session'
 
 export const metadata: Metadata = {
   title: 'Pointage · Gestion',
@@ -19,11 +19,10 @@ export const metadata: Metadata = {
 type SearchParams = Promise<Readonly<Record<string, string | ReadonlyArray<string> | undefined>>>
 
 const Desk = async ({ searchParams }: { readonly searchParams: SearchParams }) => {
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/manage/bookings')
+  await requireSession('/manage/bookings')
 
   const filters = parseBookingDeskFilters(await searchParams, new Date())
-  const result = await manageBookingPort.list(token, toAtelierBookingsQuery(filters))
+  const result = await manageBookingPort.list(toAtelierBookingsQuery(filters))
   if (!result.ok) {
     if (result.error.code === BookingFailureCode.UNAUTHORIZED) redirect('/connexion?next=/manage/bookings')
     return (

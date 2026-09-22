@@ -9,7 +9,7 @@ import { AdminAtelierTable } from '@/modules/atelier/react/components/AdminAteli
 import { AtelierDraftForm } from '@/modules/atelier/react/components/AtelierDraftForm'
 import { createAtelierAction, setAtelierStatusAction } from '@/server/admin.actions'
 import { adminAtelierPort } from '@/server/container'
-import { readSessionToken } from '@/server/session'
+import { requireSession } from '@/server/session'
 
 export const metadata: Metadata = {
   title: 'Ateliers · Administration',
@@ -17,10 +17,9 @@ export const metadata: Metadata = {
 }
 
 const Ateliers = async () => {
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/admin/ateliers')
+  await requireSession('/admin/ateliers')
 
-  const ateliers = await adminAtelierPort.list(token)
+  const ateliers = await adminAtelierPort.list()
   if (!ateliers.ok) {
     if (ateliers.error.code === AtelierFailureCode.UNAUTHORIZED) redirect('/connexion?next=/admin/ateliers')
     return (

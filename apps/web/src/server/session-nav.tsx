@@ -5,7 +5,7 @@ import { SignedOutLinks } from '@/ui/SiteHeader'
 import { identityPort } from './container'
 import { logoutAction } from './identity.actions'
 import { readMyAteliers, readPreferences } from './preferences'
-import { readSessionToken } from './session'
+import { hasSession } from './session'
 
 const resolveDefaultAtelier = async (atelierId: string | null): Promise<DefaultAtelier | null> => {
   if (atelierId === null) return null
@@ -15,10 +15,9 @@ const resolveDefaultAtelier = async (atelierId: string | null): Promise<DefaultA
 }
 
 export const CurrentSessionNav = async () => {
-  const token = await readSessionToken()
-  if (token === null) return <SignedOutLinks />
+  if (!(await hasSession())) return <SignedOutLinks />
 
-  const result = await identityPort.me(token)
+  const result = await identityPort.me()
   if (!result.ok) return <SignedOutLinks />
 
   const preferences = await readPreferences()

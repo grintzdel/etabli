@@ -1,3 +1,5 @@
+import type { AuthTokenProvider } from '@etabli/api-client'
+
 import type { ChangePasswordInput, UpdateProfileInput } from '../model/profile'
 import type { Account, CurrentUser, IdentityResult, LoginInput, RegisterInput, Session } from '../model/session'
 import { failure, IdentityFailureCode } from '../model/session'
@@ -7,6 +9,8 @@ export class IdentityInMemoryAdapter implements IIdentityPort {
   private readonly accounts = new Map<string, Account>()
   private readonly tokens = new Map<string, string>()
   private counter = 0
+
+  constructor(private readonly getAuthToken: AuthTokenProvider) {}
 
   private session(account: Account): Session {
     this.counter += 1
@@ -44,14 +48,14 @@ export class IdentityInMemoryAdapter implements IIdentityPort {
     return { ok: true, value: this.session(account) }
   }
 
-  async me(token: string): Promise<IdentityResult<CurrentUser>> {
-    const account = this.accountOf(token)
+  async me(): Promise<IdentityResult<CurrentUser>> {
+    const account = await this.accountOf()
     if (account === undefined) return failure(IdentityFailureCode.UNAUTHORIZED)
     return { ok: true, value: account.user }
   }
 
-  async updateProfile(token: string, patch: UpdateProfileInput): Promise<IdentityResult<CurrentUser>> {
-    const account = this.accountOf(token)
+  async updateProfile(patch: UpdateProfileInput): Promise<IdentityResult<CurrentUser>> {
+    const account = await this.accountOf()
     if (account === undefined) return failure(IdentityFailureCode.UNAUTHORIZED)
 
     account.user = {
@@ -62,8 +66,8 @@ export class IdentityInMemoryAdapter implements IIdentityPort {
     return { ok: true, value: account.user }
   }
 
-  async changePassword(token: string, input: ChangePasswordInput): Promise<IdentityResult<Session>> {
-    const account = this.accountOf(token)
+  async changePassword(input: ChangePasswordInput): Promise<IdentityResult<Session>> {
+    const account = await this.accountOf()
     if (account === undefined) return failure(IdentityFailureCode.UNAUTHORIZED)
     if (account.password !== input.currentPassword) return failure(IdentityFailureCode.INVALID_CREDENTIALS)
 
@@ -71,8 +75,9 @@ export class IdentityInMemoryAdapter implements IIdentityPort {
     return { ok: true, value: this.session(account) }
   }
 
-  private accountOf(token: string): Account | undefined {
-    const email = this.tokens.get(token)
+  private async accountOf(): Promise<Account | undefined> {
+    const token = await this.getAuthToken()
+    const email = token === null || token === undefined ? undefined : this.tokens.get(token)
     return email === undefined ? undefined : this.accounts.get(email)
   }
 }

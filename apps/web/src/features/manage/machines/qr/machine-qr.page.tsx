@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 
 import { qrSvgDataUri } from '@/modules/atelier/core/lib/qr-code'
 import { MACHINE_KIND_LABELS } from '@/modules/atelier/core/model/atelier'
 import { QrCode } from '@/modules/atelier/react/components/QrCode'
 import { manageMachinePort } from '@/server/container'
-import { readSessionToken } from '@/server/session'
+import { requireSession } from '@/server/session'
 
 type PageProps = { readonly params: Promise<{ readonly id: string }> }
 
@@ -20,10 +20,9 @@ export const metadata: Metadata = {
 }
 
 const loadMachine = async (id: string) => {
-  const token = await readSessionToken()
-  if (token === null) redirect(`/connexion?next=${QR_PATH}`)
+  await requireSession(QR_PATH)
 
-  const parcs = await manageMachinePort.listParcs(token)
+  const parcs = await manageMachinePort.listParcs()
   if (!parcs.ok) notFound()
 
   for (const parc of parcs.value) {

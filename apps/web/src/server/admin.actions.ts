@@ -1,7 +1,6 @@
 'use server'
 
 import { updateTag } from 'next/cache'
-import { redirect } from 'next/navigation'
 
 import { FAILURE_MESSAGES, isAtelierStatus } from '@/modules/atelier/core/model/atelier'
 import type { AtelierDraftFormState } from '@/modules/atelier/core/model/atelier-draft-form'
@@ -12,15 +11,9 @@ import {
 } from '@/modules/atelier/core/model/atelier-draft-form'
 
 import { adminAtelierPort } from './container'
-import { readSessionToken } from './session'
+import { requireSession } from './session'
 
 const ADMIN_PATH = '/admin/ateliers'
-
-const requireToken = async (): Promise<string> => {
-  const token = await readSessionToken()
-  if (token === null) redirect(`/connexion?next=${ADMIN_PATH}`)
-  return token
-}
 
 export const createAtelierAction = async (
   _previous: AtelierDraftFormState,
@@ -29,7 +22,8 @@ export const createAtelierAction = async (
   const parsed = parseAtelierDraft(formData)
   if (!parsed.ok) return { error: parsed.error, values: parsed.values }
 
-  const result = await adminAtelierPort.create(await requireToken(), parsed.input)
+  await requireSession(ADMIN_PATH)
+  const result = await adminAtelierPort.create(parsed.input)
   if (!result.ok) {
     return { error: FAILURE_MESSAGES[result.error.code], values: atelierDraftValues(formData) }
   }
@@ -43,6 +37,7 @@ export const setAtelierStatusAction = async (formData: FormData): Promise<void> 
   const status = formData.get('status')
   if (typeof atelierId !== 'string' || typeof status !== 'string' || !isAtelierStatus(status)) return
 
-  const result = await adminAtelierPort.setStatus(await requireToken(), atelierId, { status })
+  await requireSession(ADMIN_PATH)
+  const result = await adminAtelierPort.setStatus(atelierId, { status })
   if (result.ok) updateTag('ateliers')
 }

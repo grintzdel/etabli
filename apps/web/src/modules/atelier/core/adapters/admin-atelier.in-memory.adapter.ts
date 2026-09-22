@@ -1,3 +1,5 @@
+import type { AuthTokenProvider } from '@etabli/api-client'
+
 import type {
   AdminAtelier,
   AtelierMembership,
@@ -15,6 +17,7 @@ export class AdminAtelierInMemoryAdapter implements IAdminAtelierPort {
   private counter = 0
 
   constructor(
+    private readonly getAuthToken: AuthTokenProvider,
     seed: ReadonlyArray<AdminAtelier> = [],
     private readonly admins: ReadonlySet<string> = new Set()
   ) {
@@ -25,18 +28,23 @@ export class AdminAtelierInMemoryAdapter implements IAdminAtelierPort {
     this.memberships.set(`${membership.atelierId}:${membership.userId}`, membership)
   }
 
+  private async isAdmin(): Promise<boolean> {
+    const token = await this.getAuthToken()
+    return token !== null && token !== undefined && this.admins.has(token)
+  }
+
   private nextId(): string {
     this.counter += 1
     return `00000000-0000-4000-8000-${String(this.counter).padStart(12, '0')}`
   }
 
-  async list(token: string): Promise<AtelierResult<ReadonlyArray<AdminAtelier>>> {
-    if (!this.admins.has(token)) return failure('FORBIDDEN')
+  async list(): Promise<AtelierResult<ReadonlyArray<AdminAtelier>>> {
+    if (!(await this.isAdmin())) return failure('FORBIDDEN')
     return { ok: true, value: [...this.ateliers.values()] }
   }
 
-  async create(token: string, input: CreateAtelierInput): Promise<AtelierResult<AdminAtelier>> {
-    if (!this.admins.has(token)) return failure('FORBIDDEN')
+  async create(input: CreateAtelierInput): Promise<AtelierResult<AdminAtelier>> {
+    if (!(await this.isAdmin())) return failure('FORBIDDEN')
     if ([...this.ateliers.values()].some((atelier) => atelier.slug === input.slug)) return failure('SLUG_TAKEN')
 
     const atelier: AdminAtelier = {
@@ -52,8 +60,8 @@ export class AdminAtelierInMemoryAdapter implements IAdminAtelierPort {
     return { ok: true, value: atelier }
   }
 
-  async setStatus(token: string, id: string, input: SetAtelierStatusInput): Promise<AtelierResult<AdminAtelier>> {
-    if (!this.admins.has(token)) return failure('FORBIDDEN')
+  async setStatus(id: string, input: SetAtelierStatusInput): Promise<AtelierResult<AdminAtelier>> {
+    if (!(await this.isAdmin())) return failure('FORBIDDEN')
 
     const current = this.ateliers.get(id)
     if (current === undefined) return failure('NOT_FOUND')
@@ -64,12 +72,11 @@ export class AdminAtelierInMemoryAdapter implements IAdminAtelierPort {
   }
 
   async setMembershipRole(
-    token: string,
     atelierId: string,
     userId: string,
     input: SetMembershipRoleInput
   ): Promise<AtelierResult<AtelierMembership>> {
-    if (!this.admins.has(token)) return failure('FORBIDDEN')
+    if (!(await this.isAdmin())) return failure('FORBIDDEN')
 
     const current = this.memberships.get(`${atelierId}:${userId}`)
     if (current === undefined) return failure('NOT_FOUND')

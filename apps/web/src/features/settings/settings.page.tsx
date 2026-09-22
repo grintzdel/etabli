@@ -14,7 +14,7 @@ import { changePasswordAction } from '@/server/password.actions'
 import { readMyAteliers, readPreferences } from '@/server/preferences'
 import { savePreferencesAction } from '@/server/preferences.actions'
 import { saveProfileAction } from '@/server/profile.actions'
-import { readSessionToken } from '@/server/session'
+import { requireSession } from '@/server/session'
 
 export const metadata: Metadata = {
   title: 'Paramètres',
@@ -22,8 +22,7 @@ export const metadata: Metadata = {
 }
 
 const PreferencesSection = async () => {
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/parametres')
+  await requireSession('/parametres')
 
   const [preferences, ateliers] = await Promise.all([readPreferences(), readMyAteliers()])
 
@@ -39,10 +38,9 @@ const PreferencesSection = async () => {
 }
 
 const ProfileSection = async () => {
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/parametres')
+  await requireSession('/parametres')
 
-  const session = await identityPort.me(token)
+  const session = await identityPort.me()
   if (!session.ok) redirect('/connexion?next=/parametres')
 
   return (

@@ -7,7 +7,7 @@ import { BookingFailureCode } from '@/modules/booking/core/model/booking'
 import { buildOverview } from '@/modules/overview/core/model/overview'
 import { OverviewBoard } from '@/modules/overview/react/components/OverviewBoard'
 import { bookingPort, certificationPort, identityPort } from '@/server/container'
-import { readSessionToken } from '@/server/session'
+import { requireSession } from '@/server/session'
 
 const PATH = '/tableau-de-bord'
 
@@ -17,13 +17,12 @@ export const metadata: Metadata = {
 }
 
 const Board = async () => {
-  const token = await readSessionToken()
-  if (token === null) redirect(`/connexion?next=${PATH}`)
+  await requireSession(PATH)
 
-  const session = await identityPort.me(token)
+  const session = await identityPort.me()
   if (!session.ok) redirect(`/connexion?next=${PATH}`)
 
-  const [bookings, certifications] = await Promise.all([bookingPort.list(token), certificationPort.mine(token)])
+  const [bookings, certifications] = await Promise.all([bookingPort.list(), certificationPort.mine()])
 
   if (!bookings.ok) {
     if (bookings.error.code === BookingFailureCode.UNAUTHORIZED) redirect(`/connexion?next=${PATH}`)

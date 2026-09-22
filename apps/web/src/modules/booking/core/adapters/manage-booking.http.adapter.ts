@@ -1,4 +1,4 @@
-import { createApiClient, type ApiClient } from '@etabli/api-client'
+import { createApiClient, type ApiClient, type AuthTokenProvider } from '@etabli/api-client'
 import { buildPath, routes } from '@etabli/contract'
 
 import { bookingFailureOf } from '../lib/booking-failure'
@@ -9,41 +9,43 @@ import type { AtelierStats, AtelierStatsQuery, NetworkStats } from '../model/man
 import type { IManageBookingPort } from '../ports/manage-booking.port'
 
 export class ManageBookingHttpAdapter implements IManageBookingPort {
-  private readonly http: ApiClient<BookingFailureCode>
+  private readonly authenticated: ApiClient<BookingFailureCode>
 
-  constructor(baseUrl: string) {
-    this.http = createApiClient({
+  constructor(baseUrl: string, getAuthToken: AuthTokenProvider) {
+    this.authenticated = createApiClient({
       baseUrl,
       messages: FAILURE_MESSAGES,
       failureOf: bookingFailureOf,
+      getAuthToken,
       cache: 'no-store',
     })
   }
 
-  list(token: string, query: AtelierBookingsQuery): Promise<BookingResult<ReadonlyArray<AtelierBooking>>> {
-    return this.http.call<ReadonlyArray<AtelierBooking>>(routes.manage.bookings, {
-      token,
+  list(query: AtelierBookingsQuery): Promise<BookingResult<ReadonlyArray<AtelierBooking>>> {
+    return this.authenticated.get<ReadonlyArray<AtelierBooking>>(routes.manage.bookings, {
       query: { date: query.date, status: query.status },
     })
   }
 
-  checkIn(token: string, id: string): Promise<BookingResult<AtelierBooking>> {
-    return this.http.call<AtelierBooking>(buildPath(routes.manage.checkInBooking, { id }), { method: 'POST', token })
+  checkIn(id: string): Promise<BookingResult<AtelierBooking>> {
+    return this.authenticated.post<AtelierBooking>(buildPath(routes.manage.checkInBooking, { id }))
   }
 
-  markNoShow(token: string, id: string): Promise<BookingResult<AtelierBooking>> {
-    return this.http.call<AtelierBooking>(buildPath(routes.manage.noShow, { id }), { method: 'POST', token })
+  markNoShow(id: string): Promise<BookingResult<AtelierBooking>> {
+    return this.authenticated.post<AtelierBooking>(buildPath(routes.manage.noShow, { id }))
   }
 
-  cancel(token: string, id: string): Promise<BookingResult<AtelierBooking>> {
-    return this.http.call<AtelierBooking>(buildPath(routes.manage.cancelBooking, { id }), { method: 'POST', token })
+  cancel(id: string): Promise<BookingResult<AtelierBooking>> {
+    return this.authenticated.post<AtelierBooking>(buildPath(routes.manage.cancelBooking, { id }))
   }
 
-  stats(token: string, query: AtelierStatsQuery): Promise<BookingResult<ReadonlyArray<AtelierStats>>> {
-    return this.http.call<ReadonlyArray<AtelierStats>>(routes.manage.stats, { token, query: { period: query.period } })
+  stats(query: AtelierStatsQuery): Promise<BookingResult<ReadonlyArray<AtelierStats>>> {
+    return this.authenticated.get<ReadonlyArray<AtelierStats>>(routes.manage.stats, {
+      query: { period: query.period },
+    })
   }
 
-  networkStats(token: string, query: AtelierStatsQuery): Promise<BookingResult<NetworkStats>> {
-    return this.http.call<NetworkStats>(routes.admin.stats, { token, query: { period: query.period } })
+  networkStats(query: AtelierStatsQuery): Promise<BookingResult<NetworkStats>> {
+    return this.authenticated.get<NetworkStats>(routes.admin.stats, { query: { period: query.period } })
   }
 }

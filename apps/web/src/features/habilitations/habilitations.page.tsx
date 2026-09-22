@@ -7,7 +7,7 @@ import { CertificationFailureCode } from '@/modules/certification/core/model/cer
 import { MyCertificationsTable } from '@/modules/certification/react/components/MyCertificationsTable'
 import { requestCertificationAction } from '@/server/certification.actions'
 import { certificationPort } from '@/server/container'
-import { readSessionToken } from '@/server/session'
+import { requireSession } from '@/server/session'
 
 export const metadata: Metadata = {
   title: 'Mes habilitations',
@@ -15,10 +15,9 @@ export const metadata: Metadata = {
 }
 
 const Certifications = async () => {
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/habilitations')
+  await requireSession('/habilitations')
 
-  const mine = await certificationPort.mine(token)
+  const mine = await certificationPort.mine()
   if (!mine.ok) {
     if (mine.error.code === CertificationFailureCode.UNAUTHORIZED) redirect('/connexion?next=/habilitations')
     return (

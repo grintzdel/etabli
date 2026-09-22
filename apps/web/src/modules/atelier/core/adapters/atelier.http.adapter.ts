@@ -1,4 +1,4 @@
-import { createApiClient, type ApiClient } from '@etabli/api-client'
+import { createApiClient, type ApiClient, type AuthTokenProvider } from '@etabli/api-client'
 import { buildPath, routes } from '@etabli/contract'
 
 import { atelierFailureOf } from '../lib/atelier-failure'
@@ -16,32 +16,30 @@ import { FAILURE_MESSAGES } from '../model/atelier'
 import type { IAtelierPort } from '../ports/atelier.port'
 
 export class AtelierHttpAdapter implements IAtelierPort {
-  private readonly http: ApiClient<AtelierFailureCode>
+  private readonly anonymous: ApiClient<AtelierFailureCode>
+  private readonly authenticated: ApiClient<AtelierFailureCode>
 
-  constructor(baseUrl: string) {
-    this.http = createApiClient({ baseUrl, messages: FAILURE_MESSAGES, failureOf: atelierFailureOf })
+  constructor(baseUrl: string, getAuthToken: AuthTokenProvider) {
+    const shared = { baseUrl, messages: FAILURE_MESSAGES, failureOf: atelierFailureOf }
+    this.anonymous = createApiClient(shared)
+    this.authenticated = createApiClient({ ...shared, getAuthToken, cache: 'no-store' })
   }
 
   list(filters: DirectoryFilters): Promise<AtelierResult<ReadonlyArray<AtelierSummary>>> {
-    return this.http.call<ReadonlyArray<AtelierSummary>>(routes.ateliers.list, {
+    return this.anonymous.get<ReadonlyArray<AtelierSummary>>(routes.ateliers.list, {
       query: { city: filters.city, machineKind: filters.machineKind },
     })
   }
 
   getBySlug(slug: string): Promise<AtelierResult<AtelierDetail>> {
-    return this.http.call<AtelierDetail>(buildPath(routes.ateliers.getBySlug, { slug }))
+    return this.anonymous.get<AtelierDetail>(buildPath(routes.ateliers.getBySlug, { slug }))
   }
 
   getMachineById(id: string): Promise<AtelierResult<MachineDetail>> {
-    return this.http.call<MachineDetail>(buildPath(routes.machines.getById, { id }))
+    return this.anonymous.get<MachineDetail>(buildPath(routes.machines.getById, { id }))
   }
 
-  completeOnboarding(token: string, input: CompleteOnboardingInput): Promise<AtelierResult<OnboardingResult>> {
-    return this.http.call<OnboardingResult>(routes.onboarding.complete, {
-      method: 'POST',
-      token,
-      body: input,
-      cache: 'no-store',
-    })
+  completeOnboarding(input: CompleteOnboardingInput): Promise<AtelierResult<OnboardingResult>> {
+    return this.authenticated.post<OnboardingResult>(routes.onboarding.complete, input)
   }
 }

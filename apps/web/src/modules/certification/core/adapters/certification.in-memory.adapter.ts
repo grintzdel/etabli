@@ -1,3 +1,5 @@
+import type { AuthTokenProvider } from '@etabli/api-client'
+
 import type { CertificationRequest, CertificationResult, MyCertification } from '../model/certification'
 import { failure, isRequestable } from '../model/certification'
 import type { ICertificationPort } from '../ports/certification.port'
@@ -8,6 +10,7 @@ export class CertificationInMemoryAdapter implements ICertificationPort {
   private counter = 0
 
   constructor(
+    private readonly getAuthToken: AuthTokenProvider,
     seed: ReadonlyArray<CertificationRequest> = [],
     private readonly fabmanagers: ReadonlyMap<string, ReadonlyArray<string>> = new Map()
   ) {
@@ -18,13 +21,18 @@ export class CertificationInMemoryAdapter implements ICertificationPort {
     this.catalog.set(token, certifications)
   }
 
-  async mine(token: string): Promise<CertificationResult<ReadonlyArray<MyCertification>>> {
-    const mine = this.catalog.get(token)
+  private async caller(): Promise<string> {
+    return (await this.getAuthToken()) ?? ''
+  }
+
+  async mine(): Promise<CertificationResult<ReadonlyArray<MyCertification>>> {
+    const mine = this.catalog.get(await this.caller())
     if (mine === undefined) return failure('UNAUTHORIZED')
     return { ok: true, value: mine }
   }
 
-  async request(token: string, machineId: string): Promise<CertificationResult<void>> {
+  async request(machineId: string): Promise<CertificationResult<void>> {
+    const token = await this.caller()
     const mine = this.catalog.get(token)
     if (mine === undefined) return failure('UNAUTHORIZED')
 
@@ -58,8 +66,8 @@ export class CertificationInMemoryAdapter implements ICertificationPort {
     return { ok: true, value: undefined }
   }
 
-  async queue(token: string): Promise<CertificationResult<ReadonlyArray<CertificationRequest>>> {
-    const owned = this.fabmanagers.get(token)
+  async queue(): Promise<CertificationResult<ReadonlyArray<CertificationRequest>>> {
+    const owned = this.fabmanagers.get(await this.caller())
     if (owned === undefined) return failure('UNAUTHORIZED')
 
     return {
@@ -70,20 +78,16 @@ export class CertificationInMemoryAdapter implements ICertificationPort {
     }
   }
 
-  grant(token: string, certificationId: string): Promise<CertificationResult<void>> {
-    return this.decide(token, certificationId, 'GRANTED')
+  grant(certificationId: string): Promise<CertificationResult<void>> {
+    return this.decide(certificationId, 'GRANTED')
   }
 
-  revoke(token: string, certificationId: string): Promise<CertificationResult<void>> {
-    return this.decide(token, certificationId, 'REVOKED')
+  revoke(certificationId: string): Promise<CertificationResult<void>> {
+    return this.decide(certificationId, 'REVOKED')
   }
 
-  private async decide(
-    token: string,
-    certificationId: string,
-    status: 'GRANTED' | 'REVOKED'
-  ): Promise<CertificationResult<void>> {
-    const owned = this.fabmanagers.get(token)
+  private async decide(certificationId: string, status: 'GRANTED' | 'REVOKED'): Promise<CertificationResult<void>> {
+    const owned = this.fabmanagers.get(await this.caller())
     if (owned === undefined) return failure('UNAUTHORIZED')
 
     const current = this.requests.get(certificationId)

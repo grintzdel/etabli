@@ -3,10 +3,10 @@ import type { AtelierBooking, AtelierBookingsQuery } from '../model/manage-booki
 import type { AtelierStats, AtelierStatsQuery, NetworkStats } from '../model/manage-stats'
 
 export interface IManageBookingPort {
-  list(token: string, query: AtelierBookingsQuery): Promise<BookingResult<ReadonlyArray<AtelierBooking>>>
-  checkIn(token: string, id: string): Promise<BookingResult<AtelierBooking>>
-  markNoShow(token: string, id: string): Promise<BookingResult<AtelierBooking>>
-  cancel(token: string, id: string): Promise<BookingResult<AtelierBooking>>
-  stats(token: string, query: AtelierStatsQuery): Promise<BookingResult<ReadonlyArray<AtelierStats>>>
-  networkStats(token: string, query: AtelierStatsQuery): Promise<BookingResult<NetworkStats>>
+  list(query: AtelierBookingsQuery): Promise<BookingResult<ReadonlyArray<AtelierBooking>>>
+  checkIn(id: string): Promise<BookingResult<AtelierBooking>>
+  markNoShow(id: string): Promise<BookingResult<AtelierBooking>>
+  cancel(id: string): Promise<BookingResult<AtelierBooking>>
+  stats(query: AtelierStatsQuery): Promise<BookingResult<ReadonlyArray<AtelierStats>>>
+  networkStats(query: AtelierStatsQuery): Promise<BookingResult<NetworkStats>>
 }

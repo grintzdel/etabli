@@ -9,11 +9,10 @@ import type { SettingsFormState } from '@/modules/identity/core/model/settings'
 import { settingsRefused, settingsSaved } from '@/modules/identity/core/model/settings'
 
 import { identityPort } from './container'
-import { readSessionToken } from './session'
+import { requireSession } from './session'
 
 export const saveProfileAction = async (_state: SettingsFormState, formData: FormData): Promise<SettingsFormState> => {
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/parametres')
+  await requireSession('/parametres')
 
   const displayName = typeof formData.get('displayName') === 'string' ? String(formData.get('displayName')) : ''
   const practice = formData.getAll('practice').filter((value) => typeof value === 'string')
@@ -23,7 +22,7 @@ export const saveProfileAction = async (_state: SettingsFormState, formData: For
 
   const patch: UpdateProfileInput = { displayName, practice }
 
-  const result = await identityPort.updateProfile(token, patch)
+  const result = await identityPort.updateProfile(patch)
   if (!result.ok) {
     if (result.error.code === IdentityFailureCode.UNAUTHORIZED) redirect('/connexion?next=/parametres')
     return settingsRefused(result.error.message)

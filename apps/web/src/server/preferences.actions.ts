@@ -10,14 +10,13 @@ import type { SettingsFormState } from '@/modules/identity/core/model/settings'
 import { settingsRefused, settingsSaved } from '@/modules/identity/core/model/settings'
 
 import { preferencesPort } from './container'
-import { readSessionToken } from './session'
+import { requireSession } from './session'
 
 export const savePreferencesAction = async (
   _state: SettingsFormState,
   formData: FormData
 ): Promise<SettingsFormState> => {
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/parametres')
+  await requireSession('/parametres')
 
   const theme = formData.get('theme')
   const atelier = formData.get('defaultAtelierId')
@@ -27,7 +26,7 @@ export const savePreferencesAction = async (
     ...(atelier === null ? {} : { defaultAtelierId: typeof atelier === 'string' && atelier !== '' ? atelier : null }),
   }
 
-  const result = await preferencesPort.update(token, patch)
+  const result = await preferencesPort.update(patch)
   if (!result.ok) {
     if (result.error.code === IdentityFailureCode.UNAUTHORIZED) redirect('/connexion?next=/parametres')
     return settingsRefused(result.error.message)

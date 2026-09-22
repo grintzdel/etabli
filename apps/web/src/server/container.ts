@@ -17,14 +17,16 @@ import type { IAdminUserPort } from '@/modules/identity/core/ports/admin-user.po
 import type { IIdentityPort } from '@/modules/identity/core/ports/identity.port'
 import type { IPreferencesPort } from '@/modules/identity/core/ports/preferences.port'
 
+import { readSessionToken } from './session'
+
 const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
 
-export const identityPort: IIdentityPort = new IdentityHttpAdapter(apiUrl)
-export const preferencesPort: IPreferencesPort = new PreferencesHttpAdapter(apiUrl)
-export const atelierPort: IAtelierPort = new AtelierHttpAdapter(apiUrl)
-export const adminAtelierPort: IAdminAtelierPort = new AdminAtelierHttpAdapter(apiUrl)
-export const adminUserPort: IAdminUserPort = new AdminUserHttpAdapter(apiUrl)
-export const manageMachinePort: IManageMachinePort = new ManageMachineHttpAdapter(apiUrl)
-export const certificationPort: ICertificationPort = new CertificationHttpAdapter(apiUrl)
-export const bookingPort: IBookingPort = new BookingHttpAdapter(apiUrl)
-export const manageBookingPort: IManageBookingPort = new ManageBookingHttpAdapter(apiUrl)
+export const identityPort: IIdentityPort = new IdentityHttpAdapter(apiUrl, readSessionToken)
+export const preferencesPort: IPreferencesPort = new PreferencesHttpAdapter(apiUrl, readSessionToken)
+export const atelierPort: IAtelierPort = new AtelierHttpAdapter(apiUrl, readSessionToken)
+export const adminAtelierPort: IAdminAtelierPort = new AdminAtelierHttpAdapter(apiUrl, readSessionToken)
+export const adminUserPort: IAdminUserPort = new AdminUserHttpAdapter(apiUrl, readSessionToken)
+export const manageMachinePort: IManageMachinePort = new ManageMachineHttpAdapter(apiUrl, readSessionToken)
+export const certificationPort: ICertificationPort = new CertificationHttpAdapter(apiUrl, readSessionToken)
+export const bookingPort: IBookingPort = new BookingHttpAdapter(apiUrl, readSessionToken)
+export const manageBookingPort: IManageBookingPort = new ManageBookingHttpAdapter(apiUrl, readSessionToken)

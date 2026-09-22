@@ -1,4 +1,4 @@
-import { createApiClient, type ApiClient } from '@etabli/api-client'
+import { createApiClient, type ApiClient, type AuthTokenProvider } from '@etabli/api-client'
 import { buildPath, routes } from '@etabli/contract'
 
 import { bookingFailureOf } from '../lib/booking-failure'
@@ -13,37 +13,37 @@ import { FAILURE_MESSAGES } from '../model/booking'
 import type { IBookingPort } from '../ports/booking.port'
 
 export class BookingHttpAdapter implements IBookingPort {
-  private readonly http: ApiClient<BookingFailureCode>
+  private readonly authenticated: ApiClient<BookingFailureCode>
 
-  constructor(baseUrl: string) {
-    this.http = createApiClient({
+  constructor(baseUrl: string, getAuthToken: AuthTokenProvider) {
+    this.authenticated = createApiClient({
       baseUrl,
       messages: FAILURE_MESSAGES,
       failureOf: bookingFailureOf,
+      getAuthToken,
       cache: 'no-store',
     })
   }
 
-  availability(token: string, machineId: string, from?: string): Promise<BookingResult<MachineAvailability>> {
-    return this.http.call<MachineAvailability>(buildPath(routes.machines.availability, { id: machineId }), {
-      token,
+  availability(machineId: string, from?: string): Promise<BookingResult<MachineAvailability>> {
+    return this.authenticated.get<MachineAvailability>(buildPath(routes.machines.availability, { id: machineId }), {
       query: { from },
     })
   }
 
-  create(token: string, input: CreateBooking): Promise<BookingResult<BookingDetail>> {
-    return this.http.call<BookingDetail>(routes.bookings.create, { method: 'POST', token, body: input })
+  create(input: CreateBooking): Promise<BookingResult<BookingDetail>> {
+    return this.authenticated.post<BookingDetail>(routes.bookings.create, input)
   }
 
-  list(token: string): Promise<BookingResult<ReadonlyArray<BookingDetail>>> {
-    return this.http.call<ReadonlyArray<BookingDetail>>(routes.bookings.list, { token })
+  list(): Promise<BookingResult<ReadonlyArray<BookingDetail>>> {
+    return this.authenticated.get<ReadonlyArray<BookingDetail>>(routes.bookings.list)
   }
 
-  getById(token: string, id: string): Promise<BookingResult<BookingDetail>> {
-    return this.http.call<BookingDetail>(buildPath(routes.bookings.getById, { id }), { token })
+  getById(id: string): Promise<BookingResult<BookingDetail>> {
+    return this.authenticated.get<BookingDetail>(buildPath(routes.bookings.getById, { id }))
   }
 
-  cancel(token: string, id: string): Promise<BookingResult<BookingDetail>> {
-    return this.http.call<BookingDetail>(buildPath(routes.bookings.cancel, { id }), { method: 'POST', token })
+  cancel(id: string): Promise<BookingResult<BookingDetail>> {
+    return this.authenticated.post<BookingDetail>(buildPath(routes.bookings.cancel, { id }))
   }
 }

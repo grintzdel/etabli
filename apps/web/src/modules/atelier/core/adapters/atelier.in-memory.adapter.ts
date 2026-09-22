@@ -79,7 +79,7 @@ export class AtelierInMemoryAdapter implements IAtelierPort {
     return failure(AtelierFailureCode.NOT_FOUND)
   }
 
-  async completeOnboarding(_token: string, input: CompleteOnboardingInput): Promise<AtelierResult<OnboardingResult>> {
+  async completeOnboarding(input: CompleteOnboardingInput): Promise<AtelierResult<OnboardingResult>> {
     const sheet = [...this.sheets.values()].find((candidate) => candidate.id === input.atelierId)
     if (sheet === undefined) return failure(AtelierFailureCode.NOT_FOUND)
 

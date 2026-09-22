@@ -8,7 +8,7 @@ import { Suspense } from 'react'
 import { MembershipList } from '@/modules/atelier/react/components/MembershipList'
 import { AccountCard } from '@/modules/identity/react/components/AccountCard'
 import { atelierPort, identityPort } from '@/server/container'
-import { readSessionToken } from '@/server/session'
+import { requireSession } from '@/server/session'
 
 export const metadata: Metadata = {
   title: 'Mon compte',
@@ -16,10 +16,9 @@ export const metadata: Metadata = {
 }
 
 const AccountDetails = async () => {
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/compte')
+  await requireSession('/compte')
 
-  const result = await identityPort.me(token)
+  const result = await identityPort.me()
   if (!result.ok) redirect('/connexion?next=/compte')
 
   const directory = await atelierPort.list({})

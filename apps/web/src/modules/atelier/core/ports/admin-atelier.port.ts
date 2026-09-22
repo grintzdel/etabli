@@ -8,11 +8,10 @@ import type {
 } from '../model/atelier'
 
 export interface IAdminAtelierPort {
-  list(token: string): Promise<AtelierResult<ReadonlyArray<AdminAtelier>>>
-  create(token: string, input: CreateAtelierInput): Promise<AtelierResult<AdminAtelier>>
-  setStatus(token: string, id: string, input: SetAtelierStatusInput): Promise<AtelierResult<AdminAtelier>>
+  list(): Promise<AtelierResult<ReadonlyArray<AdminAtelier>>>
+  create(input: CreateAtelierInput): Promise<AtelierResult<AdminAtelier>>
+  setStatus(id: string, input: SetAtelierStatusInput): Promise<AtelierResult<AdminAtelier>>
   setMembershipRole(
-    token: string,
     atelierId: string,
     userId: string,
     input: SetMembershipRoleInput
