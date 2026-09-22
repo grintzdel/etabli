@@ -1,4 +1,4 @@
-import { createApiClient, type ApiClient } from '@etabli/api-client'
+import { createApiClient, type ApiClient, type AuthTokenProvider } from '@etabli/api-client'
 import { buildPath, routes } from '@etabli/contract'
 
 import { manageMachineFailureOf } from '../lib/atelier-failure'
@@ -14,37 +14,31 @@ import { FAILURE_MESSAGES } from '../model/atelier'
 import type { IManageMachinePort } from '../ports/manage-machine.port'
 
 export class ManageMachineHttpAdapter implements IManageMachinePort {
-  private readonly http: ApiClient<AtelierFailureCode>
+  private readonly authenticated: ApiClient<AtelierFailureCode>
 
-  constructor(baseUrl: string) {
-    this.http = createApiClient({
+  constructor(baseUrl: string, getAuthToken: AuthTokenProvider) {
+    this.authenticated = createApiClient({
       baseUrl,
       messages: FAILURE_MESSAGES,
       failureOf: manageMachineFailureOf,
+      getAuthToken,
       cache: 'no-store',
     })
   }
 
-  listParcs(token: string): Promise<AtelierResult<ReadonlyArray<ManagedParc>>> {
-    return this.http.call<ReadonlyArray<ManagedParc>>(routes.manage.machines, { token })
+  listParcs(): Promise<AtelierResult<ReadonlyArray<ManagedParc>>> {
+    return this.authenticated.get<ReadonlyArray<ManagedParc>>(routes.manage.machines)
   }
 
-  create(token: string, input: CreateMachineInput): Promise<AtelierResult<ManagedMachine>> {
-    return this.http.call<ManagedMachine>(routes.manage.machines, { method: 'POST', token, body: input })
+  create(input: CreateMachineInput): Promise<AtelierResult<ManagedMachine>> {
+    return this.authenticated.post<ManagedMachine>(routes.manage.machines, input)
   }
 
-  update(token: string, id: string, input: UpdateMachineInput): Promise<AtelierResult<ManagedMachine>> {
-    return this.http.call<ManagedMachine>(buildPath(routes.manage.machine, { id }), {
-      method: 'PATCH',
-      token,
-      body: input,
-    })
+  update(id: string, input: UpdateMachineInput): Promise<AtelierResult<ManagedMachine>> {
+    return this.authenticated.patch<ManagedMachine>(buildPath(routes.manage.machine, { id }), input)
   }
 
-  regenerateCheckInToken(token: string, id: string): Promise<AtelierResult<ManagedMachine>> {
-    return this.http.call<ManagedMachine>(buildPath(routes.manage.regenerateMachineToken, { id }), {
-      method: 'POST',
-      token,
-    })
+  regenerateCheckInToken(id: string): Promise<AtelierResult<ManagedMachine>> {
+    return this.authenticated.post<ManagedMachine>(buildPath(routes.manage.regenerateMachineToken, { id }))
   }
 }

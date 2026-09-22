@@ -1,4 +1,4 @@
-import { createApiClient, type ApiClient } from '@etabli/api-client'
+import { createApiClient, type ApiClient, type AuthTokenProvider } from '@etabli/api-client'
 import { routes } from '@etabli/contract'
 
 import { identityFailureOf } from '../lib/identity-failure'
@@ -8,26 +8,27 @@ import { FAILURE_MESSAGES } from '../model/session'
 import type { IPreferencesPort } from '../ports/preferences.port'
 
 export class PreferencesHttpAdapter implements IPreferencesPort {
-  private readonly http: ApiClient<IdentityFailureCode>
+  private readonly authenticated: ApiClient<IdentityFailureCode>
 
-  constructor(baseUrl: string) {
-    this.http = createApiClient({
+  constructor(baseUrl: string, getAuthToken: AuthTokenProvider) {
+    this.authenticated = createApiClient({
       baseUrl,
       messages: FAILURE_MESSAGES,
       failureOf: identityFailureOf,
+      getAuthToken,
       cache: 'no-store',
     })
   }
 
-  get(token: string): Promise<IdentityResult<UserPreferences>> {
-    return this.http.call<UserPreferences>(routes.me.preferences, { token })
+  get(): Promise<IdentityResult<UserPreferences>> {
+    return this.authenticated.get<UserPreferences>(routes.me.preferences)
   }
 
-  myAteliers(token: string): Promise<IdentityResult<ReadonlyArray<MemberAtelier>>> {
-    return this.http.call<ReadonlyArray<MemberAtelier>>(routes.me.ateliers, { token })
+  myAteliers(): Promise<IdentityResult<ReadonlyArray<MemberAtelier>>> {
+    return this.authenticated.get<ReadonlyArray<MemberAtelier>>(routes.me.ateliers)
   }
 
-  update(token: string, patch: UpdatePreferencesInput): Promise<IdentityResult<UserPreferences>> {
-    return this.http.call<UserPreferences>(routes.me.preferences, { method: 'PATCH', token, body: patch })
+  update(patch: UpdatePreferencesInput): Promise<IdentityResult<UserPreferences>> {
+    return this.authenticated.patch<UserPreferences>(routes.me.preferences, patch)
   }
 }

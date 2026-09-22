@@ -7,7 +7,7 @@ import { CertificationFailureCode } from '@/modules/certification/core/model/cer
 import { CertificationQueue } from '@/modules/certification/react/components/CertificationQueue'
 import { grantCertificationAction, revokeCertificationAction } from '@/server/certification.actions'
 import { certificationPort } from '@/server/container'
-import { readSessionToken } from '@/server/session'
+import { requireSession } from '@/server/session'
 
 export const metadata: Metadata = {
   title: 'Habilitations · Gestion',
@@ -15,10 +15,9 @@ export const metadata: Metadata = {
 }
 
 const Queue = async () => {
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/manage/certifications')
+  await requireSession('/manage/certifications')
 
-  const queue = await certificationPort.queue(token)
+  const queue = await certificationPort.queue()
   if (!queue.ok) {
     if (queue.error.code === CertificationFailureCode.UNAUTHORIZED) redirect('/connexion?next=/manage/certifications')
     return (

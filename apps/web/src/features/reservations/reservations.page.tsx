@@ -8,7 +8,7 @@ import { Suspense } from 'react'
 import { BookingFailureCode, partitionBookings } from '@/modules/booking/core/model/booking'
 import { BookingList } from '@/modules/booking/react/components/BookingList'
 import { bookingPort } from '@/server/container'
-import { readSessionToken } from '@/server/session'
+import { requireSession } from '@/server/session'
 
 export const metadata: Metadata = {
   title: 'Mes réservations',
@@ -16,10 +16,9 @@ export const metadata: Metadata = {
 }
 
 const Bookings = async () => {
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/reservations')
+  await requireSession('/reservations')
 
-  const result = await bookingPort.list(token)
+  const result = await bookingPort.list()
   if (!result.ok) {
     if (result.error.code === BookingFailureCode.UNAUTHORIZED) redirect('/connexion?next=/reservations')
     return (

@@ -1,3 +1,5 @@
+import type { AuthTokenProvider } from '@etabli/api-client'
+
 import type { AdminUser, AdminUsersQuery, UpdateAdminUser } from '../model/admin-user'
 import type { IdentityResult } from '../model/session'
 import { failure, IdentityFailureCode } from '../model/session'
@@ -7,14 +9,20 @@ export class AdminUserInMemoryAdapter implements IAdminUserPort {
   private readonly users = new Map<string, AdminUser>()
 
   constructor(
+    private readonly getAuthToken: AuthTokenProvider,
     seed: ReadonlyArray<AdminUser> = [],
     private readonly admins: ReadonlySet<string> = new Set()
   ) {
     for (const user of seed) this.users.set(user.id, user)
   }
 
-  async list(token: string, query: AdminUsersQuery): Promise<IdentityResult<ReadonlyArray<AdminUser>>> {
-    if (!this.admins.has(token)) return failure(IdentityFailureCode.FORBIDDEN)
+  private async admin(): Promise<string | undefined> {
+    const token = await this.getAuthToken()
+    return token !== null && token !== undefined && this.admins.has(token) ? token : undefined
+  }
+
+  async list(query: AdminUsersQuery): Promise<IdentityResult<ReadonlyArray<AdminUser>>> {
+    if ((await this.admin()) === undefined) return failure(IdentityFailureCode.FORBIDDEN)
     return { ok: true, value: [...this.users.values()].filter((user) => this.matches(user, query)) }
   }
 
@@ -28,12 +36,13 @@ export class AdminUserInMemoryAdapter implements IAdminUserPort {
     return query.status === undefined || user.status === query.status
   }
 
-  async update(token: string, id: string, patch: UpdateAdminUser): Promise<IdentityResult<AdminUser>> {
-    if (!this.admins.has(token)) return failure(IdentityFailureCode.FORBIDDEN)
+  async update(id: string, patch: UpdateAdminUser): Promise<IdentityResult<AdminUser>> {
+    const caller = await this.admin()
+    if (caller === undefined) return failure(IdentityFailureCode.FORBIDDEN)
 
     const current = this.users.get(id)
     if (current === undefined) return failure(IdentityFailureCode.USER_UNKNOWN)
-    if (id === token && (patch.platformRole === 'MEMBER' || patch.status === 'SUSPENDED')) {
+    if (id === caller && (patch.platformRole === 'MEMBER' || patch.status === 'SUSPENDED')) {
       return failure(IdentityFailureCode.SELF_LOCKOUT)
     }
 

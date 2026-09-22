@@ -1,4 +1,4 @@
-import { createApiClient, type ApiClient } from '@etabli/api-client'
+import { createApiClient, type ApiClient, type AuthTokenProvider } from '@etabli/api-client'
 import { buildPath, routes } from '@etabli/contract'
 
 import { adminAtelierFailureOf } from '../lib/atelier-failure'
@@ -15,43 +15,38 @@ import { FAILURE_MESSAGES } from '../model/atelier'
 import type { IAdminAtelierPort } from '../ports/admin-atelier.port'
 
 export class AdminAtelierHttpAdapter implements IAdminAtelierPort {
-  private readonly http: ApiClient<AtelierFailureCode>
+  private readonly authenticated: ApiClient<AtelierFailureCode>
 
-  constructor(baseUrl: string) {
-    this.http = createApiClient({
+  constructor(baseUrl: string, getAuthToken: AuthTokenProvider) {
+    this.authenticated = createApiClient({
       baseUrl,
       messages: FAILURE_MESSAGES,
       failureOf: adminAtelierFailureOf,
+      getAuthToken,
       cache: 'no-store',
     })
   }
 
-  list(token: string): Promise<AtelierResult<ReadonlyArray<AdminAtelier>>> {
-    return this.http.call<ReadonlyArray<AdminAtelier>>(routes.admin.ateliers, { token })
+  list(): Promise<AtelierResult<ReadonlyArray<AdminAtelier>>> {
+    return this.authenticated.get<ReadonlyArray<AdminAtelier>>(routes.admin.ateliers)
   }
 
-  create(token: string, input: CreateAtelierInput): Promise<AtelierResult<AdminAtelier>> {
-    return this.http.call<AdminAtelier>(routes.admin.ateliers, { method: 'POST', token, body: input })
+  create(input: CreateAtelierInput): Promise<AtelierResult<AdminAtelier>> {
+    return this.authenticated.post<AdminAtelier>(routes.admin.ateliers, input)
   }
 
-  setStatus(token: string, id: string, input: SetAtelierStatusInput): Promise<AtelierResult<AdminAtelier>> {
-    return this.http.call<AdminAtelier>(buildPath(routes.admin.atelier, { id }), {
-      method: 'PATCH',
-      token,
-      body: input,
-    })
+  setStatus(id: string, input: SetAtelierStatusInput): Promise<AtelierResult<AdminAtelier>> {
+    return this.authenticated.patch<AdminAtelier>(buildPath(routes.admin.atelier, { id }), input)
   }
 
   setMembershipRole(
-    token: string,
     atelierId: string,
     userId: string,
     input: SetMembershipRoleInput
   ): Promise<AtelierResult<AtelierMembership>> {
-    return this.http.call<AtelierMembership>(buildPath(routes.admin.atelierMember, { atelierId, userId }), {
-      method: 'PATCH',
-      token,
-      body: input,
-    })
+    return this.authenticated.patch<AtelierMembership>(
+      buildPath(routes.admin.atelierMember, { atelierId, userId }),
+      input
+    )
   }
 }

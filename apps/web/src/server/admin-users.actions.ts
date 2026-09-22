@@ -11,7 +11,7 @@ import type { SettingsFormState } from '@/modules/identity/core/model/settings'
 import { settingsRefused, settingsSaved } from '@/modules/identity/core/model/settings'
 
 import { adminAtelierPort, adminUserPort } from './container'
-import { readSessionToken } from './session'
+import { requireSession } from './session'
 
 const ADMIN_PATH = '/admin/utilisateurs'
 
@@ -29,8 +29,7 @@ export const updateAdminUserAction = async (
   _state: SettingsFormState,
   formData: FormData
 ): Promise<SettingsFormState> => {
-  const token = await readSessionToken()
-  if (token === null) redirect(`/connexion?next=${ADMIN_PATH}`)
+  await requireSession(ADMIN_PATH)
 
   const userId = formData.get('userId')
   if (typeof userId !== 'string') return settingsRefused('Ce compte n’existe pas.')
@@ -38,7 +37,7 @@ export const updateAdminUserAction = async (
   const patch = readPatch(formData)
   if (Object.keys(patch).length === 0) return settingsRefused('Rien à changer sur ce compte.')
 
-  const result = await adminUserPort.update(token, userId, patch)
+  const result = await adminUserPort.update(userId, patch)
   if (!result.ok) {
     if (result.error.code === IdentityFailureCode.UNAUTHORIZED) redirect(`/connexion?next=${ADMIN_PATH}`)
     return settingsRefused(result.error.message)
@@ -52,8 +51,7 @@ export const setMembershipRoleAction = async (
   _state: SettingsFormState,
   formData: FormData
 ): Promise<SettingsFormState> => {
-  const token = await readSessionToken()
-  if (token === null) redirect(`/connexion?next=${ADMIN_PATH}`)
+  await requireSession(ADMIN_PATH)
 
   const userId = formData.get('userId')
   const atelierId = formData.get('atelierId')
@@ -63,7 +61,7 @@ export const setMembershipRoleAction = async (
   }
   if (!isMembershipRole(role)) return settingsRefused('Ce rôle n’existe pas.')
 
-  const result = await adminAtelierPort.setMembershipRole(token, atelierId, userId, { role })
+  const result = await adminAtelierPort.setMembershipRole(atelierId, userId, { role })
   if (!result.ok) {
     if (result.error.code === AtelierFailureCode.UNAUTHORIZED) redirect(`/connexion?next=${ADMIN_PATH}`)
     if (result.error.code === AtelierFailureCode.NOT_FOUND) {

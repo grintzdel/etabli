@@ -1,3 +1,5 @@
+import type { AuthTokenProvider } from '@etabli/api-client'
+
 import type {
   AtelierResult,
   CreateMachineInput,
@@ -13,6 +15,7 @@ export class ManageMachineInMemoryAdapter implements IManageMachinePort {
   private counter = 0
 
   constructor(
+    private readonly getAuthToken: AuthTokenProvider,
     private readonly parcs: ReadonlyArray<ManagedParc['atelier']> = [],
     private readonly managers: ReadonlyMap<string, ReadonlyArray<string>> = new Map()
   ) {}
@@ -31,12 +34,17 @@ export class ManageMachineInMemoryAdapter implements IManageMachinePort {
     return `qr-in-memory-${this.counter}`
   }
 
-  private manages(token: string, atelierId: string): boolean {
-    return (this.managers.get(token) ?? []).includes(atelierId)
+  private async owned(): Promise<ReadonlyArray<string> | undefined> {
+    const token = await this.getAuthToken()
+    return token === null || token === undefined ? undefined : this.managers.get(token)
   }
 
-  async listParcs(token: string): Promise<AtelierResult<ReadonlyArray<ManagedParc>>> {
-    const owned = this.managers.get(token)
+  private async manages(atelierId: string): Promise<boolean> {
+    return (await this.owned())?.includes(atelierId) ?? false
+  }
+
+  async listParcs(): Promise<AtelierResult<ReadonlyArray<ManagedParc>>> {
+    const owned = await this.owned()
     if (owned === undefined) return failure('FORBIDDEN')
 
     return {
@@ -50,8 +58,8 @@ export class ManageMachineInMemoryAdapter implements IManageMachinePort {
     }
   }
 
-  async create(token: string, input: CreateMachineInput): Promise<AtelierResult<ManagedMachine>> {
-    if (!this.manages(token, input.atelierId)) return failure('FORBIDDEN')
+  async create(input: CreateMachineInput): Promise<AtelierResult<ManagedMachine>> {
+    if (!(await this.manages(input.atelierId))) return failure('FORBIDDEN')
 
     const now = new Date().toISOString()
     const machine: ManagedMachine = {
@@ -71,10 +79,10 @@ export class ManageMachineInMemoryAdapter implements IManageMachinePort {
     return { ok: true, value: machine }
   }
 
-  async update(token: string, id: string, input: UpdateMachineInput): Promise<AtelierResult<ManagedMachine>> {
+  async update(id: string, input: UpdateMachineInput): Promise<AtelierResult<ManagedMachine>> {
     const current = this.machines.get(id)
     if (current === undefined) return failure('NOT_FOUND')
-    if (!this.manages(token, current.atelierId)) return failure('NOT_FOUND')
+    if (!(await this.manages(current.atelierId))) return failure('NOT_FOUND')
 
     const next: ManagedMachine = {
       ...current,
@@ -89,10 +97,10 @@ export class ManageMachineInMemoryAdapter implements IManageMachinePort {
     return { ok: true, value: next }
   }
 
-  async regenerateCheckInToken(token: string, id: string): Promise<AtelierResult<ManagedMachine>> {
+  async regenerateCheckInToken(id: string): Promise<AtelierResult<ManagedMachine>> {
     const current = this.machines.get(id)
     if (current === undefined) return failure('NOT_FOUND')
-    if (!this.manages(token, current.atelierId)) return failure('NOT_FOUND')
+    if (!(await this.manages(current.atelierId))) return failure('NOT_FOUND')
 
     const next: ManagedMachine = {
       ...current,

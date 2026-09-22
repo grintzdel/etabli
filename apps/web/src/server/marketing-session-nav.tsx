@@ -1,13 +1,12 @@
 import { SignedInShortcut, SignedOutLinks } from '@/ui/SiteHeader'
 
 import { identityPort } from './container'
-import { readSessionToken } from './session'
+import { hasSession } from './session'
 
 export const MarketingSessionNav = async () => {
-  const token = await readSessionToken()
-  if (token === null) return <SignedOutLinks />
+  if (!(await hasSession())) return <SignedOutLinks />
 
-  const result = await identityPort.me(token)
+  const result = await identityPort.me()
   if (!result.ok) return <SignedOutLinks />
 
   return <SignedInShortcut displayName={result.value.displayName} />

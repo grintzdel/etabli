@@ -7,7 +7,7 @@ import type { SettingsFormState } from '@/modules/identity/core/model/settings'
 import { settingsRefused, settingsSaved } from '@/modules/identity/core/model/settings'
 
 import { identityPort } from './container'
-import { readSessionToken, writeSessionCookie } from './session'
+import { requireSession, writeSessionCookie } from './session'
 
 const text = (formData: FormData, name: string): string => {
   const value = formData.get(name)
@@ -18,8 +18,7 @@ export const changePasswordAction = async (
   _state: SettingsFormState,
   formData: FormData
 ): Promise<SettingsFormState> => {
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/parametres')
+  await requireSession('/parametres')
 
   const currentPassword = text(formData, 'currentPassword')
   const newPassword = text(formData, 'newPassword')
@@ -31,7 +30,7 @@ export const changePasswordAction = async (
     return settingsRefused('Les deux mots de passe ne correspondent pas.')
   }
 
-  const result = await identityPort.changePassword(token, { currentPassword, newPassword })
+  const result = await identityPort.changePassword({ currentPassword, newPassword })
   if (!result.ok) {
     if (result.error.code === IdentityFailureCode.INVALID_CREDENTIALS) {
       return settingsRefused('Le mot de passe actuel est incorrect.')

@@ -12,7 +12,7 @@ import { BookingFailureCode } from '@/modules/booking/core/model/booking'
 import { MachineWeek } from '@/modules/booking/react/components/MachineWeek'
 import { createBookingAction } from '@/server/booking.actions'
 import { atelierPort, bookingPort } from '@/server/container'
-import { readSessionToken } from '@/server/session'
+import { hasSession } from '@/server/session'
 
 type PageProps = { readonly params: Promise<{ readonly id: string }> }
 
@@ -45,13 +45,13 @@ export const generateMetadata = async ({ params }: PageProps): Promise<Metadata>
 }
 
 const Week = async ({ machine }: { readonly machine: MachineDetail }) => {
-  const token = await readSessionToken()
-  const result = token === null ? null : await bookingPort.availability(token, machine.id)
+  const signedIn = await hasSession()
+  const result = signedIn ? await bookingPort.availability(machine.id) : null
 
   if (result === null || (!result.ok && result.error.code === BookingFailureCode.MACHINE_NOT_BOOKABLE)) {
     return (
       <MachineAccessNotice
-        signedIn={token !== null}
+        signedIn={signedIn}
         atelierName={machine.atelierName}
         atelierSlug={machine.atelierSlug}
         machineId={machine.id}

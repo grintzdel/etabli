@@ -8,7 +8,7 @@ import { parseStatsPeriod } from '@/modules/booking/core/model/manage-stats'
 import { AtelierStatsBoard } from '@/modules/booking/react/components/AtelierStatsBoard'
 import { StatsPeriodFilter } from '@/modules/booking/react/components/StatsPeriodFilter'
 import { manageBookingPort } from '@/server/container'
-import { readSessionToken } from '@/server/session'
+import { requireSession } from '@/server/session'
 
 export const metadata: Metadata = {
   title: 'Statistiques · Gestion',
@@ -18,11 +18,10 @@ export const metadata: Metadata = {
 type SearchParams = Promise<Readonly<Record<string, string | ReadonlyArray<string> | undefined>>>
 
 const Board = async ({ searchParams }: { readonly searchParams: SearchParams }) => {
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/manage/stats')
+  await requireSession('/manage/stats')
 
   const period = parseStatsPeriod(await searchParams)
-  const result = await manageBookingPort.stats(token, { period })
+  const result = await manageBookingPort.stats({ period })
   if (!result.ok) {
     if (result.error.code === BookingFailureCode.UNAUTHORIZED) redirect('/connexion?next=/manage/stats')
     return (

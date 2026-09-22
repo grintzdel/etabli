@@ -9,7 +9,7 @@ import { MachineForm } from '@/modules/atelier/react/components/MachineForm'
 import { ManagedParcTable } from '@/modules/atelier/react/components/ManagedParcTable'
 import { manageMachinePort } from '@/server/container'
 import { createMachineAction, regenerateCheckInTokenAction, setMachineStatusAction } from '@/server/manage.actions'
-import { readSessionToken } from '@/server/session'
+import { requireSession } from '@/server/session'
 
 export const metadata: Metadata = {
   title: 'Machines · Gestion',
@@ -17,10 +17,9 @@ export const metadata: Metadata = {
 }
 
 const Parcs = async () => {
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/manage/machines')
+  await requireSession('/manage/machines')
 
-  const parcs = await manageMachinePort.listParcs(token)
+  const parcs = await manageMachinePort.listParcs()
   if (!parcs.ok) {
     if (parcs.error.code === AtelierFailureCode.UNAUTHORIZED) redirect('/connexion?next=/manage/machines')
     return (

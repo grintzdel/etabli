@@ -7,7 +7,7 @@ import type { BookingActionState } from '@/modules/booking/core/model/booking'
 import { BookingFailureCode } from '@/modules/booking/core/model/booking'
 
 import { bookingPort, manageBookingPort } from './container'
-import { readSessionToken } from './session'
+import { requireSession } from './session'
 
 export const createBookingAction = async (
   _state: BookingActionState,
@@ -17,10 +17,9 @@ export const createBookingAction = async (
   const startAt = formData.get('startAt')
   if (typeof machineId !== 'string' || typeof startAt !== 'string') return { error: null }
 
-  const token = await readSessionToken()
-  if (token === null) redirect(`/connexion?next=/machines/${machineId}`)
+  await requireSession(`/machines/${machineId}`)
 
-  const result = await bookingPort.create(token, { machineId, startAt })
+  const result = await bookingPort.create({ machineId, startAt })
   if (!result.ok) {
     if (result.error.code === BookingFailureCode.UNAUTHORIZED) redirect(`/connexion?next=/machines/${machineId}`)
     return { error: result.error.message }
@@ -36,10 +35,9 @@ export const cancelBookingAction = async (
   const bookingId = formData.get('bookingId')
   if (typeof bookingId !== 'string' || bookingId.length === 0) return { error: null }
 
-  const token = await readSessionToken()
-  if (token === null) redirect(`/connexion?next=/reservations/${bookingId}`)
+  await requireSession(`/reservations/${bookingId}`)
 
-  const result = await bookingPort.cancel(token, bookingId)
+  const result = await bookingPort.cancel(bookingId)
   if (!result.ok) {
     if (result.error.code === BookingFailureCode.UNAUTHORIZED) redirect(`/connexion?next=/reservations/${bookingId}`)
     return { error: result.error.message }
@@ -56,10 +54,9 @@ export const manualCheckInAction = async (
   const bookingId = formData.get('bookingId')
   if (typeof bookingId !== 'string' || bookingId.length === 0) return { error: null }
 
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/manage/bookings')
+  await requireSession('/manage/bookings')
 
-  const result = await manageBookingPort.checkIn(token, bookingId)
+  const result = await manageBookingPort.checkIn(bookingId)
   if (!result.ok) {
     if (result.error.code === BookingFailureCode.UNAUTHORIZED) redirect('/connexion?next=/manage/bookings')
     return { error: result.error.message }
@@ -73,10 +70,9 @@ export const markNoShowAction = async (_state: BookingActionState, formData: For
   const bookingId = formData.get('bookingId')
   if (typeof bookingId !== 'string' || bookingId.length === 0) return { error: null }
 
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/manage/bookings')
+  await requireSession('/manage/bookings')
 
-  const result = await manageBookingPort.markNoShow(token, bookingId)
+  const result = await manageBookingPort.markNoShow(bookingId)
   if (!result.ok) {
     if (result.error.code === BookingFailureCode.UNAUTHORIZED) redirect('/connexion?next=/manage/bookings')
     return { error: result.error.message }
@@ -93,10 +89,9 @@ export const cancelAtelierBookingAction = async (
   const bookingId = formData.get('bookingId')
   if (typeof bookingId !== 'string' || bookingId.length === 0) return { error: null }
 
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/manage/bookings')
+  await requireSession('/manage/bookings')
 
-  const result = await manageBookingPort.cancel(token, bookingId)
+  const result = await manageBookingPort.cancel(bookingId)
   if (!result.ok) {
     if (result.error.code === BookingFailureCode.UNAUTHORIZED) redirect('/connexion?next=/manage/bookings')
     return { error: result.error.message }

@@ -7,7 +7,7 @@ import { emptyOnboardingFormState } from '@/modules/atelier/core/model/onboardin
 import { OnboardingForm } from '@/modules/atelier/react/components/OnboardingForm'
 import { atelierPort, identityPort } from '@/server/container'
 import { completeOnboardingAction } from '@/server/onboarding.actions'
-import { readSessionToken } from '@/server/session'
+import { requireSession } from '@/server/session'
 
 export const metadata: Metadata = {
   title: 'Bienvenue',
@@ -15,10 +15,9 @@ export const metadata: Metadata = {
 }
 
 const Onboarding = async () => {
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/bienvenue')
+  await requireSession('/bienvenue')
 
-  const session = await identityPort.me(token)
+  const session = await identityPort.me()
   if (!session.ok) redirect('/connexion?next=/bienvenue')
   if (session.value.memberships.length > 0) redirect('/compte')
 

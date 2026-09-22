@@ -6,7 +6,7 @@ import { FAILURE_MESSAGES, AtelierFailureCode } from '@/modules/atelier/core/mod
 import type { OnboardingFormState } from '@/modules/atelier/core/model/onboarding-form'
 
 import { atelierPort } from './container'
-import { readSessionToken } from './session'
+import { requireSession } from './session'
 
 export const completeOnboardingAction = async (
   _previous: OnboardingFormState,
@@ -22,10 +22,9 @@ export const completeOnboardingAction = async (
     return { error: 'Déclarez au moins une pratique.', practice }
   }
 
-  const token = await readSessionToken()
-  if (token === null) redirect('/connexion?next=/bienvenue')
+  await requireSession('/bienvenue')
 
-  const result = await atelierPort.completeOnboarding(token, { atelierId, practice })
+  const result = await atelierPort.completeOnboarding({ atelierId, practice })
   if (!result.ok) {
     if (result.error.code === AtelierFailureCode.UNAUTHORIZED) redirect('/connexion?next=/bienvenue')
     return { error: FAILURE_MESSAGES[result.error.code], practice }

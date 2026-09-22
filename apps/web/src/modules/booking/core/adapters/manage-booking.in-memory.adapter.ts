@@ -1,3 +1,5 @@
+import type { AuthTokenProvider } from '@etabli/api-client'
+
 import type { BookingResult } from '../model/booking'
 import { BookingFailureCode, failure } from '../model/booking'
 import type { AtelierBooking, AtelierBookingsQuery } from '../model/manage-booking'
@@ -9,6 +11,7 @@ export class ManageBookingInMemoryAdapter implements IManageBookingPort {
   private readonly bookings = new Map<string, AtelierBooking>()
 
   constructor(
+    private readonly getAuthToken: AuthTokenProvider,
     seed: ReadonlyArray<AtelierBooking> = [],
     private readonly managers: ReadonlyMap<string, ReadonlyArray<string>> = new Map(),
     private readonly rows: ReadonlyArray<AtelierStats> = []
@@ -16,19 +19,22 @@ export class ManageBookingInMemoryAdapter implements IManageBookingPort {
     for (const booking of seed) this.bookings.set(booking.id, booking)
   }
 
-  private managed(token: string, booking: AtelierBooking): boolean {
-    return (this.managers.get(token) ?? []).includes(booking.atelierId)
+  private async owned(): Promise<ReadonlyArray<string> | undefined> {
+    const token = await this.getAuthToken()
+    return token === null || token === undefined ? undefined : this.managers.get(token)
   }
 
-  private transition(
-    token: string,
+  private async transition(
     id: string,
     allowed: (booking: AtelierBooking) => boolean,
     refusal: BookingFailureCode,
     patch: (booking: AtelierBooking) => AtelierBooking
-  ): BookingResult<AtelierBooking> {
+  ): Promise<BookingResult<AtelierBooking>> {
+    const owned = await this.owned()
     const current = this.bookings.get(id)
-    if (current === undefined || !this.managed(token, current)) return failure(BookingFailureCode.BOOKING_UNKNOWN)
+    if (current === undefined || !(owned ?? []).includes(current.atelierId)) {
+      return failure(BookingFailureCode.BOOKING_UNKNOWN)
+    }
     if (!allowed(current)) return failure(refusal)
 
     const next = patch(current)
@@ -36,8 +42,8 @@ export class ManageBookingInMemoryAdapter implements IManageBookingPort {
     return { ok: true, value: next }
   }
 
-  async list(token: string, query: AtelierBookingsQuery): Promise<BookingResult<ReadonlyArray<AtelierBooking>>> {
-    const owned = this.managers.get(token)
+  async list(query: AtelierBookingsQuery): Promise<BookingResult<ReadonlyArray<AtelierBooking>>> {
+    const owned = await this.owned()
     if (owned === undefined) return failure(BookingFailureCode.FORBIDDEN)
 
     return {
@@ -55,9 +61,8 @@ export class ManageBookingInMemoryAdapter implements IManageBookingPort {
     return date === undefined || booking.startAt.slice(0, 10) === date
   }
 
-  async checkIn(token: string, id: string): Promise<BookingResult<AtelierBooking>> {
+  async checkIn(id: string): Promise<BookingResult<AtelierBooking>> {
     return this.transition(
-      token,
       id,
       (booking) => booking.canCheckIn,
       BookingFailureCode.NOT_CHECK_INABLE,
@@ -73,9 +78,8 @@ export class ManageBookingInMemoryAdapter implements IManageBookingPort {
     )
   }
 
-  async markNoShow(token: string, id: string): Promise<BookingResult<AtelierBooking>> {
+  async markNoShow(id: string): Promise<BookingResult<AtelierBooking>> {
     return this.transition(
-      token,
       id,
       (booking) => booking.canMarkNoShow,
       BookingFailureCode.NOT_MARKABLE_AS_NO_SHOW,
@@ -83,9 +87,8 @@ export class ManageBookingInMemoryAdapter implements IManageBookingPort {
     )
   }
 
-  async cancel(token: string, id: string): Promise<BookingResult<AtelierBooking>> {
+  async cancel(id: string): Promise<BookingResult<AtelierBooking>> {
     return this.transition(
-      token,
       id,
       (booking) => booking.canCancel,
       BookingFailureCode.NOT_CANCELLABLE,
@@ -93,16 +96,16 @@ export class ManageBookingInMemoryAdapter implements IManageBookingPort {
     )
   }
 
-  async stats(token: string, query: AtelierStatsQuery): Promise<BookingResult<ReadonlyArray<AtelierStats>>> {
-    const owned = this.managers.get(token)
+  async stats(query: AtelierStatsQuery): Promise<BookingResult<ReadonlyArray<AtelierStats>>> {
+    const owned = await this.owned()
     if (owned === undefined) return failure(BookingFailureCode.FORBIDDEN)
 
     const period = query.period ?? DEFAULT_STATS_PERIOD
     return { ok: true, value: this.rows.filter((row) => owned.includes(row.atelierId) && row.period === period) }
   }
 
-  async networkStats(token: string, query: AtelierStatsQuery): Promise<BookingResult<NetworkStats>> {
-    if (!this.managers.has(token)) return failure(BookingFailureCode.FORBIDDEN)
+  async networkStats(query: AtelierStatsQuery): Promise<BookingResult<NetworkStats>> {
+    if ((await this.owned()) === undefined) return failure(BookingFailureCode.FORBIDDEN)
 
     const period = query.period ?? DEFAULT_STATS_PERIOD
     const byAtelier = this.rows.filter((row) => row.period === period)

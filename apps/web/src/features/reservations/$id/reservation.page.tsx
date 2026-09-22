@@ -8,7 +8,7 @@ import { BookingFailureCode } from '@/modules/booking/core/model/booking'
 import { BookingSummary } from '@/modules/booking/react/components/BookingSummary'
 import { cancelBookingAction } from '@/server/booking.actions'
 import { bookingPort } from '@/server/container'
-import { readSessionToken } from '@/server/session'
+import { requireSession } from '@/server/session'
 
 export const metadata: Metadata = {
   title: 'Réservation',
@@ -19,10 +19,9 @@ type PageProps = { readonly params: Promise<{ readonly id: string }> }
 
 const Booking = async ({ params }: PageProps) => {
   const { id } = await params
-  const token = await readSessionToken()
-  if (token === null) redirect(`/connexion?next=/reservations/${id}`)
+  await requireSession(`/reservations/${id}`)
 
-  const result = await bookingPort.getById(token, id)
+  const result = await bookingPort.getById(id)
   if (!result.ok) {
     if (result.error.code === BookingFailureCode.UNAUTHORIZED) redirect(`/connexion?next=/reservations/${id}`)
     if (result.error.code === BookingFailureCode.BOOKING_UNKNOWN) notFound()
