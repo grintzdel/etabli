@@ -417,7 +417,19 @@ le trousseau.
 liste n'est plus triée par distance, et l'écran le dit avec un bouton pour
 réessayer. Les trois paramètres voyagent ensemble ou pas du tout — le schema de
 l'API refuse un `lat` sans `radiusKm`. Le rayon vaut 1000 km : il est un clip
-dur côté SQL, et le but est de **trier**, pas de filtrer.
+dur côté SQL, et le but est de **trier**, pas de filtrer. La règle du trio vit
+maintenant dans `directoryQuery`, seule fonction pure du module à la connaître,
+et elle est testée là.
+
+**L'annuaire mobile filtre par ville et par type, et le dit comme c'est.** Le
+filtre ville de l'API est une **égalité** (`lower(city) = lower(input)`), pas une
+recherche : « Mont » ne rend rien pour Montreuil. Le web a le même défaut sans le
+dire ; l'écran mobile l'écrit sous le champ plutôt que de laisser l'utilisateur
+conclure que l'annuaire est vide. Passer en préfixe est un changement d'`apps/api`,
+pas un changement de mobile. Le champ ne part qu'au `submit` ou au `blur` — une
+requête par frappe, sur un filtre exact, ne trouverait rien avant le dernier
+caractère. Géo et filtres se composent : `listPublished` empile les clauses et
+garde le tri par distance.
 
 **Les photos sont dans le bundle, et le choix reste une arithmétique.**
 `apps/mobile/assets/ateliers/` porte une copie des six photographies de type et

@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router'
 
+import { AtelierDirectoryFilters } from '@/modules/atelier/ui/components/AtelierDirectoryFilters'
 import { AtelierList } from '@/modules/atelier/ui/components/AtelierList'
 import { useAtelierDirectory } from '@/modules/atelier/ui/hooks/use-atelier-directory'
 import { useSession } from '@/modules/identity/ui/hooks/use-session'
@@ -33,12 +34,24 @@ export const AteliersPage = () => {
         <Notice message={directory.locationNotice} actionLabel="Réessayer" onAction={directory.retryLocation} />
       )}
 
+      <AtelierDirectoryFilters
+        filters={directory.filters}
+        hasFilters={directory.hasFilters}
+        onSearchCity={directory.searchCity}
+        onToggleMachineKind={directory.toggleMachineKind}
+        onClear={directory.clearFilters}
+      />
+
       {directory.error === null ? null : <Notice tone="danger" title="Annuaire" message={directory.error} />}
 
       {directory.isPending ? (
         <Loader />
       ) : (
-        <AtelierList ateliers={directory.ateliers} onSelect={(slug) => router.push(`/ateliers/${slug}`)} />
+        <AtelierList
+          ateliers={directory.ateliers}
+          filtered={directory.hasFilters}
+          onSelect={(slug) => router.push(`/ateliers/${slug}`)}
+        />
       )}
     </Screen>
   )
