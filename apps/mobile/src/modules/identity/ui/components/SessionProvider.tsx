@@ -19,10 +19,12 @@ export const SessionProvider = ({ children }: { readonly children: ReactNode }) 
         return
       }
 
-      const me = await dependencies.identity.me(token)
+      dependencies.sessionToken.write(token)
+      const me = await dependencies.identity.me()
       if (cancelled) return
       if (me.ok) setState({ status: 'authenticated', token, user: me.value })
       else {
+        dependencies.sessionToken.write(null)
         await dependencies.sessionStore.clear()
         setState({ status: 'anonymous' })
       }
@@ -39,6 +41,7 @@ export const SessionProvider = ({ children }: { readonly children: ReactNode }) 
       const result = await dependencies.identity.login(input)
       if (!result.ok) return result
 
+      dependencies.sessionToken.write(result.value.token)
       await dependencies.sessionStore.write(result.value.token)
       queryClient.clear()
       setState({ status: 'authenticated', token: result.value.token, user: result.value.user })
@@ -48,6 +51,7 @@ export const SessionProvider = ({ children }: { readonly children: ReactNode }) 
   )
 
   const signOut = useCallback(() => {
+    dependencies.sessionToken.write(null)
     void dependencies.sessionStore.clear()
     queryClient.clear()
     setState({ status: 'anonymous' })
