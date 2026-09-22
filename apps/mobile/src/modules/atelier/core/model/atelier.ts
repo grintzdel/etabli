@@ -2,13 +2,24 @@ import { makeFailure, type Failure, type Result } from '@etabli/api-client'
 import type {
   AtelierDetail,
   AtelierSummary,
+  CompleteOnboardingInput,
   MachineDetail,
   MachineKind,
   MachineStatus,
+  OnboardingResult,
   PublicMachine,
 } from '@etabli/contract'
 
-export type { AtelierDetail, AtelierSummary, MachineDetail, MachineKind, MachineStatus, PublicMachine }
+export type {
+  AtelierDetail,
+  AtelierSummary,
+  CompleteOnboardingInput,
+  MachineDetail,
+  MachineKind,
+  MachineStatus,
+  OnboardingResult,
+  PublicMachine,
+}
 
 export const DIRECTORY_RADIUS_KM = 1000
 
@@ -61,3 +72,12 @@ export const MACHINE_STATUS_TONES: Readonly<Record<MachineStatus, 'ok' | 'warn' 
 
 export const formatDistance = (km: number): string =>
   km < 10 ? `${km.toFixed(1).replace('.', ',')} km` : `${Math.round(km)} km`
+
+export const PRACTICES: ReadonlyArray<string> = [
+  'Bois',
+  'Métal',
+  'Textile',
+  'Électronique',
+  'Impression 3D',
+  'Découpe laser',
+]

@@ -8,6 +8,7 @@ import {
   type IdentityFailureCode,
   type IdentityResult,
   type LoginInput,
+  type MemberAtelier,
   type Session,
 } from '../model/session'
 import type { IIdentityPort } from '../ports/identity.port'
@@ -28,5 +29,9 @@ export class IdentityHttpAdapter implements IIdentityPort {
 
   me(): Promise<IdentityResult<CurrentUser>> {
     return this.authenticated.get<CurrentUser>(routes.auth.me)
+  }
+
+  myAteliers(): Promise<IdentityResult<ReadonlyArray<MemberAtelier>>> {
+    return this.authenticated.get<ReadonlyArray<MemberAtelier>>(routes.me.ateliers)
   }
 }

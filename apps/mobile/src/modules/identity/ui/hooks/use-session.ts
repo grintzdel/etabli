@@ -13,6 +13,7 @@ export interface SessionApi {
   readonly user: CurrentUser | null
   signIn(input: LoginInput): Promise<IdentityResult<Session>>
   signOut(): void
+  refresh(): Promise<void>
 }
 
 export const SessionContext = createContext<SessionApi | null>(null)

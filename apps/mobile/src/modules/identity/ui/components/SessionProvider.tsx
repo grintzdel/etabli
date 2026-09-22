@@ -50,6 +50,12 @@ export const SessionProvider = ({ children }: { readonly children: ReactNode }) 
     [queryClient]
   )
 
+  const refresh = useCallback(async (): Promise<void> => {
+    const me = await dependencies.identity.me()
+    if (me.ok)
+      setState((previous) => (previous.status === 'authenticated' ? { ...previous, user: me.value } : previous))
+  }, [])
+
   const signOut = useCallback(() => {
     dependencies.sessionToken.write(null)
     void dependencies.sessionStore.clear()
@@ -65,6 +71,7 @@ export const SessionProvider = ({ children }: { readonly children: ReactNode }) 
         user: state.status === 'authenticated' ? state.user : null,
         signIn,
         signOut,
+        refresh,
       }}
     >
       {children}

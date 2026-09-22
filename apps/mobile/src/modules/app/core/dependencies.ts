@@ -23,7 +23,7 @@ const scanner: ICheckInScannerPort = {
 const sessionToken = new SessionTokenHolder()
 
 export const dependencies = {
-  atelier: new AtelierHttpAdapter(API_BASE_URL),
+  atelier: new AtelierHttpAdapter(API_BASE_URL, sessionToken.read),
   booking: new BookingHttpAdapter(API_BASE_URL, sessionToken.read),
   certification: new CertificationHttpAdapter(API_BASE_URL, sessionToken.read),
   identity: new IdentityHttpAdapter(API_BASE_URL, sessionToken.read),

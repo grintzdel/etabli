@@ -1,4 +1,4 @@
-import { createApiClient, type ApiClient } from '@etabli/api-client'
+import { createApiClient, type ApiClient, type AuthTokenProvider } from '@etabli/api-client'
 import { buildPath, routes } from '@etabli/contract'
 
 import { atelierFailureOf } from '../lib/atelier-failure'
@@ -9,16 +9,21 @@ import {
   type AtelierFailureCode,
   type AtelierResult,
   type AtelierSummary,
+  type CompleteOnboardingInput,
   type DirectoryPoint,
   type MachineDetail,
+  type OnboardingResult,
 } from '../model/atelier'
 import type { IAtelierPort } from '../ports/atelier.port'
 
 export class AtelierHttpAdapter implements IAtelierPort {
   private readonly anonymous: ApiClient<AtelierFailureCode>
+  private readonly authenticated: ApiClient<AtelierFailureCode>
 
-  constructor(baseUrl: string) {
-    this.anonymous = createApiClient({ baseUrl, messages: FAILURE_MESSAGES, failureOf: atelierFailureOf })
+  constructor(baseUrl: string, getAuthToken: AuthTokenProvider) {
+    const shared = { baseUrl, messages: FAILURE_MESSAGES, failureOf: atelierFailureOf }
+    this.anonymous = createApiClient(shared)
+    this.authenticated = createApiClient({ ...shared, getAuthToken })
   }
 
   list(point: DirectoryPoint | null): Promise<AtelierResult<ReadonlyArray<AtelierSummary>>> {
@@ -40,5 +45,9 @@ export class AtelierHttpAdapter implements IAtelierPort {
 
   getMachineById(id: string): Promise<AtelierResult<MachineDetail>> {
     return this.anonymous.get<MachineDetail>(buildPath(routes.machines.getById, { id }))
+  }
+
+  completeOnboarding(input: CompleteOnboardingInput): Promise<AtelierResult<OnboardingResult>> {
+    return this.authenticated.post<OnboardingResult>(routes.onboarding.complete, input)
   }
 }
