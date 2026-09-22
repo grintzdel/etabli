@@ -1,7 +1,8 @@
 import { ApiErrorCode } from '@etabli/contract'
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
+import type { IAuthContext } from '../../../../shared/domain/auth-context.interface.ts'
+import { AUTH_CONTEXT } from '../../../../shared/domain/auth-context.token.ts'
 import type { IClock } from '../../../../shared/domain/clock.interface.ts'
 import { CLOCK } from '../../../../shared/domain/clock.token.ts'
 import { type CurrentUser, toCurrentUser } from '../../domain/entities/user.entity.ts'
@@ -13,10 +14,12 @@ import type { UpdateProfileBody } from '../../presentation/dtos/update-profile.r
 export class UpdateProfileUsecase {
   constructor(
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
-    @Inject(CLOCK) private readonly clock: IClock
+    @Inject(CLOCK) private readonly clock: IClock,
+    @Inject(AUTH_CONTEXT) private readonly authContext: IAuthContext
   ) {}
 
-  async execute(user: AuthUser, body: UpdateProfileBody): Promise<CurrentUser> {
+  async execute(body: UpdateProfileBody): Promise<CurrentUser> {
+    const user = this.authContext.user
     const updated = await this.userRepository.updateProfile(user.id, body, this.clock.now())
     if (updated === null)
       throw new UnauthorizedException({ code: ApiErrorCode.UNAUTHORIZED, message: 'Session expirée' })

@@ -1,8 +1,6 @@
 import { Controller, Get, Patch, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
-import { CurrentUser } from '../../../../infrastructure/decorators/current-user.decorator.ts'
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
 import { ZodBody } from '../../../../shared/presentation/decorators/zod.decorator.ts'
 import { jsonSchema } from '../../../../shared/presentation/json-schema.ts'
 import { JwtAuthGuard } from '../../../auth/presentation/guards/jwt-auth.guard.ts'
@@ -27,28 +25,24 @@ export class UserController {
 
   @Patch('profile')
   @ApiOkResponse({ schema: jsonSchema(currentUserResponseSchema) })
-  async updateProfile(
-    @CurrentUser() user: AuthUser,
-    @ZodBody(updateProfileBodySchema) body: UpdateProfileBody
-  ): Promise<CurrentUserResponse> {
-    const current = await this.userService.updateProfile(user, body)
+  async updateProfile(@ZodBody(updateProfileBodySchema) body: UpdateProfileBody): Promise<CurrentUserResponse> {
+    const current = await this.userService.updateProfile(body)
     return toCurrentUserResponse(current)
   }
 
   @Get('preferences')
   @ApiOkResponse({ schema: jsonSchema(userPreferencesResponseSchema) })
-  async getPreferences(@CurrentUser() user: AuthUser): Promise<UserPreferencesResponse> {
-    const preferences = await this.userService.getPreferences(user)
+  async getPreferences(): Promise<UserPreferencesResponse> {
+    const preferences = await this.userService.getPreferences()
     return toUserPreferencesResponse(preferences)
   }
 
   @Patch('preferences')
   @ApiOkResponse({ schema: jsonSchema(userPreferencesResponseSchema) })
   async updatePreferences(
-    @CurrentUser() user: AuthUser,
     @ZodBody(updatePreferencesBodySchema) body: UpdatePreferencesBody
   ): Promise<UserPreferencesResponse> {
-    const preferences = await this.userService.updatePreferences(user, body)
+    const preferences = await this.userService.updatePreferences(body)
     return toUserPreferencesResponse(preferences)
   }
 }

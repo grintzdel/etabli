@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
+import type { IAuthContext } from '../../../../shared/domain/auth-context.interface.ts'
+import { AUTH_CONTEXT } from '../../../../shared/domain/auth-context.token.ts'
 import { MachineStatus } from '../../../machine/domain/constants/machine.constant.ts'
 import type { IMachineRepository } from '../../../machine/domain/repositories/machine.repository.interface.ts'
 import { MACHINE_REPOSITORY } from '../../../machine/domain/repositories/machine.repository.token.ts'
@@ -13,10 +14,12 @@ import { CERTIFICATION_REPOSITORY } from '../../domain/repositories/certificatio
 export class ListMyCertificationsUsecase {
   constructor(
     @Inject(CERTIFICATION_REPOSITORY) private readonly certificationRepository: ICertificationRepository,
-    @Inject(MACHINE_REPOSITORY) private readonly machineRepository: IMachineRepository
+    @Inject(MACHINE_REPOSITORY) private readonly machineRepository: IMachineRepository,
+    @Inject(AUTH_CONTEXT) private readonly authContext: IAuthContext
   ) {}
 
-  async execute(user: AuthUser): Promise<ReadonlyArray<MyCertification>> {
+  async execute(): Promise<ReadonlyArray<MyCertification>> {
+    const user = this.authContext.user
     const atelierIds = user.memberships.map((membership) => membership.atelierId)
     if (atelierIds.length === 0) return []
 

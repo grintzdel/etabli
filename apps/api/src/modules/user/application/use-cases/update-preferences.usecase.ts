@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
+import type { IAuthContext } from '../../../../shared/domain/auth-context.interface.ts'
+import { AUTH_CONTEXT } from '../../../../shared/domain/auth-context.token.ts'
 import type { IClock } from '../../../../shared/domain/clock.interface.ts'
 import { CLOCK } from '../../../../shared/domain/clock.token.ts'
 import { isMemberOf } from '../../../../shared/domain/permissions.ts'
@@ -14,10 +15,12 @@ import type { UpdatePreferencesBody } from '../../presentation/dtos/update-prefe
 export class UpdatePreferencesUsecase {
   constructor(
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
-    @Inject(CLOCK) private readonly clock: IClock
+    @Inject(CLOCK) private readonly clock: IClock,
+    @Inject(AUTH_CONTEXT) private readonly authContext: IAuthContext
   ) {}
 
-  async execute(user: AuthUser, body: UpdatePreferencesBody): Promise<UserPreferencesEntity> {
+  async execute(body: UpdatePreferencesBody): Promise<UserPreferencesEntity> {
+    const user = this.authContext.user
     const wanted = body.defaultAtelierId
     if (wanted != null && !isMemberOf(user, wanted)) throw new PreferredAtelierNotJoinedError(wanted)
 

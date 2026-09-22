@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
+import type { IAuthContext } from '../../../../shared/domain/auth-context.interface.ts'
+import { AUTH_CONTEXT } from '../../../../shared/domain/auth-context.token.ts'
 import type { IClock } from '../../../../shared/domain/clock.interface.ts'
 import { CLOCK } from '../../../../shared/domain/clock.token.ts'
 import { PlatformRole } from '../../../../shared/domain/roles.constant.ts'
@@ -18,10 +19,12 @@ const locksItselfOut = (patch: UpdateAdminUserBody): boolean =>
 export class UpdateAdminUserUsecase {
   constructor(
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
-    @Inject(CLOCK) private readonly clock: IClock
+    @Inject(CLOCK) private readonly clock: IClock,
+    @Inject(AUTH_CONTEXT) private readonly authContext: IAuthContext
   ) {}
 
-  async execute(user: AuthUser, userId: string, patch: UpdateAdminUserBody): Promise<AdminUserEntity> {
+  async execute(userId: string, patch: UpdateAdminUserBody): Promise<AdminUserEntity> {
+    const user = this.authContext.user
     if (user.id === userId && locksItselfOut(patch)) throw new AdminSelfLockoutError()
 
     const updated = await this.userRepository.updateAdminState(userId, patch, this.clock.now())

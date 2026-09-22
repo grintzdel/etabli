@@ -1,9 +1,7 @@
 import { Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
-import { CurrentUser } from '../../../../infrastructure/decorators/current-user.decorator.ts'
 import { Roles } from '../../../../infrastructure/decorators/roles.decorator.ts'
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
 import { PlatformRole } from '../../../../shared/domain/roles.constant.ts'
 import { UuidParam, ZodQuery } from '../../../../shared/presentation/decorators/zod.decorator.ts'
 import { jsonSchema, jsonSchemaArray } from '../../../../shared/presentation/json-schema.ts'
@@ -37,53 +35,40 @@ export class BookingManagementController {
   @Get('bookings')
   @ApiOkResponse({ schema: jsonSchemaArray(atelierBookingResponseSchema) })
   async list(
-    @CurrentUser() user: AuthUser,
     @ZodQuery(listAtelierBookingsQuerySchema) query: ListAtelierBookingsQuery
   ): Promise<ReadonlyArray<AtelierBookingResponse>> {
-    const bookings = await this.bookingService.listForAtelier(user, query)
+    const bookings = await this.bookingService.listForAtelier(query)
     return bookings.map(toAtelierBookingResponse)
   }
 
   @Post('bookings/:bookingId/check-in')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: jsonSchema(atelierBookingResponseSchema) })
-  async checkIn(
-    @CurrentUser() user: AuthUser,
-    @UuidParam('bookingId') bookingId: string
-  ): Promise<AtelierBookingResponse> {
-    const booking = await this.bookingService.manualCheckIn(user, bookingId)
+  async checkIn(@UuidParam('bookingId') bookingId: string): Promise<AtelierBookingResponse> {
+    const booking = await this.bookingService.manualCheckIn(bookingId)
     return toAtelierBookingResponse(booking)
   }
 
   @Post('bookings/:bookingId/cancel')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: jsonSchema(atelierBookingResponseSchema) })
-  async cancel(
-    @CurrentUser() user: AuthUser,
-    @UuidParam('bookingId') bookingId: string
-  ): Promise<AtelierBookingResponse> {
-    const booking = await this.bookingService.cancelForAtelier(user, bookingId)
+  async cancel(@UuidParam('bookingId') bookingId: string): Promise<AtelierBookingResponse> {
+    const booking = await this.bookingService.cancelForAtelier(bookingId)
     return toAtelierBookingResponse(booking)
   }
 
   @Post('bookings/:bookingId/no-show')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: jsonSchema(atelierBookingResponseSchema) })
-  async markNoShow(
-    @CurrentUser() user: AuthUser,
-    @UuidParam('bookingId') bookingId: string
-  ): Promise<AtelierBookingResponse> {
-    const booking = await this.bookingService.markNoShow(user, bookingId)
+  async markNoShow(@UuidParam('bookingId') bookingId: string): Promise<AtelierBookingResponse> {
+    const booking = await this.bookingService.markNoShow(bookingId)
     return toAtelierBookingResponse(booking)
   }
 
   @Get('stats')
   @ApiOkResponse({ schema: jsonSchemaArray(atelierStatsResponseSchema) })
-  async stats(
-    @CurrentUser() user: AuthUser,
-    @ZodQuery(statsQuerySchema) query: StatsQuery
-  ): Promise<ReadonlyArray<AtelierStatsResponse>> {
-    const stats = await this.bookingService.atelierStats(user, query)
+  async stats(@ZodQuery(statsQuerySchema) query: StatsQuery): Promise<ReadonlyArray<AtelierStatsResponse>> {
+    const stats = await this.bookingService.atelierStats(query)
     return stats.map(toAtelierStatsResponse)
   }
 }

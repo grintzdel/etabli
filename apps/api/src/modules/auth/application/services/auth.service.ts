@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
 import type { CurrentUser } from '../../../user/domain/entities/user.entity.ts'
 import type { Session } from '../../domain/entities/session.entity.ts'
 import type { ChangePasswordBody } from '../../presentation/dtos/change-password.request.dto.ts'
@@ -28,11 +27,11 @@ export class AuthService {
     return this.loginUserUsecase.execute(body)
   }
 
-  public async changePassword(user: AuthUser, body: ChangePasswordBody): Promise<Session> {
-    return this.changePasswordUsecase.execute(user, body)
+  public async changePassword(body: ChangePasswordBody): Promise<Session> {
+    return this.changePasswordUsecase.execute(body)
   }
 
-  public async me(user: AuthUser): Promise<CurrentUser> {
-    return this.getCurrentUserUsecase.execute(user)
+  public async me(): Promise<CurrentUser> {
+    return this.getCurrentUserUsecase.execute()
   }
 }

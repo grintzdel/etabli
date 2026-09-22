@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
 import type { MemberAtelier, MembershipEntity, OnboardingResult } from '../../domain/entities/membership.entity.ts'
 import type { CompleteOnboardingBody } from '../../presentation/dtos/complete-onboarding.request.dto.ts'
 import type { SetMembershipRoleBody } from '../../presentation/dtos/set-membership-role.request.dto.ts'
@@ -16,12 +15,12 @@ export class MembershipService {
     private readonly setMembershipRoleUsecase: SetMembershipRoleUsecase
   ) {}
 
-  public async completeOnboarding(user: AuthUser, body: CompleteOnboardingBody): Promise<OnboardingResult> {
-    return this.completeOnboardingUsecase.execute(user, body)
+  public async completeOnboarding(body: CompleteOnboardingBody): Promise<OnboardingResult> {
+    return this.completeOnboardingUsecase.execute(body)
   }
 
-  public async listMyAteliers(user: AuthUser): Promise<ReadonlyArray<MemberAtelier>> {
-    return this.listMyAteliersUsecase.execute(user)
+  public async listMyAteliers(): Promise<ReadonlyArray<MemberAtelier>> {
+    return this.listMyAteliersUsecase.execute()
   }
 
   public async setRole(atelierId: string, userId: string, body: SetMembershipRoleBody): Promise<MembershipEntity> {

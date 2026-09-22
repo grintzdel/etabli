@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { FixedAuthContext } from '../../../../shared/testing/fixed.auth-context.ts'
 import { FixedClock } from '../../../../shared/testing/fixed.clock.ts'
 import { authUserFixture, fabmanagerOf, machineFixture, memberOf } from '../../../../shared/testing/fixtures.ts'
 import { stub } from '../../../../shared/testing/stub.ts'
@@ -55,10 +56,11 @@ describe('CancelBookingUsecase', () => {
     const usecase = new CancelBookingUsecase(
       stub<IBookingRepository>({ findById: vi.fn().mockResolvedValue(bookingOf()), cancel }),
       machineRepository,
-      new FixedClock('2026-09-16T09:00:00Z')
+      new FixedClock('2026-09-16T09:00:00Z'),
+      new FixedAuthContext(OWNER)
     )
 
-    const detail = await usecase.execute(OWNER, 'booking-1')
+    const detail = await usecase.execute('booking-1')
 
     expect(detail.status).toBe(BookingStatus.CANCELLED)
     expect(cancel).toHaveBeenCalledWith('booking-1', new Date('2026-09-16T09:00:00Z'), OWNER.id)
@@ -68,20 +70,22 @@ describe('CancelBookingUsecase', () => {
     const usecase = new CancelBookingUsecase(
       stub<IBookingRepository>({ findById: vi.fn().mockResolvedValue(bookingOf({ userId: 'someone-else' })) }),
       machineRepository,
-      new FixedClock('2026-09-16T09:00:00Z')
+      new FixedClock('2026-09-16T09:00:00Z'),
+      new FixedAuthContext(OWNER)
     )
 
-    await expect(usecase.execute(OWNER, 'booking-1')).rejects.toThrow(BookingUnknownError)
+    await expect(usecase.execute('booking-1')).rejects.toThrow(BookingUnknownError)
   })
 
   it('refuses a slot already started', async () => {
     const usecase = new CancelBookingUsecase(
       stub<IBookingRepository>({ findById: vi.fn().mockResolvedValue(bookingOf()) }),
       machineRepository,
-      new FixedClock('2026-09-16T10:30:00Z')
+      new FixedClock('2026-09-16T10:30:00Z'),
+      new FixedAuthContext(OWNER)
     )
 
-    await expect(usecase.execute(OWNER, 'booking-1')).rejects.toThrow(BookingNotCancellableError)
+    await expect(usecase.execute('booking-1')).rejects.toThrow(BookingNotCancellableError)
   })
 })
 
@@ -96,10 +100,11 @@ describe('CancelAtelierBookingUsecase', () => {
       }),
       machineRepository,
       userRepository,
-      new FixedClock('2026-09-16T10:30:00Z')
+      new FixedClock('2026-09-16T10:30:00Z'),
+      new FixedAuthContext(fabmanager)
     )
 
-    expect((await usecase.execute(fabmanager, 'booking-1')).status).toBe(BookingStatus.CANCELLED)
+    expect((await usecase.execute('booking-1')).status).toBe(BookingStatus.CANCELLED)
   })
 
   it('stops at the end of the slot', async () => {
@@ -107,10 +112,11 @@ describe('CancelAtelierBookingUsecase', () => {
       stub<IBookingRepository>({ findById: vi.fn().mockResolvedValue(bookingOf()) }),
       machineRepository,
       userRepository,
-      new FixedClock('2026-09-16T11:00:00Z')
+      new FixedClock('2026-09-16T11:00:00Z'),
+      new FixedAuthContext(fabmanager)
     )
 
-    await expect(usecase.execute(fabmanager, 'booking-1')).rejects.toThrow(BookingNotCancellableError)
+    await expect(usecase.execute('booking-1')).rejects.toThrow(BookingNotCancellableError)
   })
 
   it('hides a slot of an atelier the fabmanager does not run', async () => {
@@ -119,10 +125,11 @@ describe('CancelAtelierBookingUsecase', () => {
       stub<IBookingRepository>({ findById: vi.fn().mockResolvedValue(bookingOf()) }),
       machineRepository,
       userRepository,
-      new FixedClock('2026-09-16T10:30:00Z')
+      new FixedClock('2026-09-16T10:30:00Z'),
+      new FixedAuthContext(stranger)
     )
 
-    await expect(usecase.execute(stranger, 'booking-1')).rejects.toThrow(BookingUnknownError)
+    await expect(usecase.execute('booking-1')).rejects.toThrow(BookingUnknownError)
   })
 })
 
@@ -136,11 +143,12 @@ describe('CheckInBookingUsecase', () => {
         ),
       }),
       stub<IMachineRepository>({ findById: vi.fn().mockResolvedValue({ ...MACHINE, checkInToken: token }) }),
-      new FixedClock(now)
+      new FixedClock(now),
+      new FixedAuthContext(OWNER)
     )
 
   it('stamps the slot when the tag matches inside the window', async () => {
-    const detail = await usecaseWith(bookingOf(), '2026-09-16T09:50:00Z').execute(OWNER, 'booking-1', {
+    const detail = await usecaseWith(bookingOf(), '2026-09-16T09:50:00Z').execute('booking-1', {
       checkInToken: 'qr-forge-laser-01',
     })
 
@@ -150,7 +158,7 @@ describe('CheckInBookingUsecase', () => {
 
   it('is not idempotent: a second stamp is refused', async () => {
     await expect(
-      usecaseWith(bookingOf({ status: BookingStatus.CHECKED_IN }), '2026-09-16T09:50:00Z').execute(OWNER, 'booking-1', {
+      usecaseWith(bookingOf({ status: BookingStatus.CHECKED_IN }), '2026-09-16T09:50:00Z').execute('booking-1', {
         checkInToken: 'qr-forge-laser-01',
       })
     ).rejects.toThrow(BookingNotCheckInableError)
@@ -158,7 +166,7 @@ describe('CheckInBookingUsecase', () => {
 
   it('refuses a stamp outside the window', async () => {
     await expect(
-      usecaseWith(bookingOf(), '2026-09-16T10:31:00Z').execute(OWNER, 'booking-1', {
+      usecaseWith(bookingOf(), '2026-09-16T10:31:00Z').execute('booking-1', {
         checkInToken: 'qr-forge-laser-01',
       })
     ).rejects.toThrow(CheckInWindowClosedError)
@@ -166,7 +174,7 @@ describe('CheckInBookingUsecase', () => {
 
   it('refuses a token that is not the machine’s', async () => {
     await expect(
-      usecaseWith(bookingOf(), '2026-09-16T09:50:00Z').execute(OWNER, 'booking-1', { checkInToken: 'qr-autre' })
+      usecaseWith(bookingOf(), '2026-09-16T09:50:00Z').execute('booking-1', { checkInToken: 'qr-autre' })
     ).rejects.toThrow(CheckInTokenMismatchError)
   })
 
@@ -177,10 +185,11 @@ describe('CheckInBookingUsecase', () => {
     const usecase = new CheckInBookingUsecase(
       stub<IBookingRepository>({ findById: vi.fn().mockResolvedValue(bookingOf()), checkIn }),
       stub<IMachineRepository>({ findById: vi.fn().mockResolvedValue(MACHINE) }),
-      new FixedClock('2026-09-16T09:50:00Z')
+      new FixedClock('2026-09-16T09:50:00Z'),
+      new FixedAuthContext(OWNER)
     )
 
-    await usecase.execute(OWNER, 'booking-1', { checkInToken: 'qr-forge-laser-01' })
+    await usecase.execute('booking-1', { checkInToken: 'qr-forge-laser-01' })
 
     expect(checkIn).toHaveBeenCalledWith('booking-1', expect.any(Date), CheckInMethod.QR)
   })
@@ -197,27 +206,25 @@ describe('MarkNoShowUsecase', () => {
       }),
       machineRepository,
       userRepository,
-      new FixedClock(now)
+      new FixedClock(now),
+      new FixedAuthContext(fabmanager)
     )
 
   it('marks an absence once the check-in window has closed', async () => {
-    expect((await usecaseWith(bookingOf(), '2026-09-16T10:31:00Z').execute(fabmanager, 'booking-1')).status).toBe(
+    expect((await usecaseWith(bookingOf(), '2026-09-16T10:31:00Z').execute('booking-1')).status).toBe(
       BookingStatus.NO_SHOW
     )
   })
 
   it('waits for the window to close, not for the slot to end', async () => {
-    await expect(usecaseWith(bookingOf(), '2026-09-16T10:30:00Z').execute(fabmanager, 'booking-1')).rejects.toThrow(
+    await expect(usecaseWith(bookingOf(), '2026-09-16T10:30:00Z').execute('booking-1')).rejects.toThrow(
       BookingNotMarkableAsNoShowError
     )
   })
 
   it('leaves a stamped slot alone', async () => {
     await expect(
-      usecaseWith(bookingOf({ status: BookingStatus.CHECKED_IN }), '2026-09-16T12:00:00Z').execute(
-        fabmanager,
-        'booking-1'
-      )
+      usecaseWith(bookingOf({ status: BookingStatus.CHECKED_IN }), '2026-09-16T12:00:00Z').execute('booking-1')
     ).rejects.toThrow(BookingNotMarkableAsNoShowError)
   })
 })

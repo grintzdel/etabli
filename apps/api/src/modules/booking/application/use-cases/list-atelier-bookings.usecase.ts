@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
+import type { IAuthContext } from '../../../../shared/domain/auth-context.interface.ts'
+import { AUTH_CONTEXT } from '../../../../shared/domain/auth-context.token.ts'
 import type { IClock } from '../../../../shared/domain/clock.interface.ts'
 import { CLOCK } from '../../../../shared/domain/clock.token.ts'
 import { fabmanagedAtelierIds } from '../../../../shared/domain/permissions.ts'
@@ -20,10 +21,12 @@ export class ListAtelierBookingsUsecase {
     @Inject(BOOKING_REPOSITORY) private readonly bookingRepository: IBookingRepository,
     @Inject(MACHINE_REPOSITORY) private readonly machineRepository: IMachineRepository,
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
-    @Inject(CLOCK) private readonly clock: IClock
+    @Inject(CLOCK) private readonly clock: IClock,
+    @Inject(AUTH_CONTEXT) private readonly authContext: IAuthContext
   ) {}
 
-  async execute(user: AuthUser, query: ListAtelierBookingsQuery): Promise<ReadonlyArray<AtelierBooking>> {
+  async execute(query: ListAtelierBookingsQuery): Promise<ReadonlyArray<AtelierBooking>> {
+    const user = this.authContext.user
     const fabmanaged = fabmanagedAtelierIds(user)
     if (fabmanaged.length === 0) return []
 

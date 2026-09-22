@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
 import type { AdminUserEntity, CurrentUser, UserPreferencesEntity } from '../../domain/entities/user.entity.ts'
 import type { ListAdminUsersQuery } from '../../presentation/dtos/list-admin-users.request.dto.ts'
 import type { UpdateAdminUserBody } from '../../presentation/dtos/update-admin-user.request.dto.ts'
@@ -22,23 +21,23 @@ export class UserService {
     private readonly updateAdminUserUsecase: UpdateAdminUserUsecase
   ) {}
 
-  public async updateProfile(user: AuthUser, body: UpdateProfileBody): Promise<CurrentUser> {
-    return this.updateProfileUsecase.execute(user, body)
+  public async updateProfile(body: UpdateProfileBody): Promise<CurrentUser> {
+    return this.updateProfileUsecase.execute(body)
   }
 
-  public async getPreferences(user: AuthUser): Promise<UserPreferencesEntity> {
-    return this.getPreferencesUsecase.execute(user)
+  public async getPreferences(): Promise<UserPreferencesEntity> {
+    return this.getPreferencesUsecase.execute()
   }
 
-  public async updatePreferences(user: AuthUser, body: UpdatePreferencesBody): Promise<UserPreferencesEntity> {
-    return this.updatePreferencesUsecase.execute(user, body)
+  public async updatePreferences(body: UpdatePreferencesBody): Promise<UserPreferencesEntity> {
+    return this.updatePreferencesUsecase.execute(body)
   }
 
   public async listAdminUsers(query: ListAdminUsersQuery): Promise<ReadonlyArray<AdminUserEntity>> {
     return this.listAdminUsersUsecase.execute(query)
   }
 
-  public async updateAdminUser(user: AuthUser, userId: string, body: UpdateAdminUserBody): Promise<AdminUserEntity> {
-    return this.updateAdminUserUsecase.execute(user, userId, body)
+  public async updateAdminUser(userId: string, body: UpdateAdminUserBody): Promise<AdminUserEntity> {
+    return this.updateAdminUserUsecase.execute(userId, body)
   }
 }

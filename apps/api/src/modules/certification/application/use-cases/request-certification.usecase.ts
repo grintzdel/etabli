@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto'
 
 import { Inject, Injectable } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
+import type { IAuthContext } from '../../../../shared/domain/auth-context.interface.ts'
+import { AUTH_CONTEXT } from '../../../../shared/domain/auth-context.token.ts'
 import type { IClock } from '../../../../shared/domain/clock.interface.ts'
 import { CLOCK } from '../../../../shared/domain/clock.token.ts'
 import { isMemberOf } from '../../../../shared/domain/permissions.ts'
@@ -24,10 +25,12 @@ export class RequestCertificationUsecase {
   constructor(
     @Inject(CERTIFICATION_REPOSITORY) private readonly certificationRepository: ICertificationRepository,
     @Inject(MACHINE_REPOSITORY) private readonly machineRepository: IMachineRepository,
-    @Inject(CLOCK) private readonly clock: IClock
+    @Inject(CLOCK) private readonly clock: IClock,
+    @Inject(AUTH_CONTEXT) private readonly authContext: IAuthContext
   ) {}
 
-  async execute(user: AuthUser, body: RequestCertificationBody): Promise<CertificationEntity> {
+  async execute(body: RequestCertificationBody): Promise<CertificationEntity> {
+    const user = this.authContext.user
     const machine = await this.machineRepository.findById(body.machineId)
     const reachable =
       machine !== null &&

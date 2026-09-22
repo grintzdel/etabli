@@ -1,9 +1,7 @@
 import { Controller, Get, Patch, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
-import { CurrentUser } from '../../../../infrastructure/decorators/current-user.decorator.ts'
 import { Roles } from '../../../../infrastructure/decorators/roles.decorator.ts'
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
 import { PlatformRole } from '../../../../shared/domain/roles.constant.ts'
 import { UuidParam, ZodBody, ZodQuery } from '../../../../shared/presentation/decorators/zod.decorator.ts'
 import { jsonSchema, jsonSchemaArray } from '../../../../shared/presentation/json-schema.ts'
@@ -34,11 +32,10 @@ export class AdminUserController {
   @Patch(':userId')
   @ApiOkResponse({ schema: jsonSchema(adminUserResponseSchema) })
   async update(
-    @CurrentUser() user: AuthUser,
     @UuidParam('userId') userId: string,
     @ZodBody(updateAdminUserBodySchema) body: UpdateAdminUserBody
   ): Promise<AdminUserResponse> {
-    const account = await this.userService.updateAdminUser(user, userId, body)
+    const account = await this.userService.updateAdminUser(userId, body)
     return toAdminUserResponse(account)
   }
 }

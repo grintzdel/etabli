@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
+import { FixedAuthContext } from '../../../../shared/testing/fixed.auth-context.ts'
 import { FixedClock } from '../../../../shared/testing/fixed.clock.ts'
 import { authUserFixture, fabmanagerOf, machineFixture, memberOf } from '../../../../shared/testing/fixtures.ts'
 import { stub } from '../../../../shared/testing/stub.ts'
@@ -21,31 +23,32 @@ const body = {
   slotDurationMinutes: 60,
 }
 
-const creating = () =>
+const creating = (user: AuthUser) =>
   new CreateMachineUsecase(
     stub<IMachineRepository>({ insert: vi.fn(async (input) => machineFixture({ ...input })) }),
-    CLOCK
+    CLOCK,
+    new FixedAuthContext(user)
   )
 
 describe('CreateMachineUsecase', () => {
   it('adds a machine to an atelier the fabmanager runs', async () => {
     const fabmanager = authUserFixture({ memberships: [fabmanagerOf(MACHINE.atelierId)] })
 
-    expect((await creating().execute(fabmanager, body)).name).toBe('Trotec Speedy 400')
+    expect((await creating(fabmanager).execute(body)).name).toBe('Trotec Speedy 400')
   })
 
   it('refuses a plain member with a 403', async () => {
-    const usecase = new CreateMachineUsecase(stub<IMachineRepository>({}), CLOCK)
     const member = authUserFixture({ memberships: [memberOf(MACHINE.atelierId)] })
+    const usecase = new CreateMachineUsecase(stub<IMachineRepository>({}), CLOCK, new FixedAuthContext(member))
 
-    await expect(usecase.execute(member, body)).rejects.toThrow(NotYourAtelierError)
+    await expect(usecase.execute(body)).rejects.toThrow(NotYourAtelierError)
   })
 
   it('hands every new machine its own check-in token', async () => {
     const fabmanager = authUserFixture({ memberships: [fabmanagerOf(MACHINE.atelierId)] })
 
-    const first = await creating().execute(fabmanager, body)
-    const second = await creating().execute(fabmanager, body)
+    const first = await creating(fabmanager).execute(body)
+    const second = await creating(fabmanager).execute(body)
 
     expect(first.checkInToken).not.toBe('')
     expect(first.checkInToken).not.toBe(second.checkInToken)
@@ -55,29 +58,30 @@ describe('CreateMachineUsecase', () => {
 describe('UpdateMachineUsecase', () => {
   const fabmanager = authUserFixture({ memberships: [fabmanagerOf(MACHINE.atelierId)] })
 
-  const usecase = (found: typeof MACHINE | null = MACHINE) =>
+  const usecase = (user: AuthUser, found: typeof MACHINE | null = MACHINE) =>
     new UpdateMachineUsecase(
       stub<IMachineRepository>({
         findById: vi.fn().mockResolvedValue(found),
         update: vi.fn(async (_id, patch) => machineFixture({ ...MACHINE, ...patch })),
       }),
-      CLOCK
+      CLOCK,
+      new FixedAuthContext(user)
     )
 
   it('hides a machine of another atelier behind a 404', async () => {
     const stranger = authUserFixture({ memberships: [fabmanagerOf('another-atelier')] })
 
-    await expect(usecase().execute(stranger, MACHINE.id, { name: 'Renommée' })).rejects.toThrow(MachineUnknownError)
+    await expect(usecase(stranger).execute(MACHINE.id, { name: 'Renommée' })).rejects.toThrow(MachineUnknownError)
   })
 
   it('renames a machine of an atelier the fabmanager runs', async () => {
-    const updated = await usecase().execute(fabmanager, MACHINE.id, { name: 'Renommée' })
+    const updated = await usecase(fabmanager).execute(MACHINE.id, { name: 'Renommée' })
 
     expect(updated.name).toBe('Renommée')
   })
 
   it('leaves the check-in token alone', async () => {
-    const updated = await usecase().execute(fabmanager, MACHINE.id, { name: 'Renommée' })
+    const updated = await usecase(fabmanager).execute(MACHINE.id, { name: 'Renommée' })
 
     expect(updated.checkInToken).toBe('qr-forge-laser-01')
   })
@@ -86,17 +90,18 @@ describe('UpdateMachineUsecase', () => {
 describe('RegenerateCheckInTokenUsecase', () => {
   const fabmanager = authUserFixture({ memberships: [fabmanagerOf(MACHINE.atelierId)] })
 
-  const usecase = (found: typeof MACHINE | null = MACHINE) =>
+  const usecase = (user: AuthUser, found: typeof MACHINE | null = MACHINE) =>
     new RegenerateCheckInTokenUsecase(
       stub<IMachineRepository>({
         findById: vi.fn().mockResolvedValue(found),
         update: vi.fn(async (_id, patch) => machineFixture({ ...MACHINE, ...patch })),
       }),
-      CLOCK
+      CLOCK,
+      new FixedAuthContext(user)
     )
 
   it('retires the token the lost sticker carried', async () => {
-    const updated = await usecase().execute(fabmanager, MACHINE.id)
+    const updated = await usecase(fabmanager).execute(MACHINE.id)
 
     expect(updated.checkInToken).not.toBe('qr-forge-laser-01')
   })
@@ -104,6 +109,6 @@ describe('RegenerateCheckInTokenUsecase', () => {
   it('hides a machine of another atelier behind a 404', async () => {
     const stranger = authUserFixture({ memberships: [fabmanagerOf('another-atelier')] })
 
-    await expect(usecase().execute(stranger, MACHINE.id)).rejects.toThrow(MachineUnknownError)
+    await expect(usecase(stranger).execute(MACHINE.id)).rejects.toThrow(MachineUnknownError)
   })
 })
