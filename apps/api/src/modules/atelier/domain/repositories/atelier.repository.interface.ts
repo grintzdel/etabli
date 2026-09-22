@@ -12,20 +12,7 @@ export interface DirectoryFilter {
   readonly offset: number
 }
 
-export interface NewAtelier {
-  readonly id: string
-  readonly slug: string
-  readonly name: string
-  readonly description: string
-  readonly street: string
-  readonly postalCode: string
-  readonly city: string
-  readonly country: string
-  readonly latitude: number
-  readonly longitude: number
-  readonly status: AtelierStatus
-  readonly createdAt: Date
-}
+export type NewAtelier = Omit<AtelierEntity, 'updatedAt'>
 
 export interface IAtelierRepository {
   listPublished(filter: DirectoryFilter): Promise<ReadonlyArray<AtelierSummary>>
