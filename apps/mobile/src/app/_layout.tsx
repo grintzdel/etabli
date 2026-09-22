@@ -53,6 +53,7 @@ const RootNavigator = () => {
           <Stack.Screen name="machines/[id]" options={{ title: 'Machine' }} />
           <Stack.Screen name="bookings/[id]" options={{ title: 'Réservation' }} />
           <Stack.Screen name="habilitations" options={{ title: 'Habilitations' }} />
+          <Stack.Screen name="onboarding" options={{ title: 'Rejoindre un atelier' }} />
         </Stack.Protected>
         <Stack.Protected guard={state.status === 'anonymous'}>
           <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />

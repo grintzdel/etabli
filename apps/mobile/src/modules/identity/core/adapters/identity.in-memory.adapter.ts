@@ -1,12 +1,13 @@
 import type { AuthTokenProvider } from '@etabli/api-client'
 
-import type { Account, CurrentUser, IdentityResult, LoginInput, Session } from '../model/session'
+import type { Account, CurrentUser, IdentityResult, LoginInput, MemberAtelier, Session } from '../model/session'
 import { failure } from '../model/session'
 import type { IIdentityPort } from '../ports/identity.port'
 
 export class IdentityInMemoryAdapter implements IIdentityPort {
   private readonly accounts = new Map<string, Account>()
   private readonly tokens = new Map<string, string>()
+  private readonly ateliers = new Map<string, ReadonlyArray<MemberAtelier>>()
   private counter = 0
 
   constructor(
@@ -14,6 +15,10 @@ export class IdentityInMemoryAdapter implements IIdentityPort {
     seed: ReadonlyArray<Account> = []
   ) {
     for (const account of seed) this.accounts.set(account.user.email.toLowerCase(), account)
+  }
+
+  seedAteliers(email: string, ateliers: ReadonlyArray<MemberAtelier>): void {
+    this.ateliers.set(email.toLowerCase(), ateliers)
   }
 
   async login(input: LoginInput): Promise<IdentityResult<Session>> {
@@ -37,5 +42,11 @@ export class IdentityInMemoryAdapter implements IIdentityPort {
     const account = email === undefined ? undefined : this.accounts.get(email)
     if (account === undefined) return failure('UNAUTHORIZED')
     return { ok: true, value: account.user }
+  }
+
+  async myAteliers(): Promise<IdentityResult<ReadonlyArray<MemberAtelier>>> {
+    const mine = await this.me()
+    if (!mine.ok) return mine
+    return { ok: true, value: this.ateliers.get(mine.value.email.toLowerCase()) ?? [] }
   }
 }

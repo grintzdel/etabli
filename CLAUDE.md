@@ -453,6 +453,19 @@ membre, donc `request` serait refusé. La fiche n'affiche alors aucun bouton
 plutôt qu'un bouton qui échoue. L'écran `/habilitations`, poussé depuis Compte,
 reste la vue d'ensemble.
 
+**Rejoindre un atelier n'est pas une garde.** Le mobile n'a pas d'écran
+d'inscription : on y arrive avec un compte, qui a ou n'a pas d'adhésion. Un
+`Stack.Protected` sur `memberships.length === 0` enfermerait un membre dans un
+formulaire. L'annuaire affiche donc un encart quand la liste est vide — les
+créneaux sont fermés tant qu'on n'a rejoint personne — et Compte porte la même
+entrée.
+
+**`SessionProvider` sait se rafraîchir.** Sans cela, `user.memberships` reste
+périmé après l'adhésion : l'encart de l'annuaire ne disparaîtrait pas et la
+semaine resterait fermée jusqu'au prochain démarrage. L'adhésion appelle
+`refresh()` et invalide tout le cache TanStack — rejoindre un atelier change ce
+que l'application entière a le droit de voir.
+
 **TanStack Query vit à la racine.** C'est le second consommateur annoncé : sur
 le web le `QueryClient` ne sort pas de `MachineWeek`, ici tous les écrans lisent
 le réseau. Pas de Redux, pas de hors-ligne.
@@ -519,7 +532,9 @@ prerender** : `getMachineById` tourne dans un `use cache`, où lire un cookie
 casserait la build. `AtelierHttpAdapter` et `IdentityHttpAdapter` se coupent
 ainsi des deux côtés — `register` et `login` ne doivent pas partir avec un
 Bearer périmé. Les sept autres adapters web, entièrement authentifiés, n'ont
-qu'un client ; l'`AtelierHttpAdapter` mobile, entièrement public, non plus.
+qu'un client. L'`AtelierHttpAdapter` mobile s'est coupé en deux à son tour le
+jour où l'onboarding est arrivé : l'annuaire et les fiches restent anonymes,
+`POST /onboarding/complete` part avec le Bearer.
 
 `cache` se règle par client et s'écrase par appel — la stratégie de prerender du
 web en dépend : les GET publics de l'annuaire restent cachables, seul

@@ -1,7 +1,7 @@
 import { makeFailure, type Failure, type Result } from '@etabli/api-client'
-import type { CurrentUser, LoginInput, Session } from '@etabli/contract'
+import type { CurrentUser, LoginInput, MemberAtelier, Session } from '@etabli/contract'
 
-export type { CurrentUser, LoginInput, Session }
+export type { CurrentUser, LoginInput, MemberAtelier, Session }
 
 export const IdentityFailureCode = {
   INVALID_INPUT: 'INVALID_INPUT',

@@ -3,9 +3,11 @@ import type {
   AtelierDetail,
   AtelierResult,
   AtelierSummary,
+  CompleteOnboardingInput,
   DirectoryPoint,
   MachineDetail,
   MachineKind,
+  OnboardingResult,
 } from '../model/atelier'
 import { failure } from '../model/atelier'
 import type { IAtelierPort } from '../ports/atelier.port'
@@ -77,5 +79,22 @@ export class AtelierInMemoryAdapter implements IAtelierPort {
     }
 
     return failure('NOT_FOUND')
+  }
+
+  async completeOnboarding(input: CompleteOnboardingInput): Promise<AtelierResult<OnboardingResult>> {
+    const sheet = [...this.sheets.values()].find((candidate) => candidate.id === input.atelierId)
+    if (sheet === undefined) return failure('NOT_FOUND')
+
+    return {
+      ok: true,
+      value: {
+        atelierId: sheet.id,
+        atelierSlug: sheet.slug,
+        atelierName: sheet.name,
+        role: 'MEMBER',
+        practice: input.practice,
+        joinedAt: new Date().toISOString(),
+      },
+    }
   }
 }
