@@ -1,29 +1,13 @@
 import type { Transactable } from '../../../../infrastructure/database/database.token.ts'
 import type { PlatformRole } from '../../../../shared/domain/roles.constant.ts'
-import type { Theme } from '../constants/preferences.constant.ts'
 import type { UserStatus } from '../constants/user.constant.ts'
 import type { AdminUserEntity, UserEntity, UserPreferencesEntity } from '../entities/user.entity.ts'
 
-export interface NewUser {
-  readonly id: string
-  readonly email: string
-  readonly passwordHash: string
-  readonly displayName: string
-  readonly platformRole: PlatformRole
-  readonly practice: ReadonlyArray<string>
-  readonly status: UserStatus
-  readonly createdAt: Date
-}
+export type NewUser = Omit<UserEntity, 'onboardingCompletedAt' | 'updatedAt'>
 
-export interface UpdateProfileInput {
-  readonly displayName?: string
-  readonly practice?: ReadonlyArray<string>
-}
+export type UpdateProfileInput = Partial<Pick<UserEntity, 'displayName' | 'practice'>>
 
-export interface UpdateAdminUserInput {
-  readonly platformRole?: PlatformRole
-  readonly status?: UserStatus
-}
+export type UpdateAdminUserInput = Partial<Pick<UserEntity, 'platformRole' | 'status'>>
 
 export interface AdminUsersFilter {
   readonly search?: string
@@ -31,10 +15,7 @@ export interface AdminUsersFilter {
   readonly status?: UserStatus
 }
 
-export interface UpdatePreferencesInput {
-  readonly theme?: Theme
-  readonly defaultAtelierId?: string | null
-}
+export type UpdatePreferencesInput = Partial<Pick<UserPreferencesEntity, 'theme' | 'defaultAtelierId'>>
 
 export interface IUserRepository {
   findById(id: string): Promise<UserEntity | null>

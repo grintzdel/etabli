@@ -1,13 +1,7 @@
 import type { CertificationStatus } from '../constants/certification.constant.ts'
 import type { CertificationEntity } from '../entities/certification.entity.ts'
 
-export interface NewCertification {
-  readonly id: string
-  readonly userId: string
-  readonly machineId: string
-  readonly status: CertificationStatus
-  readonly requestedAt: Date
-}
+export type NewCertification = Omit<CertificationEntity, 'decidedAt' | 'decidedBy'>
 
 export interface ICertificationRepository {
   findById(id: string): Promise<CertificationEntity | null>
