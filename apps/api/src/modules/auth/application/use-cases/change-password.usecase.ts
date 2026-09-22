@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
+import type { IAuthContext } from '../../../../shared/domain/auth-context.interface.ts'
+import { AUTH_CONTEXT } from '../../../../shared/domain/auth-context.token.ts'
 import type { IClock } from '../../../../shared/domain/clock.interface.ts'
 import { CLOCK } from '../../../../shared/domain/clock.token.ts'
 import { toCurrentUser } from '../../../user/domain/entities/user.entity.ts'
@@ -20,10 +21,12 @@ export class ChangePasswordUsecase {
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
     @Inject(PASSWORD_HASHER) private readonly hasher: IPasswordHasher,
     @Inject(TOKEN_ISSUER) private readonly tokens: ITokenIssuer,
-    @Inject(CLOCK) private readonly clock: IClock
+    @Inject(CLOCK) private readonly clock: IClock,
+    @Inject(AUTH_CONTEXT) private readonly authContext: IAuthContext
   ) {}
 
-  async execute(auth: AuthUser, body: ChangePasswordBody): Promise<Session> {
+  async execute(body: ChangePasswordBody): Promise<Session> {
+    const auth = this.authContext.user
     const user = await this.userRepository.findById(auth.id)
     if (user === null) throw new SessionExpiredError('account no longer exists')
 

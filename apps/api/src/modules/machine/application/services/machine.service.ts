@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
 import type { MachineEntity, MachineWithAtelier, ManagedParc } from '../../domain/entities/machine.entity.ts'
 import type { CreateMachineBody } from '../../presentation/dtos/create-machine.request.dto.ts'
 import type { UpdateMachineBody } from '../../presentation/dtos/update-machine.request.dto.ts'
@@ -24,19 +23,19 @@ export class MachineService {
     return this.getMachineDetailUsecase.execute(machineId)
   }
 
-  public async listManagedParcs(user: AuthUser): Promise<ReadonlyArray<ManagedParc>> {
-    return this.listManagedParcsUsecase.execute(user)
+  public async listManagedParcs(): Promise<ReadonlyArray<ManagedParc>> {
+    return this.listManagedParcsUsecase.execute()
   }
 
-  public async create(user: AuthUser, body: CreateMachineBody): Promise<MachineEntity> {
-    return this.createMachineUsecase.execute(user, body)
+  public async create(body: CreateMachineBody): Promise<MachineEntity> {
+    return this.createMachineUsecase.execute(body)
   }
 
-  public async update(user: AuthUser, machineId: string, body: UpdateMachineBody): Promise<MachineEntity> {
-    return this.updateMachineUsecase.execute(user, machineId, body)
+  public async update(machineId: string, body: UpdateMachineBody): Promise<MachineEntity> {
+    return this.updateMachineUsecase.execute(machineId, body)
   }
 
-  public async regenerateCheckInToken(user: AuthUser, machineId: string): Promise<MachineEntity> {
-    return this.regenerateCheckInTokenUsecase.execute(user, machineId)
+  public async regenerateCheckInToken(machineId: string): Promise<MachineEntity> {
+    return this.regenerateCheckInTokenUsecase.execute(machineId)
   }
 }

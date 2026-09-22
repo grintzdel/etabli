@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
+import { FixedAuthContext } from '../../../../shared/testing/fixed.auth-context.ts'
 import { FixedClock } from '../../../../shared/testing/fixed.clock.ts'
 import { authUserFixture, machineFixture, memberOf } from '../../../../shared/testing/fixtures.ts'
 import { stub } from '../../../../shared/testing/stub.ts'
@@ -18,18 +20,22 @@ import { CreateBookingUsecase } from './create-booking.usecase.ts'
 const NOW = '2026-09-15T10:00:00Z'
 const TOMORROW = new Date('2026-09-16T10:00:00Z')
 
-const makeUsecase = (options: {
-  machine?: ReturnType<typeof machineFixture> | null
-  certified?: boolean
-  insert?: ReturnType<typeof vi.fn>
-}) =>
+const makeUsecase = (
+  options: {
+    machine?: ReturnType<typeof machineFixture> | null
+    certified?: boolean
+    insert?: ReturnType<typeof vi.fn>
+  },
+  user: AuthUser
+) =>
   new CreateBookingUsecase(
     stub<IBookingRepository>({
       insert: options.insert ?? vi.fn(async (props) => BookingEntity.from(props)),
     }),
     stub<IMachineRepository>({ findById: vi.fn().mockResolvedValue(options.machine ?? null) }),
     stub<ICertificationRepository>({ isCertified: vi.fn().mockResolvedValue(options.certified ?? false) }),
-    new FixedClock(NOW)
+    new FixedClock(NOW),
+    new FixedAuthContext(user)
   )
 
 describe('CreateBookingUsecase', () => {
@@ -37,7 +43,7 @@ describe('CreateBookingUsecase', () => {
     const machine = machineFixture()
     const user = authUserFixture({ memberships: [memberOf(machine.atelierId)] })
 
-    const booking = await makeUsecase({ machine, certified: true }).execute(user, {
+    const booking = await makeUsecase({ machine, certified: true }, user).execute({
       machineId: machine.id,
       startAt: TOMORROW,
     })
@@ -51,7 +57,7 @@ describe('CreateBookingUsecase', () => {
     const user = authUserFixture()
 
     await expect(
-      makeUsecase({ machine: null }).execute(user, { machineId: 'machine-x', startAt: TOMORROW })
+      makeUsecase({ machine: null }, user).execute({ machineId: 'machine-x', startAt: TOMORROW })
     ).rejects.toThrow(MachineNotBookableError)
   })
 
@@ -60,7 +66,7 @@ describe('CreateBookingUsecase', () => {
     const user = authUserFixture({ memberships: [memberOf('another-atelier')] })
 
     await expect(
-      makeUsecase({ machine, certified: true }).execute(user, { machineId: machine.id, startAt: TOMORROW })
+      makeUsecase({ machine, certified: true }, user).execute({ machineId: machine.id, startAt: TOMORROW })
     ).rejects.toThrow(MachineNotBookableError)
   })
 
@@ -69,7 +75,7 @@ describe('CreateBookingUsecase', () => {
     const user = authUserFixture({ memberships: [memberOf(machine.atelierId)] })
 
     await expect(
-      makeUsecase({ machine, certified: true }).execute(user, { machineId: machine.id, startAt: TOMORROW })
+      makeUsecase({ machine, certified: true }, user).execute({ machineId: machine.id, startAt: TOMORROW })
     ).rejects.toThrow(MachineNotBookableError)
   })
 
@@ -78,7 +84,7 @@ describe('CreateBookingUsecase', () => {
     const user = authUserFixture({ memberships: [memberOf(machine.atelierId)] })
 
     await expect(
-      makeUsecase({ machine, certified: true }).execute(user, { machineId: machine.id, startAt: TOMORROW })
+      makeUsecase({ machine, certified: true }, user).execute({ machineId: machine.id, startAt: TOMORROW })
     ).rejects.toThrow(MachineUnavailableError)
   })
 
@@ -87,7 +93,7 @@ describe('CreateBookingUsecase', () => {
     const user = authUserFixture({ memberships: [memberOf(machine.atelierId)] })
 
     await expect(
-      makeUsecase({ machine, certified: true }).execute(user, {
+      makeUsecase({ machine, certified: true }, user).execute({
         machineId: machine.id,
         startAt: new Date('2026-09-15T09:00:00Z'),
       })
@@ -99,7 +105,7 @@ describe('CreateBookingUsecase', () => {
     const user = authUserFixture({ memberships: [memberOf(machine.atelierId)] })
 
     await expect(
-      makeUsecase({ machine, certified: false }).execute(user, { machineId: machine.id, startAt: TOMORROW })
+      makeUsecase({ machine, certified: false }, user).execute({ machineId: machine.id, startAt: TOMORROW })
     ).rejects.toThrow(MissingCertificationError)
   })
 
@@ -107,7 +113,7 @@ describe('CreateBookingUsecase', () => {
     const machine = machineFixture({ requiresCertification: false })
     const user = authUserFixture({ memberships: [memberOf(machine.atelierId)] })
 
-    const booking = await makeUsecase({ machine, certified: false }).execute(user, {
+    const booking = await makeUsecase({ machine, certified: false }, user).execute({
       machineId: machine.id,
       startAt: TOMORROW,
     })
@@ -120,7 +126,7 @@ describe('CreateBookingUsecase', () => {
     const user = authUserFixture({ memberships: [] })
 
     await expect(
-      makeUsecase({ machine, certified: true }).execute(user, { machineId: machine.id, startAt: TOMORROW })
+      makeUsecase({ machine, certified: true }, user).execute({ machineId: machine.id, startAt: TOMORROW })
     ).rejects.toThrow(MachineNotBookableError)
   })
 })

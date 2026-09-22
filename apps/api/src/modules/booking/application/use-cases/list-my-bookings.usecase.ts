@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
+import type { IAuthContext } from '../../../../shared/domain/auth-context.interface.ts'
+import { AUTH_CONTEXT } from '../../../../shared/domain/auth-context.token.ts'
 import type { IClock } from '../../../../shared/domain/clock.interface.ts'
 import { CLOCK } from '../../../../shared/domain/clock.token.ts'
 import type { IMachineRepository } from '../../../machine/domain/repositories/machine.repository.interface.ts'
@@ -14,10 +15,12 @@ export class ListMyBookingsUsecase {
   constructor(
     @Inject(BOOKING_REPOSITORY) private readonly bookingRepository: IBookingRepository,
     @Inject(MACHINE_REPOSITORY) private readonly machineRepository: IMachineRepository,
-    @Inject(CLOCK) private readonly clock: IClock
+    @Inject(CLOCK) private readonly clock: IClock,
+    @Inject(AUTH_CONTEXT) private readonly authContext: IAuthContext
   ) {}
 
-  async execute(user: AuthUser): Promise<ReadonlyArray<BookingDetail>> {
+  async execute(): Promise<ReadonlyArray<BookingDetail>> {
+    const user = this.authContext.user
     const bookings = await this.bookingRepository.listForUser(user.id)
     if (bookings.length === 0) return []
 

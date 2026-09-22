@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
 import type {
   CertificationEntity,
   CertificationRequest,
@@ -23,23 +22,23 @@ export class CertificationService {
     private readonly revokeCertificationUsecase: RevokeCertificationUsecase
   ) {}
 
-  public async request(user: AuthUser, body: RequestCertificationBody): Promise<CertificationEntity> {
-    return this.requestCertificationUsecase.execute(user, body)
+  public async request(body: RequestCertificationBody): Promise<CertificationEntity> {
+    return this.requestCertificationUsecase.execute(body)
   }
 
-  public async mine(user: AuthUser): Promise<ReadonlyArray<MyCertification>> {
-    return this.listMyCertificationsUsecase.execute(user)
+  public async mine(): Promise<ReadonlyArray<MyCertification>> {
+    return this.listMyCertificationsUsecase.execute()
   }
 
-  public async queue(user: AuthUser): Promise<ReadonlyArray<CertificationRequest>> {
-    return this.listCertificationQueueUsecase.execute(user)
+  public async queue(): Promise<ReadonlyArray<CertificationRequest>> {
+    return this.listCertificationQueueUsecase.execute()
   }
 
-  public async grant(user: AuthUser, certificationId: string): Promise<CertificationEntity> {
-    return this.grantCertificationUsecase.execute(user, certificationId)
+  public async grant(certificationId: string): Promise<CertificationEntity> {
+    return this.grantCertificationUsecase.execute(certificationId)
   }
 
-  public async revoke(user: AuthUser, certificationId: string): Promise<CertificationEntity> {
-    return this.revokeCertificationUsecase.execute(user, certificationId)
+  public async revoke(certificationId: string): Promise<CertificationEntity> {
+    return this.revokeCertificationUsecase.execute(certificationId)
   }
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { PlatformRole } from '../../../../shared/domain/roles.constant.ts'
+import { FixedAuthContext } from '../../../../shared/testing/fixed.auth-context.ts'
 import { FixedClock } from '../../../../shared/testing/fixed.clock.ts'
 import { authUserFixture, memberOf } from '../../../../shared/testing/fixtures.ts'
 import { stub } from '../../../../shared/testing/stub.ts'
@@ -46,70 +47,70 @@ const adminEntity: AdminUserEntity = {
 
 describe('UpdateAdminUserUsecase', () => {
   it('suspends another account', async () => {
+    const admin = authUserFixture({ id: 'admin-1', platformRole: PlatformRole.PLATFORM_ADMIN })
     const usecase = new UpdateAdminUserUsecase(
       stub<IUserRepository>({
         updateAdminState: vi.fn().mockResolvedValue(userEntity({ status: UserStatus.SUSPENDED })),
         findAdminById: vi.fn().mockResolvedValue(adminEntity),
       }),
-      CLOCK
+      CLOCK,
+      new FixedAuthContext(admin)
     )
 
-    const admin = authUserFixture({ id: 'admin-1', platformRole: PlatformRole.PLATFORM_ADMIN })
-    expect((await usecase.execute(admin, 'user-1', { status: UserStatus.SUSPENDED })).status).toBe('SUSPENDED')
+    expect((await usecase.execute('user-1', { status: UserStatus.SUSPENDED })).status).toBe('SUSPENDED')
   })
 
   it('refuses an admin who takes their own role away', async () => {
-    const usecase = new UpdateAdminUserUsecase(stub<IUserRepository>({}), CLOCK)
     const admin = authUserFixture({ platformRole: PlatformRole.PLATFORM_ADMIN })
+    const usecase = new UpdateAdminUserUsecase(stub<IUserRepository>({}), CLOCK, new FixedAuthContext(admin))
 
-    await expect(usecase.execute(admin, admin.id, { platformRole: PlatformRole.MEMBER })).rejects.toThrow(
+    await expect(usecase.execute(admin.id, { platformRole: PlatformRole.MEMBER })).rejects.toThrow(
       AdminSelfLockoutError
     )
   })
 
   it('refuses an admin who suspends themselves', async () => {
-    const usecase = new UpdateAdminUserUsecase(stub<IUserRepository>({}), CLOCK)
     const admin = authUserFixture({ platformRole: PlatformRole.PLATFORM_ADMIN })
+    const usecase = new UpdateAdminUserUsecase(stub<IUserRepository>({}), CLOCK, new FixedAuthContext(admin))
 
-    await expect(usecase.execute(admin, admin.id, { status: UserStatus.SUSPENDED })).rejects.toThrow(
-      AdminSelfLockoutError
-    )
+    await expect(usecase.execute(admin.id, { status: UserStatus.SUSPENDED })).rejects.toThrow(AdminSelfLockoutError)
   })
 
   it('lets an admin keep their own role', async () => {
+    const admin = authUserFixture({ platformRole: PlatformRole.PLATFORM_ADMIN })
     const usecase = new UpdateAdminUserUsecase(
       stub<IUserRepository>({
         updateAdminState: vi.fn().mockResolvedValue(userEntity()),
         findAdminById: vi.fn().mockResolvedValue(adminEntity),
       }),
-      CLOCK
+      CLOCK,
+      new FixedAuthContext(admin)
     )
-    const admin = authUserFixture({ platformRole: PlatformRole.PLATFORM_ADMIN })
 
-    await expect(usecase.execute(admin, admin.id, { platformRole: PlatformRole.PLATFORM_ADMIN })).resolves.toBeDefined()
+    await expect(usecase.execute(admin.id, { platformRole: PlatformRole.PLATFORM_ADMIN })).resolves.toBeDefined()
   })
 
   it('answers 404 on an account that does not exist', async () => {
+    const admin = authUserFixture({ id: 'admin-2', platformRole: PlatformRole.PLATFORM_ADMIN })
     const usecase = new UpdateAdminUserUsecase(
       stub<IUserRepository>({ updateAdminState: vi.fn().mockResolvedValue(null) }),
-      CLOCK
+      CLOCK,
+      new FixedAuthContext(admin)
     )
 
-    await expect(
-      usecase.execute(authUserFixture({ id: 'admin-2', platformRole: PlatformRole.PLATFORM_ADMIN }), 'ghost', {
-        status: UserStatus.ACTIVE,
-      })
-    ).rejects.toThrow(UserUnknownError)
+    await expect(usecase.execute('ghost', { status: UserStatus.ACTIVE })).rejects.toThrow(UserUnknownError)
   })
 })
 
 describe('UpdatePreferencesUsecase', () => {
   it('refuses a default atelier the member has not joined', async () => {
-    const usecase = new UpdatePreferencesUsecase(stub<IUserRepository>({}), CLOCK)
-
-    await expect(usecase.execute(authUserFixture(), { defaultAtelierId: 'atelier-x' })).rejects.toThrow(
-      PreferredAtelierNotJoinedError
+    const usecase = new UpdatePreferencesUsecase(
+      stub<IUserRepository>({}),
+      CLOCK,
+      new FixedAuthContext(authUserFixture())
     )
+
+    await expect(usecase.execute({ defaultAtelierId: 'atelier-x' })).rejects.toThrow(PreferredAtelierNotJoinedError)
   })
 
   it('accepts an explicit null, which clears the default atelier', async () => {
@@ -119,9 +120,13 @@ describe('UpdatePreferencesUsecase', () => {
       defaultAtelierId: null,
       updatedAt: CLOCK.now(),
     })
-    const usecase = new UpdatePreferencesUsecase(stub<IUserRepository>({ upsertPreferences: upsert }), CLOCK)
+    const usecase = new UpdatePreferencesUsecase(
+      stub<IUserRepository>({ upsertPreferences: upsert }),
+      CLOCK,
+      new FixedAuthContext(authUserFixture({ memberships: [memberOf('atelier-1')] }))
+    )
 
-    await usecase.execute(authUserFixture({ memberships: [memberOf('atelier-1')] }), { defaultAtelierId: null })
+    await usecase.execute({ defaultAtelierId: null })
 
     expect(upsert).toHaveBeenCalledWith(expect.any(String), { defaultAtelierId: null }, CLOCK.now())
   })
@@ -130,10 +135,11 @@ describe('UpdatePreferencesUsecase', () => {
 describe('GetPreferencesUsecase', () => {
   it('falls back to the system theme when nothing has been stored', async () => {
     const usecase = new GetPreferencesUsecase(
-      stub<IUserRepository>({ findPreferences: vi.fn().mockResolvedValue(null) })
+      stub<IUserRepository>({ findPreferences: vi.fn().mockResolvedValue(null) }),
+      new FixedAuthContext(authUserFixture({ id: 'user-1' }))
     )
 
-    const preferences = await usecase.execute(authUserFixture({ id: 'user-1' }))
+    const preferences = await usecase.execute()
 
     expect(preferences).toEqual({ userId: 'user-1', theme: 'system', defaultAtelierId: null, updatedAt: null })
   })

@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
+import type { IAuthContext } from '../../../../shared/domain/auth-context.interface.ts'
+import { AUTH_CONTEXT } from '../../../../shared/domain/auth-context.token.ts'
 import type { IClock } from '../../../../shared/domain/clock.interface.ts'
 import { CLOCK } from '../../../../shared/domain/clock.token.ts'
 import { isMemberOf } from '../../../../shared/domain/permissions.ts'
@@ -18,10 +19,12 @@ export class GetMachineAvailabilityUsecase {
   constructor(
     @Inject(BOOKING_REPOSITORY) private readonly bookingRepository: IBookingRepository,
     @Inject(MACHINE_REPOSITORY) private readonly machineRepository: IMachineRepository,
-    @Inject(CLOCK) private readonly clock: IClock
+    @Inject(CLOCK) private readonly clock: IClock,
+    @Inject(AUTH_CONTEXT) private readonly authContext: IAuthContext
   ) {}
 
-  async execute(user: AuthUser, machineId: string, query: MachineAvailabilityQuery): Promise<MachineAvailability> {
+  async execute(machineId: string, query: MachineAvailabilityQuery): Promise<MachineAvailability> {
+    const user = this.authContext.user
     const machine = await this.machineRepository.findById(machineId)
     const reachable =
       machine !== null && machine.status !== MachineStatus.RETIRED && isMemberOf(user, machine.atelierId)

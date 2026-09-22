@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
+import type { IAuthContext } from '../../../../shared/domain/auth-context.interface.ts'
+import { AUTH_CONTEXT } from '../../../../shared/domain/auth-context.token.ts'
 import type { IClock } from '../../../../shared/domain/clock.interface.ts'
 import { CLOCK } from '../../../../shared/domain/clock.token.ts'
 import type { IMachineRepository } from '../../../machine/domain/repositories/machine.repository.interface.ts'
@@ -16,10 +17,12 @@ export class RevokeCertificationUsecase {
   constructor(
     @Inject(CERTIFICATION_REPOSITORY) private readonly certificationRepository: ICertificationRepository,
     @Inject(MACHINE_REPOSITORY) private readonly machineRepository: IMachineRepository,
-    @Inject(CLOCK) private readonly clock: IClock
+    @Inject(CLOCK) private readonly clock: IClock,
+    @Inject(AUTH_CONTEXT) private readonly authContext: IAuthContext
   ) {}
 
-  async execute(user: AuthUser, certificationId: string): Promise<CertificationEntity> {
+  async execute(certificationId: string): Promise<CertificationEntity> {
+    const user = this.authContext.user
     return decideCertification(
       {
         certificationRepository: this.certificationRepository,

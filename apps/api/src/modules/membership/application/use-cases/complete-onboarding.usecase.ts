@@ -3,7 +3,8 @@ import { randomUUID } from 'node:crypto'
 import { Inject, Injectable } from '@nestjs/common'
 
 import { type Database, DATABASE_CONNECTION } from '../../../../infrastructure/database/database.token.ts'
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
+import type { IAuthContext } from '../../../../shared/domain/auth-context.interface.ts'
+import { AUTH_CONTEXT } from '../../../../shared/domain/auth-context.token.ts'
 import type { IClock } from '../../../../shared/domain/clock.interface.ts'
 import { CLOCK } from '../../../../shared/domain/clock.token.ts'
 import { MembershipRole, MembershipStatus } from '../../../../shared/domain/roles.constant.ts'
@@ -24,10 +25,12 @@ export class CompleteOnboardingUsecase {
     @Inject(ATELIER_REPOSITORY) private readonly atelierRepository: IAtelierRepository,
     @Inject(MEMBERSHIP_REPOSITORY) private readonly membershipRepository: IMembershipRepository,
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
-    @Inject(CLOCK) private readonly clock: IClock
+    @Inject(CLOCK) private readonly clock: IClock,
+    @Inject(AUTH_CONTEXT) private readonly authContext: IAuthContext
   ) {}
 
-  async execute(user: AuthUser, body: CompleteOnboardingBody): Promise<OnboardingResult> {
+  async execute(body: CompleteOnboardingBody): Promise<OnboardingResult> {
+    const user = this.authContext.user
     const atelier = await this.atelierRepository.findPublishedById(body.atelierId)
     if (atelier === null) throw new AtelierNotJoinableError(body.atelierId)
 

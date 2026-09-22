@@ -1,9 +1,7 @@
 import { Controller, Get, Patch, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
-import { CurrentUser } from '../../../../infrastructure/decorators/current-user.decorator.ts'
 import { Roles } from '../../../../infrastructure/decorators/roles.decorator.ts'
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
 import { PlatformRole } from '../../../../shared/domain/roles.constant.ts'
 import { UuidParam, ZodBody } from '../../../../shared/presentation/decorators/zod.decorator.ts'
 import { jsonSchema, jsonSchemaArray } from '../../../../shared/presentation/json-schema.ts'
@@ -36,10 +34,9 @@ export class OnboardingController {
   @Post('complete')
   @ApiCreatedResponse({ schema: jsonSchema(onboardingResultResponseSchema) })
   async complete(
-    @CurrentUser() user: AuthUser,
     @ZodBody(completeOnboardingBodySchema) body: CompleteOnboardingBody
   ): Promise<OnboardingResultResponse> {
-    const result = await this.membershipService.completeOnboarding(user, body)
+    const result = await this.membershipService.completeOnboarding(body)
     return toOnboardingResultResponse(result)
   }
 }
@@ -53,8 +50,8 @@ export class MyAteliersController {
 
   @Get()
   @ApiOkResponse({ schema: jsonSchemaArray(memberAtelierResponseSchema) })
-  async list(@CurrentUser() user: AuthUser): Promise<ReadonlyArray<MemberAtelierResponse>> {
-    const ateliers = await this.membershipService.listMyAteliers(user)
+  async list(): Promise<ReadonlyArray<MemberAtelierResponse>> {
+    const ateliers = await this.membershipService.listMyAteliers()
     return ateliers.map(toMemberAtelierResponse)
   }
 }

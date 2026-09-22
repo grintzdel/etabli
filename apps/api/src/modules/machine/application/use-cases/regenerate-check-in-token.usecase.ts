@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto'
 
 import { Inject, Injectable } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
+import type { IAuthContext } from '../../../../shared/domain/auth-context.interface.ts'
+import { AUTH_CONTEXT } from '../../../../shared/domain/auth-context.token.ts'
 import type { IClock } from '../../../../shared/domain/clock.interface.ts'
 import { CLOCK } from '../../../../shared/domain/clock.token.ts'
 import { isFabmanagerOf } from '../../../../shared/domain/permissions.ts'
@@ -15,10 +16,12 @@ import { MACHINE_REPOSITORY } from '../../domain/repositories/machine.repository
 export class RegenerateCheckInTokenUsecase {
   constructor(
     @Inject(MACHINE_REPOSITORY) private readonly machineRepository: IMachineRepository,
-    @Inject(CLOCK) private readonly clock: IClock
+    @Inject(CLOCK) private readonly clock: IClock,
+    @Inject(AUTH_CONTEXT) private readonly authContext: IAuthContext
   ) {}
 
-  async execute(user: AuthUser, machineId: string): Promise<MachineEntity> {
+  async execute(machineId: string): Promise<MachineEntity> {
+    const user = this.authContext.user
     const machine = await this.machineRepository.findById(machineId)
     if (machine === null || !isFabmanagerOf(user, machine.atelierId)) throw new MachineUnknownError(machineId)
 

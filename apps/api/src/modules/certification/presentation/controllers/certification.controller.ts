@@ -1,8 +1,6 @@
 import { Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
-import { CurrentUser } from '../../../../infrastructure/decorators/current-user.decorator.ts'
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
 import { UuidParam, ZodBody } from '../../../../shared/presentation/decorators/zod.decorator.ts'
 import { jsonSchema, jsonSchemaArray } from '../../../../shared/presentation/json-schema.ts'
 import { JwtAuthGuard } from '../../../auth/presentation/guards/jwt-auth.guard.ts'
@@ -33,17 +31,16 @@ export class CertificationController {
   @Post('request')
   @ApiCreatedResponse({ schema: jsonSchema(certificationResponseSchema) })
   async request(
-    @CurrentUser() user: AuthUser,
     @ZodBody(requestCertificationBodySchema) body: RequestCertificationBody
   ): Promise<CertificationResponse> {
-    const certification = await this.certificationService.request(user, body)
+    const certification = await this.certificationService.request(body)
     return toCertificationResponse(certification)
   }
 
   @Get('mine')
   @ApiOkResponse({ schema: jsonSchemaArray(myCertificationResponseSchema) })
-  async mine(@CurrentUser() user: AuthUser): Promise<ReadonlyArray<MyCertificationResponse>> {
-    const certifications = await this.certificationService.mine(user)
+  async mine(): Promise<ReadonlyArray<MyCertificationResponse>> {
+    const certifications = await this.certificationService.mine()
     return certifications.map(toMyCertificationResponse)
   }
 }
@@ -57,30 +54,24 @@ export class CertificationReviewController {
 
   @Get()
   @ApiOkResponse({ schema: jsonSchemaArray(certificationRequestResponseSchema) })
-  async queue(@CurrentUser() user: AuthUser): Promise<ReadonlyArray<CertificationRequestResponse>> {
-    const requests = await this.certificationService.queue(user)
+  async queue(): Promise<ReadonlyArray<CertificationRequestResponse>> {
+    const requests = await this.certificationService.queue()
     return requests.map(toCertificationRequestResponse)
   }
 
   @Post(':certificationId/grant')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: jsonSchema(certificationResponseSchema) })
-  async grant(
-    @CurrentUser() user: AuthUser,
-    @UuidParam('certificationId') certificationId: string
-  ): Promise<CertificationResponse> {
-    const certification = await this.certificationService.grant(user, certificationId)
+  async grant(@UuidParam('certificationId') certificationId: string): Promise<CertificationResponse> {
+    const certification = await this.certificationService.grant(certificationId)
     return toCertificationResponse(certification)
   }
 
   @Post(':certificationId/revoke')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ schema: jsonSchema(certificationResponseSchema) })
-  async revoke(
-    @CurrentUser() user: AuthUser,
-    @UuidParam('certificationId') certificationId: string
-  ): Promise<CertificationResponse> {
-    const certification = await this.certificationService.revoke(user, certificationId)
+  async revoke(@UuidParam('certificationId') certificationId: string): Promise<CertificationResponse> {
+    const certification = await this.certificationService.revoke(certificationId)
     return toCertificationResponse(certification)
   }
 }

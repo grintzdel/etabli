@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
+import type { IAuthContext } from '../../../../shared/domain/auth-context.interface.ts'
+import { AUTH_CONTEXT } from '../../../../shared/domain/auth-context.token.ts'
 import { fabmanagedAtelierIds } from '../../../../shared/domain/permissions.ts'
 import type { IAtelierRepository } from '../../../atelier/domain/repositories/atelier.repository.interface.ts'
 import { ATELIER_REPOSITORY } from '../../../atelier/domain/repositories/atelier.repository.token.ts'
@@ -12,10 +13,12 @@ import { MACHINE_REPOSITORY } from '../../domain/repositories/machine.repository
 export class ListManagedParcsUsecase {
   constructor(
     @Inject(MACHINE_REPOSITORY) private readonly machineRepository: IMachineRepository,
-    @Inject(ATELIER_REPOSITORY) private readonly atelierRepository: IAtelierRepository
+    @Inject(ATELIER_REPOSITORY) private readonly atelierRepository: IAtelierRepository,
+    @Inject(AUTH_CONTEXT) private readonly authContext: IAuthContext
   ) {}
 
-  async execute(user: AuthUser): Promise<ReadonlyArray<ManagedParc>> {
+  async execute(): Promise<ReadonlyArray<ManagedParc>> {
+    const user = this.authContext.user
     const parcs = await Promise.all(
       fabmanagedAtelierIds(user).map(async (atelierId) => {
         const atelier = await this.atelierRepository.findAnyById(atelierId)

@@ -1,8 +1,6 @@
 import { Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
-import { CurrentUser } from '../../../../infrastructure/decorators/current-user.decorator.ts'
-import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
 import { ZodBody } from '../../../../shared/presentation/decorators/zod.decorator.ts'
 import { jsonSchema } from '../../../../shared/presentation/json-schema.ts'
 import {
@@ -42,11 +40,8 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({ schema: jsonSchema(sessionResponseSchema) })
-  async changePassword(
-    @CurrentUser() user: AuthUser,
-    @ZodBody(changePasswordBodySchema) body: ChangePasswordBody
-  ): Promise<SessionResponse> {
-    const session = await this.authService.changePassword(user, body)
+  async changePassword(@ZodBody(changePasswordBodySchema) body: ChangePasswordBody): Promise<SessionResponse> {
+    const session = await this.authService.changePassword(body)
     return toSessionResponse(session)
   }
 
@@ -54,8 +49,8 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({ schema: jsonSchema(currentUserResponseSchema) })
-  async me(@CurrentUser() user: AuthUser): Promise<CurrentUserResponse> {
-    const current = await this.authService.me(user)
+  async me(): Promise<CurrentUserResponse> {
+    const current = await this.authService.me()
     return toCurrentUserResponse(current)
   }
 }
