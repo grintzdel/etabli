@@ -26,13 +26,13 @@ export class ManageMachineInMemoryAdapter implements IManageMachinePort {
     return `00000000-0000-4000-8000-${String(this.counter).padStart(12, '0')}`
   }
 
-  private manages(token: string, atelierId: string): boolean {
-    return (this.managers.get(token) ?? []).includes(atelierId)
+  private nextToken(): string {
+    this.counter += 1
+    return `qr-in-memory-${this.counter}`
   }
 
-  private taken(nfcTagId: string | null | undefined, exceptId?: string): boolean {
-    if (nfcTagId === null || nfcTagId === undefined) return false
-    return [...this.machines.values()].some((machine) => machine.id !== exceptId && machine.nfcTagId === nfcTagId)
+  private manages(token: string, atelierId: string): boolean {
+    return (this.managers.get(token) ?? []).includes(atelierId)
   }
 
   async listParcs(token: string): Promise<AtelierResult<ReadonlyArray<ManagedParc>>> {
@@ -52,7 +52,6 @@ export class ManageMachineInMemoryAdapter implements IManageMachinePort {
 
   async create(token: string, input: CreateMachineInput): Promise<AtelierResult<ManagedMachine>> {
     if (!this.manages(token, input.atelierId)) return failure('FORBIDDEN')
-    if (this.taken(input.nfcTagId)) return failure('NFC_TAG_TAKEN')
 
     const now = new Date().toISOString()
     const machine: ManagedMachine = {
@@ -64,7 +63,7 @@ export class ManageMachineInMemoryAdapter implements IManageMachinePort {
       requiresCertification: input.requiresCertification ?? true,
       slotDurationMinutes: input.slotDurationMinutes ?? 60,
       status: 'AVAILABLE',
-      nfcTagId: input.nfcTagId ?? null,
+      checkInToken: this.nextToken(),
       createdAt: now,
       updatedAt: now,
     }
@@ -76,7 +75,6 @@ export class ManageMachineInMemoryAdapter implements IManageMachinePort {
     const current = this.machines.get(id)
     if (current === undefined) return failure('NOT_FOUND')
     if (!this.manages(token, current.atelierId)) return failure('NOT_FOUND')
-    if (this.taken(input.nfcTagId, id)) return failure('NFC_TAG_TAKEN')
 
     const next: ManagedMachine = {
       ...current,
@@ -85,7 +83,20 @@ export class ManageMachineInMemoryAdapter implements IManageMachinePort {
       status: input.status ?? current.status,
       requiresCertification: input.requiresCertification ?? current.requiresCertification,
       slotDurationMinutes: input.slotDurationMinutes ?? current.slotDurationMinutes,
-      nfcTagId: input.nfcTagId === undefined ? current.nfcTagId : input.nfcTagId,
+      updatedAt: new Date().toISOString(),
+    }
+    this.machines.set(id, next)
+    return { ok: true, value: next }
+  }
+
+  async regenerateCheckInToken(token: string, id: string): Promise<AtelierResult<ManagedMachine>> {
+    const current = this.machines.get(id)
+    if (current === undefined) return failure('NOT_FOUND')
+    if (!this.manages(token, current.atelierId)) return failure('NOT_FOUND')
+
+    const next: ManagedMachine = {
+      ...current,
+      checkInToken: this.nextToken(),
       updatedAt: new Date().toISOString(),
     }
     this.machines.set(id, next)

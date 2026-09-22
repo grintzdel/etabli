@@ -13,7 +13,8 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Établi',
     title: 'Établi — le réseau des ateliers partagés',
-    description: "L'habilitation conditionne la réservation. Le créneau est exclusif. La présence est prouvée par NFC.",
+    description:
+      "L'habilitation conditionne la réservation. Le créneau est exclusif. La présence est prouvée par QR code.",
   },
 }
 
@@ -28,7 +29,7 @@ const steps = [
   },
   {
     title: 'Pointez sur la machine',
-    body: 'Le tag NFC collé sur le bâti prouve votre présence. Le check-in ne se fait pas depuis le canapé.',
+    body: 'Le QR code collé sur le bâti prouve votre présence. Le check-in ne se fait pas depuis le canapé.',
   },
 ]
 

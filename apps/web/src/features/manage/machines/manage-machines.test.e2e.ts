@@ -67,52 +67,54 @@ test('the browser refuses a slot outside the allowed range before it reaches the
   await expect(page.getByRole('row').filter({ hasText: 'Machine refusée' })).toHaveCount(0)
 })
 
-const nfcRow = (page: import('@playwright/test').Page, name: string) => page.getByRole('row').filter({ hasText: name })
+const machineRow = (page: import('@playwright/test').Page, name: string) =>
+  page.getByRole('row').filter({ hasText: name })
 
-test('the fabmanager sticks a tag on a machine, then peels it off', async ({ page }) => {
-  const name = `Machine NFC ${crypto.randomUUID().slice(0, 8)}`
-  const tag = `nfc-e2e-${crypto.randomUUID().slice(0, 8)}`
+test('the fabmanager opens the printable QR of a machine', async ({ page }) => {
+  const name = `Machine QR ${crypto.randomUUID().slice(0, 8)}`
 
   await signIn(page, 'fabmanager.forge@etabli.test')
   await page.goto('/manage/machines')
   await addMachine(page, name)
 
-  await nfcRow(page, name)
-    .getByLabel(/tag nfc/i)
-    .fill(tag)
-  await nfcRow(page, name)
-    .getByRole('button', { name: /enregistrer/i })
+  await machineRow(page, name)
+    .getByRole('link', { name: /imprimer le qr/i })
     .click()
-  await expect(nfcRow(page, name).getByText(/tag posé/i)).toBeVisible()
 
-  await page.reload()
-  await expect(nfcRow(page, name).getByLabel(/tag nfc/i)).toHaveValue(tag)
-
-  await nfcRow(page, name)
-    .getByLabel(/tag nfc/i)
-    .fill('')
-  await nfcRow(page, name)
-    .getByRole('button', { name: /enregistrer/i })
-    .click()
-  await expect(nfcRow(page, name).getByText(/tag décollé/i)).toBeVisible()
-
-  await page.reload()
-  await expect(nfcRow(page, name).getByLabel(/tag nfc/i)).toHaveValue('')
+  await expect(page).toHaveURL(/\/manage\/machines\/[0-9a-f-]+\/qr$/)
+  await expect(page.getByRole('heading', { name })).toBeVisible()
+  await expect(page.getByRole('img', { name: /qr de pointage/i })).toBeVisible()
 })
 
-test('a tag already worn by another machine of the network is refused', async ({ page }) => {
-  const name = `Machine NFC prise ${crypto.randomUUID().slice(0, 8)}`
+test('regenerating the QR retires the token the old sticker carried', async ({ page }) => {
+  const name = `Machine QR tournant ${crypto.randomUUID().slice(0, 8)}`
 
   await signIn(page, 'fabmanager.forge@etabli.test')
   await page.goto('/manage/machines')
   await addMachine(page, name)
 
-  await nfcRow(page, name)
-    .getByLabel(/tag nfc/i)
-    .fill('nfc-forge-cnc-01')
-  await nfcRow(page, name)
-    .getByRole('button', { name: /enregistrer/i })
+  await machineRow(page, name)
+    .getByRole('link', { name: /imprimer le qr/i })
+    .click()
+  const before = await page.getByTestId('check-in-token').textContent()
+
+  await page.goBack()
+  await machineRow(page, name)
+    .getByRole('button', { name: /régénérer/i })
+    .click()
+  await expect(machineRow(page, name).getByText(/nouveau qr généré/i)).toBeVisible()
+
+  await machineRow(page, name)
+    .getByRole('link', { name: /imprimer le qr/i })
     .click()
 
-  await expect(nfcRow(page, name).getByText(/déjà posé sur une autre machine/i)).toBeVisible()
+  await expect(page.getByTestId('check-in-token')).not.toHaveText(before ?? '')
+})
+
+test('a member never reaches the printable QR of an atelier they do not run', async ({ page }) => {
+  await signIn(page, 'membre@etabli.test')
+
+  const response = await page.goto('/manage/machines/0a7e1f00-0000-4000-8000-000000000101/qr')
+
+  expect(response?.status()).toBe(404)
 })

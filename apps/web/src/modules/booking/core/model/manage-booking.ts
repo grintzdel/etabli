@@ -3,7 +3,7 @@ import type { AtelierBooking, AtelierBookingsQuery, BookingStatus, CheckInMethod
 export type { AtelierBooking, AtelierBookingsQuery, CheckInMethod }
 
 export const CHECK_IN_METHOD_LABELS: Readonly<Record<CheckInMethod, string>> = {
-  NFC: 'Tag NFC',
+  QR: 'QR code',
   MANUAL: 'À la main',
 }
 

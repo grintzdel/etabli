@@ -57,9 +57,9 @@ export const ManageBookingsPage = ({ searchParams }: { readonly searchParams: Se
     <header className="flex flex-col gap-3">
       <h1 className="font-display text-4xl font-bold tracking-tight uppercase">Pointage</h1>
       <p className="text-graphite-200 max-w-2xl text-lg">
-        Les créneaux de vos ateliers, jour par jour. Quand le tag NFC refuse de se laisser lire, pointez le membre à la
-        main : la fenêtre reste la même, quinze minutes avant le créneau et trente après son début. Une annulation par
-        l’atelier reste possible tant que le créneau n’est pas terminé — le membre, lui, perd ce droit au départ.
+        Les créneaux de vos ateliers, jour par jour. Quand le QR code refuse de se laisser scanner, pointez le membre à
+        la main : la fenêtre reste la même, quinze minutes avant le créneau et trente après son début. Une annulation
+        par l’atelier reste possible tant que le créneau n’est pas terminé — le membre, lui, perd ce droit au départ.
       </p>
     </header>
 

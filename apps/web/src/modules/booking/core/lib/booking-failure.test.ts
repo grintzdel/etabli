@@ -15,7 +15,7 @@ const MAPPED: ReadonlyArray<readonly [ApiErrorCode, BookingFailureCode]> = [
   [ApiErrorCode.BOOKING_NOT_CHECK_INABLE, BookingFailureCode.NOT_CHECK_INABLE],
   [ApiErrorCode.CHECK_IN_WINDOW_CLOSED, BookingFailureCode.CHECK_IN_WINDOW_CLOSED],
   [ApiErrorCode.BOOKING_NOT_MARKABLE_AS_NO_SHOW, BookingFailureCode.NOT_MARKABLE_AS_NO_SHOW],
-  [ApiErrorCode.NFC_TAG_MISMATCH, BookingFailureCode.NFC_TAG_MISMATCH],
+  [ApiErrorCode.CHECK_IN_TOKEN_MISMATCH, BookingFailureCode.CHECK_IN_TOKEN_MISMATCH],
   [ApiErrorCode.FORBIDDEN, BookingFailureCode.FORBIDDEN],
 ]
 

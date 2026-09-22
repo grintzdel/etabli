@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
@@ -55,6 +55,7 @@ describe('workspace language rules', () => {
   const sources = execFileSync('git', ['ls-files', '*.ts', '*.tsx'], { cwd: root, encoding: 'utf8' })
     .split('\n')
     .filter(Boolean)
+    .filter((file) => existsSync(join(root, file)))
 
   it('declares no TypeScript enum anywhere', () => {
     const offenders = sources.filter((file) =>

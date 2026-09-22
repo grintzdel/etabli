@@ -66,7 +66,7 @@ const NextBooking = ({ overview }: { readonly overview: Overview }) => {
 
       {booking.canCheckIn ? (
         <p className="text-status-ok text-sm">
-          Pointage ouvert : présentez le tag NFC posé sur le bâti pour prouver votre présence.
+          Pointage ouvert : scannez le QR code posé sur le bâti pour prouver votre présence.
         </p>
       ) : null}
     </Surface>

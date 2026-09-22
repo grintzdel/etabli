@@ -12,8 +12,12 @@ const IMPORT = new RegExp(
 export const stripComments = (source: string): string =>
   source.replaceAll(/\/\*[\s\S]*?\*\//g, '').replaceAll(/(^|[^:])\/\/[^\n]*/g, '$1')
 
+// `git ls-files` still lists a file deleted in the working tree, so the graph would read a hole.
 export const listSourceFiles = (cwd: string): ReadonlyArray<string> =>
-  execFileSync('git', ['ls-files', '*.ts', '*.tsx'], { cwd, encoding: 'utf8' }).split('\n').filter(Boolean)
+  execFileSync('git', ['ls-files', '*.ts', '*.tsx'], { cwd, encoding: 'utf8' })
+    .split('\n')
+    .filter(Boolean)
+    .filter((file) => existsSync(join(cwd, file)))
 
 const candidatesFor = (base: string): ReadonlyArray<string> => [
   `${base}.ts`,

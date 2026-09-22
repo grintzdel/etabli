@@ -2,16 +2,16 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { managedMachineFixture } from '@/modules/atelier/__tests__/atelier.factory'
-import { idleNfcTag } from '@/modules/atelier/core/model/nfc-tag-form'
+import { idleCheckInToken } from '@/modules/atelier/core/model/check-in-token-form'
 
 import { ManagedParcTable } from './ManagedParcTable'
 
 const noop = vi.fn()
-const nfcTagAction = vi.fn().mockResolvedValue(idleNfcTag)
+const checkInTokenAction = vi.fn().mockResolvedValue(idleCheckInToken)
 
 describe('ManagedParcTable', () => {
   it('says so when the atelier has no machine yet', () => {
-    render(<ManagedParcTable machines={[]} action={noop} nfcTagAction={nfcTagAction} />)
+    render(<ManagedParcTable machines={[]} action={noop} checkInTokenAction={checkInTokenAction} />)
     expect(screen.getByText(/aucune machine/i)).toBeInTheDocument()
   })
 
@@ -20,7 +20,7 @@ describe('ManagedParcTable', () => {
       <ManagedParcTable
         machines={[managedMachineFixture({ name: 'Trotec' }), managedMachineFixture({ name: 'Prusa' })]}
         action={noop}
-        nfcTagAction={nfcTagAction}
+        checkInTokenAction={checkInTokenAction}
       />
     )
     expect(screen.getByRole('rowheader', { name: /Trotec/ })).toBeInTheDocument()
@@ -32,7 +32,7 @@ describe('ManagedParcTable', () => {
       <ManagedParcTable
         machines={[managedMachineFixture({ slotDurationMinutes: 90, requiresCertification: false })]}
         action={noop}
-        nfcTagAction={nfcTagAction}
+        checkInTokenAction={checkInTokenAction}
       />
     )
     expect(screen.getByText('90 min')).toBeInTheDocument()
@@ -44,7 +44,7 @@ describe('ManagedParcTable', () => {
       <ManagedParcTable
         machines={[managedMachineFixture({ status: 'AVAILABLE' })]}
         action={noop}
-        nfcTagAction={nfcTagAction}
+        checkInTokenAction={checkInTokenAction}
       />
     )
     expect(screen.getByRole('button', { name: /en maintenance/i })).toBeInTheDocument()
@@ -56,7 +56,7 @@ describe('ManagedParcTable', () => {
       <ManagedParcTable
         machines={[managedMachineFixture({ status: 'MAINTENANCE' })]}
         action={noop}
-        nfcTagAction={nfcTagAction}
+        checkInTokenAction={checkInTokenAction}
       />
     )
     expect(screen.getByRole('button', { name: /remettre en service/i })).toBeInTheDocument()
@@ -67,7 +67,7 @@ describe('ManagedParcTable', () => {
       <ManagedParcTable
         machines={[managedMachineFixture({ status: 'RETIRED' })]}
         action={noop}
-        nfcTagAction={nfcTagAction}
+        checkInTokenAction={checkInTokenAction}
       />
     )
     expect(screen.getByRole('button', { name: /remettre en service/i })).toBeInTheDocument()
@@ -79,35 +79,50 @@ describe('ManagedParcTable', () => {
       <ManagedParcTable
         machines={[managedMachineFixture({ id: 'abc', status: 'AVAILABLE' })]}
         action={noop}
-        nfcTagAction={nfcTagAction}
+        checkInTokenAction={checkInTokenAction}
       />
     )
     expect(container.querySelector('input[name="machineId"]')).toHaveValue('abc')
   })
 })
 
-describe('ManagedParcTable · tag NFC', () => {
-  it('shows the tag a machine already carries', () => {
+describe('ManagedParcTable · QR de pointage', () => {
+  it('offers a print link that carries the machine name', () => {
     render(
       <ManagedParcTable
-        machines={[managedMachineFixture({ name: 'Trotec', nfcTagId: 'nfc-trotec-01' })]}
+        machines={[managedMachineFixture({ id: 'machine-1', name: 'Trotec' })]}
         action={noop}
-        nfcTagAction={nfcTagAction}
+        checkInTokenAction={checkInTokenAction}
       />
     )
 
-    expect(screen.getByLabelText(/tag nfc — trotec/i)).toHaveValue('nfc-trotec-01')
+    expect(screen.getByRole('link', { name: /imprimer le qr — trotec/i })).toHaveAttribute(
+      'href',
+      '/manage/machines/machine-1/qr'
+    )
   })
 
-  it('leaves the field empty on a machine without a tag', () => {
+  it('offers a regenerate button per machine', () => {
     render(
       <ManagedParcTable
-        machines={[managedMachineFixture({ name: 'Prusa', nfcTagId: null })]}
+        machines={[managedMachineFixture({ name: 'Prusa' })]}
         action={noop}
-        nfcTagAction={nfcTagAction}
+        checkInTokenAction={checkInTokenAction}
       />
     )
 
-    expect(screen.getByLabelText(/tag nfc — prusa/i)).toHaveValue('')
+    expect(screen.getByRole('button', { name: /régénérer — prusa/i })).toBeInTheDocument()
+  })
+
+  it('never prints the token itself in the parc', () => {
+    render(
+      <ManagedParcTable
+        machines={[managedMachineFixture({ name: 'Prusa', checkInToken: 'qr-secret-01' })]}
+        action={noop}
+        checkInTokenAction={checkInTokenAction}
+      />
+    )
+
+    expect(screen.queryByText(/qr-secret-01/)).not.toBeInTheDocument()
   })
 })
