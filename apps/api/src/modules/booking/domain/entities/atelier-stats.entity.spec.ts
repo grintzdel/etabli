@@ -66,7 +66,7 @@ const machine = (id: string, status: MachineStatus = MachineStatus.AVAILABLE): M
   requiresCertification: false,
   slotDurationMinutes: 60,
   status,
-  nfcTagId: null,
+  checkInToken: 'qr-fixture-01',
   createdAt: at('2026-03-01T00:00:00Z'),
   updatedAt: at('2026-03-01T00:00:00Z'),
   atelierName: 'La Forge',

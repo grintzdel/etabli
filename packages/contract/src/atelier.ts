@@ -116,7 +116,7 @@ export type ManagedMachine = {
   readonly requiresCertification: boolean
   readonly slotDurationMinutes: number
   readonly status: MachineStatus
-  readonly nfcTagId: string | null
+  readonly checkInToken: string
   readonly createdAt: string
   readonly updatedAt: string
 }
@@ -138,7 +138,6 @@ export type CreateMachineInput = {
   readonly kind: MachineKind
   readonly requiresCertification?: boolean
   readonly slotDurationMinutes?: number
-  readonly nfcTagId?: string | null
 }
 
 export type UpdateMachineInput = {
@@ -147,7 +146,6 @@ export type UpdateMachineInput = {
   readonly status?: MachineStatus
   readonly requiresCertification?: boolean
   readonly slotDurationMinutes?: number
-  readonly nfcTagId?: string | null
 }
 
 export type SetMembershipRoleInput = {

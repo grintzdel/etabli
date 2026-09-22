@@ -7,6 +7,7 @@ import type { UpdateMachineBody } from '../../presentation/dtos/update-machine.r
 import { CreateMachineUsecase } from '../use-cases/create-machine.usecase.ts'
 import { GetMachineDetailUsecase } from '../use-cases/get-machine-detail.usecase.ts'
 import { ListManagedParcsUsecase } from '../use-cases/list-managed-parcs.usecase.ts'
+import { RegenerateCheckInTokenUsecase } from '../use-cases/regenerate-check-in-token.usecase.ts'
 import { UpdateMachineUsecase } from '../use-cases/update-machine.usecase.ts'
 
 @Injectable()
@@ -15,7 +16,8 @@ export class MachineService {
     private readonly listManagedParcsUsecase: ListManagedParcsUsecase,
     private readonly createMachineUsecase: CreateMachineUsecase,
     private readonly updateMachineUsecase: UpdateMachineUsecase,
-    private readonly getMachineDetailUsecase: GetMachineDetailUsecase
+    private readonly getMachineDetailUsecase: GetMachineDetailUsecase,
+    private readonly regenerateCheckInTokenUsecase: RegenerateCheckInTokenUsecase
   ) {}
 
   public async getDetail(machineId: string): Promise<MachineWithAtelier> {
@@ -32,5 +34,9 @@ export class MachineService {
 
   public async update(user: AuthUser, machineId: string, body: UpdateMachineBody): Promise<MachineEntity> {
     return this.updateMachineUsecase.execute(user, machineId, body)
+  }
+
+  public async regenerateCheckInToken(user: AuthUser, machineId: string): Promise<MachineEntity> {
+    return this.regenerateCheckInTokenUsecase.execute(user, machineId)
   }
 }

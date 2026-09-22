@@ -11,7 +11,7 @@ import {
   BookingNotCheckInableError,
   BookingUnknownError,
   CheckInWindowClosedError,
-  NfcTagMismatchError,
+  CheckInTokenMismatchError,
 } from '../../domain/errors/booking.errors.ts'
 import type { IBookingRepository } from '../../domain/repositories/booking.repository.interface.ts'
 import { BOOKING_REPOSITORY } from '../../domain/repositories/booking.repository.token.ts'
@@ -42,9 +42,9 @@ export class CheckInBookingUsecase {
       throw new CheckInWindowClosedError(bookingId, window.opensAt, window.closesAt)
     }
 
-    if (machine.nfcTagId !== body.nfcTagId) throw new NfcTagMismatchError(bookingId, booking.machineId)
+    if (machine.checkInToken !== body.checkInToken) throw new CheckInTokenMismatchError(bookingId, booking.machineId)
 
-    const checkedIn = await this.bookingRepository.checkIn(bookingId, now, CheckInMethod.NFC)
+    const checkedIn = await this.bookingRepository.checkIn(bookingId, now, CheckInMethod.QR)
     if (checkedIn === null) throw new BookingUnknownError(bookingId)
 
     return toBookingDetail(checkedIn, machine, now)

@@ -59,7 +59,7 @@ describe('tenancy', () => {
     it.each([
       ['GET /bookings/:id', () => api().get(`/bookings/${bookingId}`)],
       ['POST /bookings/:id/cancel', () => api().post(`/bookings/${bookingId}/cancel`)],
-      ['POST /bookings/:id/check-in', () => api().post(`/bookings/${bookingId}/check-in`).send({ nfcTagId: 'x' })],
+      ['POST /bookings/:id/check-in', () => api().post(`/bookings/${bookingId}/check-in`).send({ checkInToken: 'x' })],
     ])('%s answers 404', async (_route, call) => {
       const response = await call().set('authorization', bearer(forgeFabmanagerToken))
 

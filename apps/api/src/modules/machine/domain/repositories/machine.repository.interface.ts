@@ -10,7 +10,7 @@ export interface NewMachine {
   readonly requiresCertification: boolean
   readonly slotDurationMinutes: number
   readonly status: MachineStatus
-  readonly nfcTagId: string | null
+  readonly checkInToken: string
   readonly createdAt: Date
 }
 
@@ -20,14 +20,13 @@ export interface UpdateMachineInput {
   readonly status?: MachineStatus
   readonly requiresCertification?: boolean
   readonly slotDurationMinutes?: number
-  readonly nfcTagId?: string | null
+  readonly checkInToken?: string
 }
 
 export interface IMachineRepository {
   findById(id: string): Promise<MachineWithAtelier | null>
   findPublicById(id: string): Promise<MachineWithAtelier | null>
   findMany(ids: ReadonlyArray<string>): Promise<ReadonlyArray<MachineWithAtelier>>
-  findByNfcTag(nfcTagId: string): Promise<MachineEntity | null>
   listForAtelier(atelierId: string): Promise<ReadonlyArray<MachineEntity>>
   listForAteliers(atelierIds: ReadonlyArray<string>): Promise<ReadonlyArray<MachineWithAtelier>>
   listAll(): Promise<ReadonlyArray<MachineWithAtelier>>

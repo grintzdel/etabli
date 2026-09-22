@@ -6,29 +6,24 @@ import type { AuthUser } from '../../../../shared/domain/auth-user.ts'
 import type { IClock } from '../../../../shared/domain/clock.interface.ts'
 import { CLOCK } from '../../../../shared/domain/clock.token.ts'
 import { isFabmanagerOf } from '../../../../shared/domain/permissions.ts'
-import { MachineStatus } from '../../domain/constants/machine.constant.ts'
 import type { MachineEntity } from '../../domain/entities/machine.entity.ts'
-import { NotYourAtelierError } from '../../domain/errors/machine.errors.ts'
+import { MachineUnknownError } from '../../domain/errors/machine.errors.ts'
 import type { IMachineRepository } from '../../domain/repositories/machine.repository.interface.ts'
 import { MACHINE_REPOSITORY } from '../../domain/repositories/machine.repository.token.ts'
-import type { CreateMachineBody } from '../../presentation/dtos/create-machine.request.dto.ts'
 
 @Injectable()
-export class CreateMachineUsecase {
+export class RegenerateCheckInTokenUsecase {
   constructor(
     @Inject(MACHINE_REPOSITORY) private readonly machineRepository: IMachineRepository,
     @Inject(CLOCK) private readonly clock: IClock
   ) {}
 
-  async execute(user: AuthUser, body: CreateMachineBody): Promise<MachineEntity> {
-    if (!isFabmanagerOf(user, body.atelierId)) throw new NotYourAtelierError(body.atelierId)
+  async execute(user: AuthUser, machineId: string): Promise<MachineEntity> {
+    const machine = await this.machineRepository.findById(machineId)
+    if (machine === null || !isFabmanagerOf(user, machine.atelierId)) throw new MachineUnknownError(machineId)
 
-    return this.machineRepository.insert({
-      ...body,
-      id: randomUUID(),
-      status: MachineStatus.AVAILABLE,
-      checkInToken: randomUUID(),
-      createdAt: this.clock.now(),
-    })
+    const updated = await this.machineRepository.update(machineId, { checkInToken: randomUUID() }, this.clock.now())
+    if (updated === null) throw new MachineUnknownError(machineId)
+    return updated
   }
 }

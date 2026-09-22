@@ -1,8 +1,11 @@
+import { flattenRoutes, routes } from '@etabli/contract'
 import { SwaggerModule } from '@nestjs/swagger'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { makeTestApp, type TestApp } from '../../shared/testing/app.harness.ts'
 import { swaggerConfig } from './swagger.ts'
+
+const anonymised = (path: string): string => path.replaceAll(/:[A-Za-z]+|\{[A-Za-z]+\}/g, '{}')
 
 describe('the OpenAPI document', () => {
   let harness: TestApp
@@ -17,52 +20,12 @@ describe('the OpenAPI document', () => {
     await harness.close()
   })
 
-  it('carries the thirty-eight routes of the surface, health included', () => {
-    const operations = Object.entries(document.paths).flatMap(([path, methods]) =>
-      Object.keys(methods).map((method) => `${method.toUpperCase()} ${path}`)
-    )
+  it('serves every path the contract declares, and declares every path it serves', () => {
+    const served = new Set(Object.keys(document.paths).map(anonymised))
+    const declared = new Set(flattenRoutes(routes).map(([, path]) => anonymised(path)))
 
-    expect(operations.toSorted()).toEqual([
-      'GET /admin/ateliers',
-      'GET /admin/stats',
-      'GET /admin/users',
-      'GET /ateliers',
-      'GET /ateliers/{slug}',
-      'GET /auth/me',
-      'GET /bookings',
-      'GET /bookings/{bookingId}',
-      'GET /certifications/mine',
-      'GET /health',
-      'GET /machines/{machineId}',
-      'GET /machines/{machineId}/availability',
-      'GET /manage/bookings',
-      'GET /manage/certifications',
-      'GET /manage/machines',
-      'GET /manage/stats',
-      'GET /me/ateliers',
-      'GET /me/preferences',
-      'PATCH /admin/ateliers/{atelierId}',
-      'PATCH /admin/ateliers/{atelierId}/members/{userId}',
-      'PATCH /admin/users/{userId}',
-      'PATCH /manage/machines/{machineId}',
-      'PATCH /me/preferences',
-      'PATCH /me/profile',
-      'POST /admin/ateliers',
-      'POST /auth/login',
-      'POST /auth/password',
-      'POST /auth/register',
-      'POST /bookings',
-      'POST /bookings/{bookingId}/cancel',
-      'POST /bookings/{bookingId}/check-in',
-      'POST /certifications/request',
-      'POST /manage/bookings/{bookingId}/cancel',
-      'POST /manage/bookings/{bookingId}/check-in',
-      'POST /manage/bookings/{bookingId}/no-show',
-      'POST /manage/certifications/{certificationId}/grant',
-      'POST /manage/certifications/{certificationId}/revoke',
-      'POST /manage/machines',
-      'POST /onboarding/complete',
-    ])
+    expect([...served].filter((path) => !declared.has(path))).toEqual([])
+    expect([...declared].filter((path) => !served.has(path))).toEqual([])
   })
 
   it('describes a response from its Zod schema, fields and enums included', () => {

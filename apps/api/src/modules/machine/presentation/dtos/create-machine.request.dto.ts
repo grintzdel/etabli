@@ -15,7 +15,6 @@ export const createMachineBodySchema = z
     kind: z.enum(MACHINE_KINDS),
     requiresCertification: z.boolean().default(true),
     slotDurationMinutes: z.number().int().min(MIN_SLOT_MINUTES).max(MAX_SLOT_MINUTES).default(DEFAULT_SLOT_MINUTES),
-    nfcTagId: z.string().trim().min(1).nullable().default(null),
   })
   .strict()
 

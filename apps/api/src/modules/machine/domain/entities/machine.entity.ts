@@ -10,7 +10,7 @@ export interface MachineEntity {
   readonly requiresCertification: boolean
   readonly slotDurationMinutes: number
   readonly status: MachineStatus
-  readonly nfcTagId: string | null
+  readonly checkInToken: string
   readonly createdAt: Date
   readonly updatedAt: Date
 }

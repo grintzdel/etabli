@@ -32,7 +32,7 @@ export const machineFixture = (overrides: Partial<MachineWithAtelier> = {}): Mac
   requiresCertification: true,
   slotDurationMinutes: 60,
   status: 'AVAILABLE',
-  nfcTagId: 'nfc-forge-laser-01',
+  checkInToken: 'qr-forge-laser-01',
   createdAt: new Date('2026-01-01T00:00:00Z'),
   updatedAt: new Date('2026-01-01T00:00:00Z'),
   atelierName: 'La Forge',

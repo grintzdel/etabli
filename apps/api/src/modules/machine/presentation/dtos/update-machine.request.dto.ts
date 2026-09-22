@@ -9,7 +9,6 @@ export const updateMachineBodySchema = z
     status: z.enum(MACHINE_STATUSES).optional(),
     requiresCertification: z.boolean().optional(),
     slotDurationMinutes: z.number().int().min(MIN_SLOT_MINUTES).max(MAX_SLOT_MINUTES).optional(),
-    nfcTagId: z.string().trim().min(1).nullable().optional(),
   })
   .strict()
 
