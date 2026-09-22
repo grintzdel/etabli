@@ -408,7 +408,9 @@ montrent encore à tort.
 dans les onglets ; absent ou refusé par `GET /auth/me`, on va sur la connexion.
 Un 401 en cours de route efface le token et ramène à la connexion sans message —
 une session expirée n'est pas une panne. `useApiQuery` tient cette règle en un
-seul endroit.
+seul endroit. Le jeton lu au démarrage est ensuite relayé par
+`SessionTokenHolder` — cf. « Adapters » : les adapters le lisent là, jamais dans
+le trousseau.
 
 **Refuser la position n'est pas une erreur.** Sans elle, l'annuaire appelle
 `GET /ateliers` sans `lat`, `lng` ni `radiusKm` ; `distanceKm` vaut `null`, la
@@ -463,13 +465,55 @@ sept d'entre eux — `schema`, `errors`, `auth-context`, `time`, `id`,
 consommateur. Ne restait que `http`, c'est-à-dire le client d'API : le package
 porte donc son nom, et son unique export est la racine.
 
-`createApiClient({ baseUrl, messages, failureOf, cache? })` rend un objet à une
-seule méthode, `call<A>(path, request?)`, qui retourne un `Result<A, C>`. Il
-tient l'URL, la query string (les paramètres `undefined` tombent), `accept`, le
+`createApiClient({ baseUrl, messages, failureOf, cache?, getAuthToken?, timeoutMs?, fetch? })`
+rend un **transport** : `call<A>(path, request?)`, plus les trois verbes que
+l'API sert réellement — `get`, `post`, `patch` (18 `@Get`, 16 `@Post`,
+6 `@Patch`). Pas de `put` ni de `delete` : ç'aurait été de la spéculation.
+Chacun retourne un `Result<A, C>`. Le client tient l'URL, la query string (les
+`undefined` et les `null` tombent, les tableaux se répètent), `accept`, le
 `content-type` conditionnel, le `Bearer`, et la traduction d'un échec en
-`{ code, message }`. `cache` se règle par client et s'écrase par appel — la
-stratégie de prerender du web en dépend : les GET publics de l'annuaire restent
-cachables, seul l'onboarding force `no-store`.
+`{ code, message }`. Un 204 devient un succès sans valeur, pas un `UNREACHABLE`.
+
+`timeoutMs` et `signal` existent mais sont **éteints par défaut** : rien ne les
+utilise, et le `RequestInit` reste ainsi identique pour que le cache de Next ne
+bouge pas. À allumer sur les clients `no-store` uniquement — jamais sur le
+client public de l'annuaire, tant que l'interaction `signal` × cache de Next
+n'est pas vérifiée sur une vraie build.
+
+**Le jeton est une propriété du client, pas un argument d'appel.** `getAuthToken`
+est un provider sync ou async ; le `token` d'un appel le court-circuite. C'est
+ce qui a fait tomber `token: string` des 35 signatures de méthode des neuf ports
+web et des deux ports mobile : un appelant ne relaie plus une chaîne qu'il ne
+lit jamais.
+
+**D'où deux clients par adapter** dès qu'un module sert du public et du privé :
+un client anonyme et cachable, un client authentifié en `no-store`. La
+distinction est une propriété de la **route**, pas du site d'appel — un drapeau
+par appel l'aurait répétée à chaque ligne. C'est aussi ce qui **tient le
+prerender** : `getMachineById` tourne dans un `use cache`, où lire un cookie
+casserait la build. `AtelierHttpAdapter` et `IdentityHttpAdapter` se coupent
+ainsi des deux côtés — `register` et `login` ne doivent pas partir avec un
+Bearer périmé. Les sept autres adapters web, entièrement authentifiés, n'ont
+qu'un client ; l'`AtelierHttpAdapter` mobile, entièrement public, non plus.
+
+`cache` se règle par client et s'écrase par appel — la stratégie de prerender du
+web en dépend : les GET publics de l'annuaire restent cachables, seul
+l'onboarding force `no-store`.
+
+**Le provider n'est pas le même des deux côtés.** Côté web c'est
+`readSessionToken` : il lit le cookie httpOnly, `cookies()` est request-scoped,
+il n'y a donc rien à tenir. Côté mobile il n'y a pas d'équivalent — les adapters
+sont construits à l'import dans `dependencies.ts`, le jeton vit dans le state de
+`SessionProvider`. D'où `SessionTokenHolder`, le pont entre les deux, écrit à la
+restauration, à la connexion et à la déconnexion. C'est lui qui fait que
+`getAuthToken` **ne tape jamais `expo-secure-store`** : le trousseau est lu une
+fois au boot. À la restauration, le porteur est écrit **avant** l'appel à
+`me()`, sinon la première requête authentifiée partirait nue.
+
+Côté web, le garde que les appelants voulaient vraiment a deux noms :
+`requireSession(next)` pour le court-circuit qui redirige, `hasSession()` pour
+ceux qui branchent au lieu de rediriger — les deux navs de session, les lecteurs
+de préférences, le Route Handler d'availability, la semaine de la fiche machine.
 
 **Le client ne connaît aucun code métier.** Chaque adapter lui passe son
 `failureOf(status, body)` et sa table de messages ; le vocabulaire d'échec reste
@@ -481,10 +525,17 @@ Un réseau qui ne répond pas est un statut `0` : `failureOf(0, null)` retombe s
 traité comme injoignable lui aussi.
 
 **Chaque port a exactement deux adapters** : `<x>.http.adapter.ts` et
-`<x>.in-memory.adapter.ts`. Plus de `*.adapter.test.ts` — les 117 tests
-d'adapters ont été supprimés sur décision de l'auteur, et seul le client
-générique est testé (17 tests dans `packages/api-client/src/`). Les tables
-`BY_CODE`, elles, sont couvertes — cf. « Codes d'erreur » ci-dessous.
+`<x>.in-memory.adapter.ts`, construits de la même façon — le jumeau in-memory
+reçoit le même `AuthTokenProvider` que le jumeau HTTP. Plus de
+`*.adapter.test.ts` — les 117 tests d'adapters ont été supprimés sur décision de
+l'auteur, et seul le client générique est testé (45 tests, dans
+`api-client.test.ts` et `query.test.ts`). Les tables `BY_CODE`, elles, sont
+couvertes — cf. « Codes d'erreur » ci-dessous.
+
+**La plomberie du jeton n'a donc aucune couverture unitaire.** Les 104 E2E
+Playwright sont son seul filet côté web ; côté mobile, rien — le parcours se
+rejoue à la main sur Expo Go, et la branche qui compte est la restauration
+(tuer l'app, la rouvrir).
 
 ### Codes d'erreur — ce qui est tranché
 
