@@ -1,3 +1,5 @@
+import type { AuthTokenProvider } from '@etabli/api-client'
+
 import type { Account, CurrentUser, IdentityResult, LoginInput, Session } from '../model/session'
 import { failure } from '../model/session'
 import type { IIdentityPort } from '../ports/identity.port'
@@ -7,7 +9,10 @@ export class IdentityInMemoryAdapter implements IIdentityPort {
   private readonly tokens = new Map<string, string>()
   private counter = 0
 
-  constructor(seed: ReadonlyArray<Account> = []) {
+  constructor(
+    private readonly getAuthToken: AuthTokenProvider,
+    seed: ReadonlyArray<Account> = []
+  ) {
     for (const account of seed) this.accounts.set(account.user.email.toLowerCase(), account)
   }
 
@@ -26,8 +31,9 @@ export class IdentityInMemoryAdapter implements IIdentityPort {
     }
   }
 
-  async me(token: string): Promise<IdentityResult<CurrentUser>> {
-    const email = this.tokens.get(token)
+  async me(): Promise<IdentityResult<CurrentUser>> {
+    const token = await this.getAuthToken()
+    const email = token === null || token === undefined ? undefined : this.tokens.get(token)
     const account = email === undefined ? undefined : this.accounts.get(email)
     if (account === undefined) return failure('UNAUTHORIZED')
     return { ok: true, value: account.user }

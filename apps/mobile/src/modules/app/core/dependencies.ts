@@ -8,6 +8,7 @@ import type { ICheckInScannerPort } from '../../check-in/core/ports/check-in-sca
 import { LocationExpoAdapter } from '../../geo/core/adapters/location.expo.adapter'
 import { IdentityHttpAdapter } from '../../identity/core/adapters/identity.http.adapter'
 import { SessionStoreSecureStoreAdapter } from '../../shared/core/session/session-store.secure-store.adapter'
+import { SessionTokenHolder } from '../../shared/core/session/session-token-holder'
 import { API_BASE_URL } from './env'
 
 const camera = new ScannerExpoCameraAdapter(requestCameraScan)
@@ -18,11 +19,14 @@ const scanner: ICheckInScannerPort = {
   scan: async () => ((await camera.isAvailable()) ? camera.scan() : manual.scan()),
 }
 
+const sessionToken = new SessionTokenHolder()
+
 export const dependencies = {
   atelier: new AtelierHttpAdapter(API_BASE_URL),
-  booking: new BookingHttpAdapter(API_BASE_URL),
-  identity: new IdentityHttpAdapter(API_BASE_URL),
+  booking: new BookingHttpAdapter(API_BASE_URL, sessionToken.read),
+  identity: new IdentityHttpAdapter(API_BASE_URL, sessionToken.read),
   location: new LocationExpoAdapter(),
   scanner,
   sessionStore: new SessionStoreSecureStoreAdapter(),
+  sessionToken,
 } as const

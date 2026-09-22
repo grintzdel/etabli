@@ -1,3 +1,5 @@
+import type { AuthTokenProvider } from '@etabli/api-client'
+
 import type { BookingDetail, BookingResult, CreateBooking, MachineAvailability } from '../model/booking'
 import { failure } from '../model/booking'
 import type { IBookingPort } from '../ports/booking.port'
@@ -8,6 +10,8 @@ export class BookingInMemoryAdapter implements IBookingPort {
   private readonly owners = new Map<string, string>()
   private readonly tokens = new Map<string, string>()
   private counter = 0
+
+  constructor(private readonly getAuthToken: AuthTokenProvider) {}
 
   seedAvailability(week: MachineAvailability): void {
     this.weeks.set(week.machineId, week)
@@ -22,17 +26,21 @@ export class BookingInMemoryAdapter implements IBookingPort {
     this.tokens.set(machineId, checkInToken)
   }
 
-  private mine(token: string, id: string): BookingDetail | undefined {
-    return this.owners.get(id) === token ? this.bookings.get(id) : undefined
+  private async caller(): Promise<string> {
+    return (await this.getAuthToken()) ?? ''
   }
 
-  async availability(_token: string, machineId: string): Promise<BookingResult<MachineAvailability>> {
+  private async mine(id: string): Promise<BookingDetail | undefined> {
+    return this.owners.get(id) === (await this.caller()) ? this.bookings.get(id) : undefined
+  }
+
+  async availability(machineId: string): Promise<BookingResult<MachineAvailability>> {
     const week = this.weeks.get(machineId)
     if (week === undefined) return failure('MACHINE_NOT_BOOKABLE')
     return { ok: true, value: week }
   }
 
-  async create(token: string, input: CreateBooking): Promise<BookingResult<BookingDetail>> {
+  async create(input: CreateBooking): Promise<BookingResult<BookingDetail>> {
     const week = this.weeks.get(input.machineId)
     if (week === undefined) return failure('MACHINE_NOT_BOOKABLE')
 
@@ -57,7 +65,7 @@ export class BookingInMemoryAdapter implements IBookingPort {
       canCheckIn: false,
     }
     this.bookings.set(booking.id, booking)
-    this.owners.set(booking.id, token)
+    this.owners.set(booking.id, await this.caller())
 
     this.weeks.set(week.machineId, {
       ...week,
@@ -69,18 +77,19 @@ export class BookingInMemoryAdapter implements IBookingPort {
     return { ok: true, value: booking }
   }
 
-  async list(token: string): Promise<BookingResult<ReadonlyArray<BookingDetail>>> {
-    return { ok: true, value: [...this.bookings.values()].filter((b) => this.owners.get(b.id) === token) }
+  async list(): Promise<BookingResult<ReadonlyArray<BookingDetail>>> {
+    const caller = await this.caller()
+    return { ok: true, value: [...this.bookings.values()].filter((b) => this.owners.get(b.id) === caller) }
   }
 
-  async getById(token: string, id: string): Promise<BookingResult<BookingDetail>> {
-    const booking = this.mine(token, id)
+  async getById(id: string): Promise<BookingResult<BookingDetail>> {
+    const booking = await this.mine(id)
     if (booking === undefined) return failure('BOOKING_UNKNOWN')
     return { ok: true, value: booking }
   }
 
-  async cancel(token: string, id: string): Promise<BookingResult<BookingDetail>> {
-    const booking = this.mine(token, id)
+  async cancel(id: string): Promise<BookingResult<BookingDetail>> {
+    const booking = await this.mine(id)
     if (booking === undefined) return failure('BOOKING_UNKNOWN')
     if (!booking.canCancel) return failure('NOT_CANCELLABLE')
 
@@ -95,8 +104,8 @@ export class BookingInMemoryAdapter implements IBookingPort {
     return { ok: true, value: cancelled }
   }
 
-  async checkIn(token: string, id: string, checkInToken: string): Promise<BookingResult<BookingDetail>> {
-    const booking = this.mine(token, id)
+  async checkIn(id: string, checkInToken: string): Promise<BookingResult<BookingDetail>> {
+    const booking = await this.mine(id)
     if (booking === undefined) return failure('BOOKING_UNKNOWN')
     if (!booking.canCheckIn) return failure('NOT_CHECK_INABLE')
     if (this.tokens.get(booking.machineId) !== checkInToken) return failure('CHECK_IN_TOKEN_MISMATCH')

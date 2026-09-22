@@ -10,7 +10,7 @@ export const useBookingDetail = (id: string) => {
   const [scanError, setScanError] = useState<string | null>(null)
   const [isScanning, setIsScanning] = useState(false)
 
-  const query = useApiQuery<BookingDetail>(['booking', id], (token) => dependencies.booking.getById(token, id))
+  const query = useApiQuery<BookingDetail>(['booking', id], () => dependencies.booking.getById(id))
 
   const refreshAll = () => {
     void queryClient.invalidateQueries({ queryKey: ['booking', id] })
@@ -18,12 +18,12 @@ export const useBookingDetail = (id: string) => {
   }
 
   const cancel = useApiMutation<BookingDetail, void>(
-    (token) => dependencies.booking.cancel(token, id),
+    () => dependencies.booking.cancel(id),
     () => refreshAll()
   )
 
   const checkIn = useApiMutation<BookingDetail, string>(
-    (token, checkInToken) => dependencies.booking.checkIn(token, id, checkInToken),
+    (checkInToken) => dependencies.booking.checkIn(id, checkInToken),
     () => refreshAll()
   )
 

@@ -23,7 +23,7 @@ export const usePublicQuery = <A>(
 
 export const useApiQuery = <A>(
   queryKey: ReadonlyArray<unknown>,
-  run: (token: string) => Promise<Result<A, string>>,
+  run: () => Promise<Result<A, string>>,
   enabled = true
 ): UseQueryResult<A, Error> => {
   const { token, signOut } = useSession()
@@ -33,13 +33,13 @@ export const useApiQuery = <A>(
     enabled: enabled && token !== null,
     queryFn: () => {
       if (token === null) throw new Error('Votre session a expiré.')
-      return unwrap(run(token), signOut)
+      return unwrap(run(), signOut)
     },
   })
 }
 
 export const useApiMutation = <A, V>(
-  run: (token: string, variables: V) => Promise<Result<A, string>>,
+  run: (variables: V) => Promise<Result<A, string>>,
   onSuccess?: (value: A) => void
 ): UseMutationResult<A, Error, V> => {
   const { token, signOut } = useSession()
@@ -47,7 +47,7 @@ export const useApiMutation = <A, V>(
   return useMutation({
     mutationFn: (variables: V) => {
       if (token === null) throw new Error('Votre session a expiré.')
-      return unwrap(run(token, variables), signOut)
+      return unwrap(run(variables), signOut)
     },
     ...(onSuccess === undefined ? {} : { onSuccess }),
   })

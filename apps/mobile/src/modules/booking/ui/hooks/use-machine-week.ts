@@ -11,12 +11,12 @@ export const useMachineWeek = (machineId: string, onBooked: (booking: BookingDet
   const from = stack.at(-1)
   const queryClient = useQueryClient()
 
-  const query = useApiQuery<MachineAvailability>(['availability', machineId, from ?? 'now'], (token) =>
-    dependencies.booking.availability(token, machineId, from)
+  const query = useApiQuery<MachineAvailability>(['availability', machineId, from ?? 'now'], () =>
+    dependencies.booking.availability(machineId, from)
   )
 
   const booking = useApiMutation<BookingDetail, string>(
-    (token, startAt) => dependencies.booking.create(token, { machineId, startAt }),
+    (startAt) => dependencies.booking.create({ machineId, startAt }),
     (created) => {
       void queryClient.invalidateQueries({ queryKey: ['availability', machineId] })
       void queryClient.invalidateQueries({ queryKey: ['bookings'] })

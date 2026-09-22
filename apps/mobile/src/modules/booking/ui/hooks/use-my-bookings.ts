@@ -3,7 +3,7 @@ import { useApiQuery } from '../../../app/ui/hooks/use-api-query'
 import { partitionBookings, type BookingDetail } from '../../core/model/booking'
 
 export const useMyBookings = () => {
-  const query = useApiQuery<ReadonlyArray<BookingDetail>>(['bookings'], (token) => dependencies.booking.list(token))
+  const query = useApiQuery<ReadonlyArray<BookingDetail>>(['bookings'], () => dependencies.booking.list())
   const partition = partitionBookings(query.data ?? [], new Date())
 
   return {
