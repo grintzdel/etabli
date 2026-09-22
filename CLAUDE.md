@@ -419,6 +419,20 @@ réessayer. Les trois paramètres voyagent ensemble ou pas du tout — le schema
 l'API refuse un `lat` sans `radiusKm`. Le rayon vaut 1000 km : il est un clip
 dur côté SQL, et le but est de **trier**, pas de filtrer.
 
+**Les photos sont dans le bundle, et le choix reste une arithmétique.**
+`apps/mobile/assets/ateliers/` porte une copie des six photographies de type et
+des quatre plaques de `apps/web/public/`. `photoKeyFor` ne rend qu'une **clé** :
+un `require` d'image traverse Metro, pas vitest, et la sélection resterait
+intestable si elle chargeait le fichier. La somme des codepoints du slug est
+celle du web, au caractère près — sans elle les deux applications donneraient
+deux photos au même atelier.
+
+**Pas de voile dégradé sur mobile.** `PhotoHero` empile photo, dégradé et titre ;
+React Native n'a pas de gradient sans `expo-linear-gradient`, qui n'est pas une
+dépendance. La photo est donc une bande — 160 pt en tête de carte, 200 pt en
+tête de fiche — et le titre vit dessous. Rien n'est posé sur une image dont on ne
+maîtrise pas le contraste.
+
 **Le port de scan a deux implémentations, et l'écran ignore laquelle il tient.**
 `expo-camera` quand la permission caméra est accordée, `manual` — une saisie du
 jeton dans une feuille modale — partout ailleurs. Le module `check-in` a
