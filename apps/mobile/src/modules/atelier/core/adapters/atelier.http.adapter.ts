@@ -15,14 +15,14 @@ import {
 import type { IAtelierPort } from '../ports/atelier.port'
 
 export class AtelierHttpAdapter implements IAtelierPort {
-  private readonly http: ApiClient<AtelierFailureCode>
+  private readonly anonymous: ApiClient<AtelierFailureCode>
 
   constructor(baseUrl: string) {
-    this.http = createApiClient({ baseUrl, messages: FAILURE_MESSAGES, failureOf: atelierFailureOf })
+    this.anonymous = createApiClient({ baseUrl, messages: FAILURE_MESSAGES, failureOf: atelierFailureOf })
   }
 
   list(point: DirectoryPoint | null): Promise<AtelierResult<ReadonlyArray<AtelierSummary>>> {
-    return this.http.call<ReadonlyArray<AtelierSummary>>(routes.ateliers.list, {
+    return this.anonymous.get<ReadonlyArray<AtelierSummary>>(routes.ateliers.list, {
       query:
         point === null
           ? undefined
@@ -35,10 +35,10 @@ export class AtelierHttpAdapter implements IAtelierPort {
   }
 
   getBySlug(slug: string): Promise<AtelierResult<AtelierDetail>> {
-    return this.http.call<AtelierDetail>(buildPath(routes.ateliers.getBySlug, { slug }))
+    return this.anonymous.get<AtelierDetail>(buildPath(routes.ateliers.getBySlug, { slug }))
   }
 
   getMachineById(id: string): Promise<AtelierResult<MachineDetail>> {
-    return this.http.call<MachineDetail>(buildPath(routes.machines.getById, { id }))
+    return this.anonymous.get<MachineDetail>(buildPath(routes.machines.getById, { id }))
   }
 }
