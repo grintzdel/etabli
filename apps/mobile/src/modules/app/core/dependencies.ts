@@ -1,5 +1,6 @@
 import { AtelierHttpAdapter } from '../../atelier/core/adapters/atelier.http.adapter'
 import { BookingHttpAdapter } from '../../booking/core/adapters/booking.http.adapter'
+import { CertificationHttpAdapter } from '../../certification/core/adapters/certification.http.adapter'
 import { requestCameraScan } from '../../check-in/core/adapters/camera-scan-request'
 import { requestManualToken } from '../../check-in/core/adapters/manual-token-request'
 import { ScannerExpoCameraAdapter } from '../../check-in/core/adapters/scanner.expo-camera.adapter'
@@ -24,6 +25,7 @@ const sessionToken = new SessionTokenHolder()
 export const dependencies = {
   atelier: new AtelierHttpAdapter(API_BASE_URL),
   booking: new BookingHttpAdapter(API_BASE_URL, sessionToken.read),
+  certification: new CertificationHttpAdapter(API_BASE_URL, sessionToken.read),
   identity: new IdentityHttpAdapter(API_BASE_URL, sessionToken.read),
   location: new LocationExpoAdapter(),
   scanner,
