@@ -49,6 +49,20 @@ export interface DirectoryPoint {
   readonly longitude: number
 }
 
+export interface DirectoryFilters {
+  readonly city?: string
+  readonly machineKind?: MachineKind
+}
+
+export const MACHINE_KINDS: ReadonlyArray<MachineKind> = [
+  'LASER_CUTTER',
+  'PRINTER_3D',
+  'CNC_MILL',
+  'WOOD_LATHE',
+  'SEWING',
+  'ELECTRONICS_BENCH',
+]
+
 export const MACHINE_KIND_LABELS: Readonly<Record<MachineKind, string>> = {
   LASER_CUTTER: 'Découpe laser',
   PRINTER_3D: 'Impression 3D',

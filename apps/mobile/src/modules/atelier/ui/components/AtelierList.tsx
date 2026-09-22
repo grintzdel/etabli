@@ -8,11 +8,12 @@ import { AtelierCard } from './AtelierCard'
 export type AtelierListProps = {
   readonly ateliers: ReadonlyArray<AtelierSummary>
   readonly onSelect: (slug: string) => void
+  readonly filtered?: boolean
 }
 
-export const AtelierList = ({ ateliers, onSelect }: AtelierListProps) =>
+export const AtelierList = ({ ateliers, onSelect, filtered = false }: AtelierListProps) =>
   ateliers.length === 0 ? (
-    <Notice message="Aucun atelier publié pour l’instant." />
+    <Notice message={filtered ? 'Aucun atelier ne répond à ces filtres.' : 'Aucun atelier publié pour l’instant.'} />
   ) : (
     <View style={styles.list}>
       {ateliers.map((atelier) => (

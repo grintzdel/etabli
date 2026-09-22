@@ -4,6 +4,7 @@ import type {
   AtelierResult,
   AtelierSummary,
   CompleteOnboardingInput,
+  DirectoryFilters,
   DirectoryPoint,
   MachineDetail,
   MachineKind,
@@ -42,8 +43,17 @@ export class AtelierInMemoryAdapter implements IAtelierPort {
     }
   }
 
-  async list(point: DirectoryPoint | null): Promise<AtelierResult<ReadonlyArray<AtelierSummary>>> {
-    const summaries = [...this.sheets.values()].map((sheet) => this.summaryOf(sheet, point))
+  async list(
+    point: DirectoryPoint | null,
+    filters: DirectoryFilters
+  ): Promise<AtelierResult<ReadonlyArray<AtelierSummary>>> {
+    const summaries = [...this.sheets.values()]
+      .filter((sheet) => filters.city === undefined || sheet.city.toLowerCase() === filters.city.toLowerCase())
+      .filter(
+        (sheet) =>
+          filters.machineKind === undefined || sheet.machines.some((machine) => machine.kind === filters.machineKind)
+      )
+      .map((sheet) => this.summaryOf(sheet, point))
     if (point === null) return { ok: true, value: summaries }
 
     return { ok: true, value: summaries.sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0)) }

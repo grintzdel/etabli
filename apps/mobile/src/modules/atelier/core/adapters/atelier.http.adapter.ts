@@ -2,14 +2,15 @@ import { createApiClient, type ApiClient, type AuthTokenProvider } from '@etabli
 import { buildPath, routes } from '@etabli/contract'
 
 import { atelierFailureOf } from '../lib/atelier-failure'
+import { directoryQuery } from '../lib/directory-query'
 import {
-  DIRECTORY_RADIUS_KM,
   FAILURE_MESSAGES,
   type AtelierDetail,
   type AtelierFailureCode,
   type AtelierResult,
   type AtelierSummary,
   type CompleteOnboardingInput,
+  type DirectoryFilters,
   type DirectoryPoint,
   type MachineDetail,
   type OnboardingResult,
@@ -26,16 +27,9 @@ export class AtelierHttpAdapter implements IAtelierPort {
     this.authenticated = createApiClient({ ...shared, getAuthToken })
   }
 
-  list(point: DirectoryPoint | null): Promise<AtelierResult<ReadonlyArray<AtelierSummary>>> {
+  list(point: DirectoryPoint | null, filters: DirectoryFilters): Promise<AtelierResult<ReadonlyArray<AtelierSummary>>> {
     return this.anonymous.get<ReadonlyArray<AtelierSummary>>(routes.ateliers.list, {
-      query:
-        point === null
-          ? undefined
-          : {
-              lat: String(point.latitude),
-              lng: String(point.longitude),
-              radiusKm: String(DIRECTORY_RADIUS_KM),
-            },
+      query: directoryQuery(point, filters),
     })
   }
 
