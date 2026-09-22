@@ -6,7 +6,7 @@ export class BookingInMemoryAdapter implements IBookingPort {
   private readonly bookings = new Map<string, BookingDetail>()
   private readonly weeks = new Map<string, MachineAvailability>()
   private readonly owners = new Map<string, string>()
-  private readonly tags = new Map<string, string>()
+  private readonly tokens = new Map<string, string>()
   private counter = 0
 
   seedAvailability(week: MachineAvailability): void {
@@ -18,8 +18,8 @@ export class BookingInMemoryAdapter implements IBookingPort {
     this.owners.set(booking.id, token)
   }
 
-  seedTag(machineId: string, nfcTagId: string): void {
-    this.tags.set(machineId, nfcTagId)
+  seedToken(machineId: string, checkInToken: string): void {
+    this.tokens.set(machineId, checkInToken)
   }
 
   private mine(token: string, id: string): BookingDetail | undefined {
@@ -95,11 +95,11 @@ export class BookingInMemoryAdapter implements IBookingPort {
     return { ok: true, value: cancelled }
   }
 
-  async checkIn(token: string, id: string, nfcTagId: string): Promise<BookingResult<BookingDetail>> {
+  async checkIn(token: string, id: string, checkInToken: string): Promise<BookingResult<BookingDetail>> {
     const booking = this.mine(token, id)
     if (booking === undefined) return failure('BOOKING_UNKNOWN')
     if (!booking.canCheckIn) return failure('NOT_CHECK_INABLE')
-    if (this.tags.get(booking.machineId) !== nfcTagId) return failure('NFC_TAG_MISMATCH')
+    if (this.tokens.get(booking.machineId) !== checkInToken) return failure('CHECK_IN_TOKEN_MISMATCH')
 
     const checkedIn: BookingDetail = {
       ...booking,

@@ -42,11 +42,11 @@ export class BookingHttpAdapter implements IBookingPort {
     return this.http.call<BookingDetail>(buildPath(routes.bookings.cancel, { id }), { method: 'POST', token })
   }
 
-  checkIn(token: string, id: string, nfcTagId: string): Promise<BookingResult<BookingDetail>> {
+  checkIn(token: string, id: string, checkInToken: string): Promise<BookingResult<BookingDetail>> {
     return this.http.call<BookingDetail>(buildPath(routes.bookings.checkIn, { id }), {
       method: 'POST',
       token,
-      body: { nfcTagId },
+      body: { checkInToken },
     })
   }
 }
