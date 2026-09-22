@@ -26,18 +26,18 @@ describe('the refusal table', () => {
       BookingFailureCode.NOT_CANCELLABLE,
       BookingFailureCode.NOT_CHECK_INABLE,
       BookingFailureCode.CHECK_IN_WINDOW_CLOSED,
-      BookingFailureCode.NFC_TAG_MISMATCH,
+      BookingFailureCode.CHECK_IN_TOKEN_MISMATCH,
     ].map((code) => FAILURE_MESSAGES[code])
 
     expect(new Set(phrases).size).toBe(phrases.length)
   })
 
   it('carries the phrase with the code', () => {
-    expect(failure(BookingFailureCode.NFC_TAG_MISMATCH)).toEqual({
+    expect(failure(BookingFailureCode.CHECK_IN_TOKEN_MISMATCH)).toEqual({
       ok: false,
       error: {
-        code: BookingFailureCode.NFC_TAG_MISMATCH,
-        message: FAILURE_MESSAGES[BookingFailureCode.NFC_TAG_MISMATCH],
+        code: BookingFailureCode.CHECK_IN_TOKEN_MISMATCH,
+        message: FAILURE_MESSAGES[BookingFailureCode.CHECK_IN_TOKEN_MISMATCH],
       },
     })
   })

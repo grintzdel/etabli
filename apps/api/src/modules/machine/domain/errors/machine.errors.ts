@@ -1,19 +1,9 @@
 import { ApiErrorCode } from '@etabli/contract'
-import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common'
+import { ForbiddenException, NotFoundException } from '@nestjs/common'
 
 export class MachineUnknownError extends NotFoundException {
   constructor(machineId: string) {
     super({ code: ApiErrorCode.MACHINE_UNKNOWN, message: `Machine introuvable : ${machineId}`, machineId })
-  }
-}
-
-export class MachineNfcTagTakenError extends ConflictException {
-  constructor(nfcTagId: string) {
-    super({
-      code: ApiErrorCode.MACHINE_NFC_TAG_TAKEN,
-      message: 'Ce tag NFC est déjà porté par une autre machine',
-      nfcTagId,
-    })
   }
 }
 

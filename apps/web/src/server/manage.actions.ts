@@ -4,10 +4,10 @@ import { updateTag } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { AtelierFailureCode, FAILURE_MESSAGES, isMachineStatus } from '@/modules/atelier/core/model/atelier'
+import type { CheckInTokenFormState } from '@/modules/atelier/core/model/check-in-token-form'
+import { checkInTokenRefused, checkInTokenRotated } from '@/modules/atelier/core/model/check-in-token-form'
 import type { MachineFormState } from '@/modules/atelier/core/model/machine-form'
 import { emptyMachineFormValues, machineFormValues, parseMachineForm } from '@/modules/atelier/core/model/machine-form'
-import type { NfcTagFormState } from '@/modules/atelier/core/model/nfc-tag-form'
-import { nfcTagRefused, nfcTagSaved, parseNfcTag } from '@/modules/atelier/core/model/nfc-tag-form'
 
 import { manageMachinePort } from './container'
 import { readSessionToken } from './session'
@@ -43,18 +43,19 @@ export const setMachineStatusAction = async (formData: FormData): Promise<void> 
   if (result.ok) updateTag('ateliers')
 }
 
-export const setMachineNfcTagAction = async (_state: NfcTagFormState, formData: FormData): Promise<NfcTagFormState> => {
+export const regenerateCheckInTokenAction = async (
+  _state: CheckInTokenFormState,
+  formData: FormData
+): Promise<CheckInTokenFormState> => {
   const machineId = formData.get('machineId')
-  if (typeof machineId !== 'string') return nfcTagRefused('Cette machine n’existe pas.')
+  if (typeof machineId !== 'string') return checkInTokenRefused('Cette machine n’existe pas.')
 
-  const nfcTagId = parseNfcTag(formData)
-
-  const result = await manageMachinePort.update(await requireToken(), machineId, { nfcTagId })
+  const result = await manageMachinePort.regenerateCheckInToken(await requireToken(), machineId)
   if (!result.ok) {
-    if (result.error.code === AtelierFailureCode.NOT_FOUND) return nfcTagRefused('Cette machine n’existe pas.')
-    return nfcTagRefused(result.error.message)
+    if (result.error.code === AtelierFailureCode.NOT_FOUND) return checkInTokenRefused('Cette machine n’existe pas.')
+    return checkInTokenRefused(result.error.message)
   }
 
   updateTag('ateliers')
-  return nfcTagSaved(nfcTagId === null ? 'Tag décollé.' : 'Tag posé.')
+  return checkInTokenRotated('Nouveau QR généré. L’ancien autocollant ne pointe plus : réimprimez-le.')
 }

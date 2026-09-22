@@ -14,7 +14,7 @@ const MAPPED: ReadonlyArray<readonly [ApiErrorCode, BookingFailureCode]> = [
   [ApiErrorCode.BOOKING_NOT_CANCELLABLE, 'NOT_CANCELLABLE'],
   [ApiErrorCode.BOOKING_NOT_CHECK_INABLE, 'NOT_CHECK_INABLE'],
   [ApiErrorCode.CHECK_IN_WINDOW_CLOSED, 'CHECK_IN_WINDOW_CLOSED'],
-  [ApiErrorCode.NFC_TAG_MISMATCH, 'NFC_TAG_MISMATCH'],
+  [ApiErrorCode.CHECK_IN_TOKEN_MISMATCH, 'CHECK_IN_TOKEN_MISMATCH'],
   [ApiErrorCode.VALIDATION_FAILED, 'INVALID_INPUT'],
   [ApiErrorCode.UNAUTHORIZED, 'UNAUTHORIZED'],
 ]
@@ -25,7 +25,7 @@ describe('bookingFailureOf', () => {
   })
 
   it('tells a wrong tag apart from a closed check-in window, both on a 409', () => {
-    expect(bookingFailureOf(409, { code: ApiErrorCode.NFC_TAG_MISMATCH })).toBe('NFC_TAG_MISMATCH')
+    expect(bookingFailureOf(409, { code: ApiErrorCode.CHECK_IN_TOKEN_MISMATCH })).toBe('CHECK_IN_TOKEN_MISMATCH')
     expect(bookingFailureOf(409, { code: ApiErrorCode.CHECK_IN_WINDOW_CLOSED })).toBe('CHECK_IN_WINDOW_CLOSED')
   })
 

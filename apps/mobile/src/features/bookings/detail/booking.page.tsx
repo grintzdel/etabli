@@ -49,11 +49,11 @@ export const BookingPage = ({ id }: { readonly id: string }) => {
               <View style={styles.facts}>
                 <Text variant="label">Pointer</Text>
                 <Text tone="muted">
-                  Approchez le téléphone du tag NFC posé sur la machine. Le serveur vérifie que c’est bien celui de la
-                  machine réservée.
+                  Scannez le QR code collé sur la machine. Le serveur vérifie que c’est bien celui de la machine
+                  réservée.
                 </Text>
                 <Button disabled={detail.isCheckingIn} onPress={detail.checkIn}>
-                  {detail.isCheckingIn ? 'Lecture…' : 'Pointer'}
+                  {detail.isCheckingIn ? 'Scan…' : 'Pointer'}
                 </Button>
               </View>
             </Surface>

@@ -13,7 +13,7 @@ export const machineResponseSchema = z.object({
   requiresCertification: z.boolean(),
   slotDurationMinutes: z.int(),
   status: z.enum(MACHINE_STATUSES),
-  nfcTagId: z.string().nullable(),
+  checkInToken: z.string(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 })
@@ -53,7 +53,7 @@ export const toMachineResponse = (machine: MachineEntity): MachineResponse => ({
   requiresCertification: machine.requiresCertification,
   slotDurationMinutes: machine.slotDurationMinutes,
   status: machine.status,
-  nfcTagId: machine.nfcTagId,
+  checkInToken: machine.checkInToken,
   createdAt: machine.createdAt.toISOString(),
   updatedAt: machine.updatedAt.toISOString(),
 })

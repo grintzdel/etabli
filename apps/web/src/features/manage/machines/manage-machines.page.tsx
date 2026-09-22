@@ -8,7 +8,7 @@ import { emptyMachineFormState } from '@/modules/atelier/core/model/machine-form
 import { MachineForm } from '@/modules/atelier/react/components/MachineForm'
 import { ManagedParcTable } from '@/modules/atelier/react/components/ManagedParcTable'
 import { manageMachinePort } from '@/server/container'
-import { createMachineAction, setMachineNfcTagAction, setMachineStatusAction } from '@/server/manage.actions'
+import { createMachineAction, regenerateCheckInTokenAction, setMachineStatusAction } from '@/server/manage.actions'
 import { readSessionToken } from '@/server/session'
 
 export const metadata: Metadata = {
@@ -52,7 +52,7 @@ const Parcs = async () => {
           <ManagedParcTable
             machines={parc.machines}
             action={setMachineStatusAction}
-            nfcTagAction={setMachineNfcTagAction}
+            checkInTokenAction={regenerateCheckInTokenAction}
           />
         </section>
       ))}
@@ -81,8 +81,8 @@ export const ManageMachinesPage = () => (
       <h1 className="font-display text-4xl font-bold tracking-tight uppercase">Machines</h1>
       <p className="text-graphite-200 max-w-2xl text-lg">
         Le parc des ateliers dont vous êtes fabmanager. Une machine retirée disparaît de la fiche publique ; une machine
-        en maintenance y reste, signalée. Le tag NFC est ce qu’un membre présente pour pointer : il est unique sur tout
-        le réseau, et le vider le décolle.
+        en maintenance y reste, signalée. Chaque machine porte un QR de pointage, unique sur tout le réseau :
+        imprimez-le et collez-le sur la machine. Régénérer le QR invalide l’autocollant en place.
       </p>
     </header>
 

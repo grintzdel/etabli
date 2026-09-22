@@ -8,7 +8,7 @@ import { PhotoHero } from '@/ui/PhotoHero'
 export const metadata: Metadata = {
   title: 'Fonctionnalités',
   description:
-    "Habilitation machine, réservation exclusive, pointage NFC, back-office fabmanager et tableau réseau : ce qu'Établi tient à la place du groupe de messagerie et du cahier posé près de la machine.",
+    "Habilitation machine, réservation exclusive, pointage par QR code, back-office fabmanager et tableau réseau : ce qu'Établi tient à la place du groupe de messagerie et du cahier posé près de la machine.",
   alternates: { canonical: '/fonctionnalites' },
   openGraph: {
     type: 'website',
@@ -28,7 +28,7 @@ const capabilities = [
     body: 'Deux créneaux ne peuvent jamais se chevaucher sur une machine. La règle est tenue par une contrainte d’exclusion en base, pas seulement par le code qui la précède.',
   },
   {
-    title: 'Pointage NFC',
+    title: 'Pointage par QR code',
     body: 'Le tag collé sur le bâti prouve la présence. Le pointage ouvre 15 minutes avant le créneau et ferme 30 minutes après son début ; passé cette fenêtre, l’absence est acquise.',
   },
   {
@@ -77,7 +77,7 @@ export const FeaturesPage = () => (
       <h2 className="font-display text-2xl font-semibold tracking-wide uppercase">Bientôt, sur le téléphone</h2>
       <Surface className="text-graphite-200 flex flex-col gap-3">
         <p>
-          Le pointage se fait déjà par tag NFC : l’application mobile lira le tag directement, là où le navigateur ne
+          Le pointage se fait déjà par QR code : l’application mobile scanne le code directement, là où le navigateur ne
           sait pas le faire.
         </p>
         <p>

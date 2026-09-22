@@ -21,7 +21,6 @@ export const routes = {
     ateliers: '/me/ateliers',
   },
   machines: {
-    list: '/machines',
     getById: '/machines/:id',
     availability: '/machines/:id/availability',
   },
@@ -42,6 +41,7 @@ export const routes = {
     revokeCertification: '/manage/certifications/:id/revoke',
     machines: '/manage/machines',
     machine: '/manage/machines/:id',
+    regenerateMachineToken: '/manage/machines/:id/check-in-token',
     bookings: '/manage/bookings',
     checkInBooking: '/manage/bookings/:id/check-in',
     noShow: '/manage/bookings/:id/no-show',

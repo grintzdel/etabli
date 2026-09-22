@@ -40,4 +40,11 @@ export class ManageMachineHttpAdapter implements IManageMachinePort {
       body: input,
     })
   }
+
+  regenerateCheckInToken(token: string, id: string): Promise<AtelierResult<ManagedMachine>> {
+    return this.http.call<ManagedMachine>(buildPath(routes.manage.regenerateMachineToken, { id }), {
+      method: 'POST',
+      token,
+    })
+  }
 }

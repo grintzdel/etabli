@@ -25,7 +25,7 @@ const toMachine = (row: MachineRow): MachineEntity => ({
   requiresCertification: row.requiresCertification,
   slotDurationMinutes: row.slotDurationMinutes,
   status: row.status as MachineStatus,
-  nfcTagId: row.nfcTagId,
+  checkInToken: row.checkInToken,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 })
@@ -73,11 +73,6 @@ export class MachineRepositoryDrizzlePg extends BaseRepository<MachineRow> imple
     return rows.map(toMachineWithAtelier)
   }
 
-  async findByNfcTag(nfcTagId: string): Promise<MachineEntity | null> {
-    const row = await this.selectOne(eq(machines.nfcTagId, nfcTagId))
-    return row === null ? null : toMachine(row)
-  }
-
   async listForAtelier(atelierId: string): Promise<ReadonlyArray<MachineEntity>> {
     const rows = await this.db
       .select()
@@ -120,7 +115,7 @@ export class MachineRepositoryDrizzlePg extends BaseRepository<MachineRow> imple
         ...(patch.status === undefined ? {} : { status: patch.status }),
         ...(patch.requiresCertification === undefined ? {} : { requiresCertification: patch.requiresCertification }),
         ...(patch.slotDurationMinutes === undefined ? {} : { slotDurationMinutes: patch.slotDurationMinutes }),
-        ...(patch.nfcTagId === undefined ? {} : { nfcTagId: patch.nfcTagId }),
+        ...(patch.checkInToken === undefined ? {} : { checkInToken: patch.checkInToken }),
         updatedAt: at,
       })
       .where(eq(machines.id, id))

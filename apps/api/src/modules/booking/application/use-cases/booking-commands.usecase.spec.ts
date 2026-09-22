@@ -13,7 +13,7 @@ import {
   BookingNotMarkableAsNoShowError,
   BookingUnknownError,
   CheckInWindowClosedError,
-  NfcTagMismatchError,
+  CheckInTokenMismatchError,
 } from '../../domain/errors/booking.errors.ts'
 import type { IBookingRepository } from '../../domain/repositories/booking.repository.interface.ts'
 import { CancelAtelierBookingUsecase } from './cancel-atelier-booking.usecase.ts'
@@ -21,7 +21,7 @@ import { CancelBookingUsecase } from './cancel-booking.usecase.ts'
 import { CheckInBookingUsecase } from './check-in-booking.usecase.ts'
 import { MarkNoShowUsecase } from './mark-no-show.usecase.ts'
 
-const MACHINE = machineFixture({ nfcTagId: 'nfc-forge-laser-01' })
+const MACHINE = machineFixture({ checkInToken: 'qr-forge-laser-01' })
 const OWNER = authUserFixture({ memberships: [memberOf(MACHINE.atelierId)] })
 
 const bookingOf = (overrides: Partial<BookingProps> = {}): BookingEntity =>
@@ -127,7 +127,7 @@ describe('CancelAtelierBookingUsecase', () => {
 })
 
 describe('CheckInBookingUsecase', () => {
-  const usecaseWith = (booking: BookingEntity, now: string, tag: string | null = MACHINE.nfcTagId) =>
+  const usecaseWith = (booking: BookingEntity, now: string, token: string = MACHINE.checkInToken) =>
     new CheckInBookingUsecase(
       stub<IBookingRepository>({
         findById: vi.fn().mockResolvedValue(booking),
@@ -135,13 +135,13 @@ describe('CheckInBookingUsecase', () => {
           bookingOf({ status: BookingStatus.CHECKED_IN, checkedInAt: at, checkedInVia: via })
         ),
       }),
-      stub<IMachineRepository>({ findById: vi.fn().mockResolvedValue({ ...MACHINE, nfcTagId: tag }) }),
+      stub<IMachineRepository>({ findById: vi.fn().mockResolvedValue({ ...MACHINE, checkInToken: token }) }),
       new FixedClock(now)
     )
 
   it('stamps the slot when the tag matches inside the window', async () => {
     const detail = await usecaseWith(bookingOf(), '2026-09-16T09:50:00Z').execute(OWNER, 'booking-1', {
-      nfcTagId: 'nfc-forge-laser-01',
+      checkInToken: 'qr-forge-laser-01',
     })
 
     expect(detail.status).toBe(BookingStatus.CHECKED_IN)
@@ -151,7 +151,7 @@ describe('CheckInBookingUsecase', () => {
   it('is not idempotent: a second stamp is refused', async () => {
     await expect(
       usecaseWith(bookingOf({ status: BookingStatus.CHECKED_IN }), '2026-09-16T09:50:00Z').execute(OWNER, 'booking-1', {
-        nfcTagId: 'nfc-forge-laser-01',
+        checkInToken: 'qr-forge-laser-01',
       })
     ).rejects.toThrow(BookingNotCheckInableError)
   })
@@ -159,32 +159,30 @@ describe('CheckInBookingUsecase', () => {
   it('refuses a stamp outside the window', async () => {
     await expect(
       usecaseWith(bookingOf(), '2026-09-16T10:31:00Z').execute(OWNER, 'booking-1', {
-        nfcTagId: 'nfc-forge-laser-01',
+        checkInToken: 'qr-forge-laser-01',
       })
     ).rejects.toThrow(CheckInWindowClosedError)
   })
 
-  it('refuses a tag that is not the machine’s', async () => {
+  it('refuses a token that is not the machine’s', async () => {
     await expect(
-      usecaseWith(bookingOf(), '2026-09-16T09:50:00Z').execute(OWNER, 'booking-1', { nfcTagId: 'nfc-autre' })
-    ).rejects.toThrow(NfcTagMismatchError)
+      usecaseWith(bookingOf(), '2026-09-16T09:50:00Z').execute(OWNER, 'booking-1', { checkInToken: 'qr-autre' })
+    ).rejects.toThrow(CheckInTokenMismatchError)
   })
 
-  it('refuses a machine that carries no tag at all', async () => {
-    await expect(
-      usecaseWith(bookingOf(), '2026-09-16T09:50:00Z', null).execute(OWNER, 'booking-1', {
-        nfcTagId: 'nfc-forge-laser-01',
-      })
-    ).rejects.toThrow(NfcTagMismatchError)
-  })
+  it('writes QR as the method', async () => {
+    const checkIn = vi.fn(async (_id: string, at: Date, via: CheckInMethod) =>
+      bookingOf({ status: BookingStatus.CHECKED_IN, checkedInAt: at, checkedInVia: via })
+    )
+    const usecase = new CheckInBookingUsecase(
+      stub<IBookingRepository>({ findById: vi.fn().mockResolvedValue(bookingOf()), checkIn }),
+      stub<IMachineRepository>({ findById: vi.fn().mockResolvedValue(MACHINE) }),
+      new FixedClock('2026-09-16T09:50:00Z')
+    )
 
-  it('writes NFC as the method', async () => {
-    const detail = await usecaseWith(bookingOf(), '2026-09-16T09:50:00Z').execute(OWNER, 'booking-1', {
-      nfcTagId: 'nfc-forge-laser-01',
-    })
+    await usecase.execute(OWNER, 'booking-1', { checkInToken: 'qr-forge-laser-01' })
 
-    expect(detail.status).toBe(BookingStatus.CHECKED_IN)
-    expect(CheckInMethod.NFC).toBe('NFC')
+    expect(checkIn).toHaveBeenCalledWith('booking-1', expect.any(Date), CheckInMethod.QR)
   })
 })
 

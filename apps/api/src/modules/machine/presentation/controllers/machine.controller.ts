@@ -52,4 +52,14 @@ export class MachineController {
     const machine = await this.machineService.update(user, machineId, body)
     return toMachineResponse(machine)
   }
+
+  @Post(':machineId/check-in-token')
+  @ApiOkResponse({ schema: jsonSchema(machineResponseSchema) })
+  async regenerateCheckInToken(
+    @CurrentUser() user: AuthUser,
+    @UuidParam('machineId') machineId: string
+  ): Promise<MachineResponse> {
+    const machine = await this.machineService.regenerateCheckInToken(user, machineId)
+    return toMachineResponse(machine)
+  }
 }

@@ -101,7 +101,7 @@ export const managedMachineFixture = (overrides: Partial<ManagedMachine> = {}): 
     requiresCertification: true,
     slotDurationMinutes: 60,
     status: 'AVAILABLE',
-    nfcTagId: null,
+    checkInToken: 'qr-fixture-01',
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
     ...overrides,

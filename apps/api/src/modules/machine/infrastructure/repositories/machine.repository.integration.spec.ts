@@ -31,11 +31,6 @@ describe('MachineRepositoryDrizzlePg', () => {
     expect(await repository.findById('00000000-0000-4000-8000-000000000000')).toBeNull()
   })
 
-  it('reads a machine by its NFC tag', async () => {
-    expect((await repository.findByNfcTag('nfc-forge-laser-01'))?.id).toBe(SEED.machine.forgeLaser)
-    expect(await repository.findByNfcTag('nfc-inconnu')).toBeNull()
-  })
-
   it('keeps the retired machines in the atelier parc', async () => {
     const machines = await repository.listForAtelier(SEED.atelier.forge)
 
@@ -65,17 +60,20 @@ describe('MachineRepositoryDrizzlePg', () => {
 
     expect(updated?.status).toBe('AVAILABLE')
     expect(updated?.name).toBe(before?.name)
-    expect(updated?.nfcTagId).toBe(before?.nfcTagId)
+    expect(updated?.checkInToken).toBe(before?.checkInToken)
   })
 
-  it('unsticks the tag on an explicit null', async () => {
-    const updated = await repository.update(
+  it('rotates the check-in token, and the unique index still holds', async () => {
+    const rotated = await repository.update(
       SEED.machine.forgePrusa,
-      { nfcTagId: null },
+      { checkInToken: 'qr-forge-prusa-02' },
       new Date('2026-09-15T10:00:00Z')
     )
 
-    expect(updated?.nfcTagId).toBeNull()
+    expect(rotated?.checkInToken).toBe('qr-forge-prusa-02')
+    await expect(
+      repository.update(SEED.machine.forgeLaser, { checkInToken: 'qr-forge-prusa-02' }, new Date())
+    ).rejects.toThrow()
   })
 
   it('reads the public fiche of a machine in service, atelier carried along', async () => {
@@ -99,7 +97,7 @@ describe('MachineRepositoryDrizzlePg', () => {
       requiresCertification: true,
       slotDurationMinutes: 60,
       status: 'AVAILABLE',
-      nfcTagId: null,
+      checkInToken: 'qr-presse-en-caisse-01',
       createdAt: new Date('2026-09-15T10:00:00Z'),
     })
 

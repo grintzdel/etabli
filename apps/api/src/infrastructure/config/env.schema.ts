@@ -5,8 +5,6 @@ export const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3001),
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(32),
-  COOKIE_SECURE: z.stringbool().default(false),
-  COOKIE_DOMAIN: z.string().default('localhost'),
 })
 
 export type Env = z.infer<typeof envSchema>

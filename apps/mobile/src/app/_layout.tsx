@@ -8,9 +8,10 @@ import { StatusBar } from 'expo-status-bar'
 import { useEffect } from 'react'
 import { useColorScheme } from 'react-native'
 
+import { ManualTokenPrompt } from '@/modules/check-in/ui/components/ManualTokenPrompt'
+import { QrScannerSheet } from '@/modules/check-in/ui/components/QrScannerSheet'
 import { SessionProvider } from '@/modules/identity/ui/components/SessionProvider'
 import { useSession } from '@/modules/identity/ui/hooks/use-session'
-import { ManualTagPrompt } from '@/modules/nfc/ui/components/ManualTagPrompt'
 
 void SplashScreen.preventAutoHideAsync()
 
@@ -75,7 +76,8 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
         <RootNavigator />
-        <ManualTagPrompt />
+        <QrScannerSheet />
+        <ManualTokenPrompt />
       </SessionProvider>
     </QueryClientProvider>
   )

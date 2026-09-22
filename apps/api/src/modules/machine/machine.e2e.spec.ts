@@ -45,7 +45,7 @@ describe('machine parcs', () => {
     expect(response.body.slotDurationMinutes).toBe(60)
     expect(response.body.requiresCertification).toBe(true)
     expect(response.body.status).toBe('AVAILABLE')
-    expect(response.body.nfcTagId).toBeNull()
+    expect(response.body.checkInToken).toEqual(expect.any(String))
   })
 
   it('refuses a fabmanager who adds a machine to someone else’s atelier', async () => {
@@ -70,33 +70,47 @@ describe('machine parcs', () => {
     expect(response.status).toBe(400)
   })
 
-  it('sticks, keeps and unsticks an NFC tag', async () => {
+  it('leaves the check-in token alone when the machine is renamed', async () => {
     const token = await harness.signIn(SEED.forgeFabmanager)
 
     const renamed = await api()
       .patch(`/manage/machines/${SEED.machine.forgeLaser}`)
       .set('authorization', bearer(token))
       .send({ name: 'Trotec Speedy 400 — atelier bois' })
-    expect(renamed.body.nfcTagId).toBe('nfc-forge-laser-01')
 
-    const same = await api()
+    expect(renamed.body.checkInToken).toBe('qr-forge-laser-01')
+  })
+
+  it('refuses a caller who writes the check-in token by hand', async () => {
+    const token = await harness.signIn(SEED.forgeFabmanager)
+
+    const response = await api()
       .patch(`/manage/machines/${SEED.machine.forgeLaser}`)
       .set('authorization', bearer(token))
-      .send({ nfcTagId: 'nfc-forge-laser-01' })
-    expect(same.status).toBe(200)
+      .send({ checkInToken: 'qr-choisi-a-la-main' })
 
-    const taken = await api()
-      .patch(`/manage/machines/${SEED.machine.forgeLaser}`)
-      .set('authorization', bearer(token))
-      .send({ nfcTagId: 'nfc-forge-prusa-01' })
-    expect(taken.status).toBe(409)
-    expect(taken.body.code).toBe('MACHINE_NFC_TAG_TAKEN')
+    expect(response.status).toBe(400)
+  })
 
-    const unstuck = await api()
-      .patch(`/manage/machines/${SEED.machine.forgeLaser}`)
+  it('regenerates the check-in token, and the printed sticker stops working', async () => {
+    const token = await harness.signIn(SEED.forgeFabmanager)
+
+    const regenerated = await api()
+      .post(`/manage/machines/${SEED.machine.forgeLaser}/check-in-token`)
       .set('authorization', bearer(token))
-      .send({ nfcTagId: null })
-    expect(unstuck.body.nfcTagId).toBeNull()
+
+    expect(regenerated.status).toBe(201)
+    expect(regenerated.body.checkInToken).not.toBe('qr-forge-laser-01')
+  })
+
+  it('hides the check-in token of another atelier behind a 404', async () => {
+    const token = await harness.signIn(SEED.lyonFabmanager)
+
+    const response = await api()
+      .post(`/manage/machines/${SEED.machine.forgeLaser}/check-in-token`)
+      .set('authorization', bearer(token))
+
+    expect(response.status).toBe(404)
   })
 
   it('hides a machine of another atelier behind a 404', async () => {
@@ -140,11 +154,11 @@ describe('public machine detail', () => {
     })
   })
 
-  it('keeps the NFC tag out of the public fiche', async () => {
+  it('keeps the check-in token out of the public fiche', async () => {
     const response = await api().get(`/machines/${SEED.machine.forgeLaser}`)
 
     expect(response.status).toBe(200)
-    expect(response.body).not.toHaveProperty('nfcTagId')
+    expect(response.body).not.toHaveProperty('checkInToken')
   })
 
   it('shows a machine under maintenance, since the fiche is not a booking', async () => {

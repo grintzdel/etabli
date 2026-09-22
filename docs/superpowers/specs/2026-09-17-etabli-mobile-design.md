@@ -3,6 +3,19 @@
 **Projet fil rouge M2 EEMI 2026 · Expo / React Native**
 Auteur : Mathis · Document créé le 17 septembre 2026
 
+> **Amendé le 22 septembre 2026 — le NFC est remplacé par un QR code.** Tout ce
+> que ce document dit du NFC vaut désormais du scan de QR code : le module
+> `nfc` est devenu `check-in`, `INfcReaderPort` est devenu
+> `ICheckInScannerPort`, et les deux implémentations sont `expo-camera` et
+> `manual` au lieu de `nfc-manager` et `manual`. Côté API,
+> `machines.nfc_tag_id` est devenu `machines.check_in_token` — `NOT NULL`,
+> généré par le serveur — et `NFC_TAG_MISMATCH` est devenu
+> `CHECK_IN_TOKEN_MISMATCH`. La raison : l'entitlement NFC d'iOS demande un
+> compte développeur Apple payant et un development build, si bien que le
+> chemin natif n'était jamais exercé et retombait en pratique sur la saisie
+> manuelle ; `expo-camera` tourne dans Expo Go. Le fabmanager imprime le QR
+> depuis `/manage/machines/:id/qr`. Voir le README pour l'état courant.
+
 ---
 
 ## Sommaire

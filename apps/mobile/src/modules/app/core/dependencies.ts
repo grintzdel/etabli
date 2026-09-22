@@ -1,20 +1,21 @@
 import { AtelierHttpAdapter } from '../../atelier/core/adapters/atelier.http.adapter'
 import { BookingHttpAdapter } from '../../booking/core/adapters/booking.http.adapter'
+import { requestCameraScan } from '../../check-in/core/adapters/camera-scan-request'
+import { requestManualToken } from '../../check-in/core/adapters/manual-token-request'
+import { ScannerExpoCameraAdapter } from '../../check-in/core/adapters/scanner.expo-camera.adapter'
+import { ScannerManualAdapter } from '../../check-in/core/adapters/scanner.manual.adapter'
+import type { ICheckInScannerPort } from '../../check-in/core/ports/check-in-scanner.port'
 import { LocationExpoAdapter } from '../../geo/core/adapters/location.expo.adapter'
 import { IdentityHttpAdapter } from '../../identity/core/adapters/identity.http.adapter'
-import { requestManualTag } from '../../nfc/core/adapters/manual-tag-request'
-import { NfcReaderManualAdapter } from '../../nfc/core/adapters/nfc-reader.manual.adapter'
-import { NfcReaderNfcManagerAdapter } from '../../nfc/core/adapters/nfc-reader.nfc-manager.adapter'
-import type { INfcReaderPort } from '../../nfc/core/ports/nfc-reader.port'
 import { SessionStoreSecureStoreAdapter } from '../../shared/core/session/session-store.secure-store.adapter'
 import { API_BASE_URL } from './env'
 
-const nfcManager = new NfcReaderNfcManagerAdapter()
-const manualTag = new NfcReaderManualAdapter(requestManualTag)
+const camera = new ScannerExpoCameraAdapter(requestCameraScan)
+const manual = new ScannerManualAdapter(requestManualToken)
 
-const nfc: INfcReaderPort = {
+const scanner: ICheckInScannerPort = {
   isAvailable: () => Promise.resolve(true),
-  readTagId: async () => ((await nfcManager.isAvailable()) ? nfcManager.readTagId() : manualTag.readTagId()),
+  scan: async () => ((await camera.isAvailable()) ? camera.scan() : manual.scan()),
 }
 
 export const dependencies = {
@@ -22,6 +23,6 @@ export const dependencies = {
   booking: new BookingHttpAdapter(API_BASE_URL),
   identity: new IdentityHttpAdapter(API_BASE_URL),
   location: new LocationExpoAdapter(),
-  nfc,
+  scanner,
   sessionStore: new SessionStoreSecureStoreAdapter(),
 } as const

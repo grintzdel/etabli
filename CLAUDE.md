@@ -1,7 +1,7 @@
 # Établi
 
 Projet fil rouge M2 EEMI 2026 — Next.js 16.3. Plateforme d'un réseau d'ateliers
-partagés : habilitations machine, réservation de créneaux, check-in NFC.
+partagés : habilitations machine, réservation de créneaux, pointage par QR code.
 
 **Lire en premier** : `docs/superpowers/specs/2026-09-14-etabli-design.md`.
 Produit, règles métier, modèle de données, surface d'API, roadmap et fiche
@@ -14,17 +14,17 @@ plages avec le paramètre `pages`).
 
 Jalons 0 à 6 terminés et sur `main`. Le parcours membre est complet de bout en
 bout, de l'atelier au créneau réservé ; le fabmanager tient le pointage, le
-no-show, l'annulation, le tag NFC et les statistiques de ses ateliers ;
+no-show, l'annulation, le QR de pointage et les statistiques de ses ateliers ;
 l'administrateur plateforme tient les ateliers, les comptes, les rôles et le
 tableau réseau. L'application mobile Expo porte le parcours membre jusqu'au
-pointage NFC.
+pointage par QR code.
 
 **Le backend est `apps/api` (v2, NestJS).** `pnpm dev`, les seeds et les E2E
 Playwright pointent tous dessus. `packages/server`, les quatre `packages/bc-*`
 et `packages/test-utils` ont été supprimés avec Effect : il n'y a plus qu'une
 implémentation du back, et plus une ligne d'Effect dans le dépôt.
 
-`pnpm check` est vert : 664 tests unitaires, `next build`. Les 103 E2E
+`pnpm check` est vert : 675 tests unitaires, `next build`. Les 104 E2E
 Playwright passent — **contre `apps/api`, depuis la bascule** — mais **ne
 tournent pas dans `pnpm verify`, sur décision de l'auteur** — `pnpm db:test:up`
 puis `pnpm test:e2e` pour les lancer.
@@ -78,9 +78,9 @@ Le back, sur la branche `feat/api-nestjs`, décrit par
 Drizzle, Zod, clean architecture port & adapter, sans Effect.ts ni bounded
 contexts. Sept modules — `auth`, `user`, `atelier`,
 `membership`, `machine`, `certification`, `booking` — plus `health`, pour les
-38 routes du §4 de la spec.
+39 routes de la surface.
 
-`pnpm --filter @etabli/api test` : 275 tests, trois étages (unitaires sur stubs
+`pnpm --filter @etabli/api test` : 277 tests, trois étages (unitaires sur stubs
 et `FixedClock`, intégration des repositories sur PGlite, bout en bout HTTP via
 supertest). Pas de Docker : chaque suite monte sa propre base en mémoire, donc
 l'isolation y est structurelle, là où les E2E Playwright la tiennent d'un
@@ -222,7 +222,7 @@ Le §7 disait « 403 » partout ; la lettre a été corrigée, pas l'intention �
 sur une ressource avouerait qu'elle existe.
 
 Trois adapters web rendaient un refus comme une panne, faute d'un code
-d'échec : le 403 côté réservation, le 409 d'un tag NFC déjà porté, le 404 d'une
+d'échec : le 403 côté réservation, le 409 d'un slug d'atelier déjà pris, le 404 d'une
 demande d'habilitation qui n'est pas la sienne. Tous trois lisent maintenant le
 code du corps avant le statut. **Quand une route gagne une erreur typée,
 l'adapter qui l'appelle doit gagner son code** — sans quoi le message affiché
@@ -248,7 +248,7 @@ pas dans un `Suspense`, pour qu'une machine retirée rende un **vrai 404** et
 non un 200 portant un corps 404 ; seule la semaine, qui lit le cookie, est
 derrière une frontière. La page passe de `ƒ` à `◐`.
 
-Le `nfcTagId` ne sort pas : la fiche publique a son propre DTO, et un test le
+Le `checkInToken` ne sort pas : la fiche publique a son propre DTO, et un test le
 fige des deux côtés.
 
 ### Photographies marketing — ce qui est tranché
@@ -312,8 +312,8 @@ Une machine `RETIRED` répond 404 partout — availability comme `POST /bookings
 Elle est sortie du parc, donc indiscernable d'une machine inconnue. Seul
 `MAINTENANCE` vaut un 409 : la machine existe et reviendra.
 
-Le check-in d'un membre est NFC et rien d'autre : la charge ne porte qu'un
-`nfcTagId`, et une machine sans tag ne peut pas être pointée. Le pointage de
+Le check-in d'un membre est un QR code et rien d'autre : la charge ne porte qu'un
+`checkInToken`. Toute machine en porte un, généré à sa création. Le pointage de
 secours vit ailleurs — `POST /manage/bookings/:id/check-in`, réservé au
 fabmanager de l'atelier, sans charge utile, `CheckInMethod.MANUAL`. Il obéit à
 la même fenêtre et au même prédicat `isCheckInOpen` ; ce qui change, c'est qui
@@ -329,13 +329,20 @@ la command et la projection du read model le partagent, et le front lit
 cette même fenêtre — pas sur la fin du créneau. Avant elle, le membre peut
 encore arriver ; après, l'absence est acquise. Règle 10 du §5.
 
-`PATCH /manage/machines/:id` associe, remplace ou retire un tag NFC :
-`nfcTagId` absent laisse le tag en place, `null` le décolle, une chaîne le pose.
-Le tag est unique sur tout le réseau — `nfc_tag_id` porte la contrainte en base
-depuis la migration `0003`, et `MachineNfcTagTakenError` (409) la double à la
-création comme à la modification, pour ne pas rendre un 500 sur un doublon.
-Reposer sur une machine le tag qu'elle porte déjà passe. Aucun écran ne s'en
-sert encore : le formulaire de `/manage/machines` ne crée que.
+**Le jeton de pointage est généré par le serveur, jamais saisi.**
+`CreateMachineUsecase` pose un `randomUUID()` dans `check_in_token`, colonne
+`NOT NULL` unique sur tout le réseau depuis la migration `0002`. Le `PATCH` de
+la machine ne l'accepte pas — `updateMachineBodySchema` est `.strict()`, donc
+l'écrire à la main rend 400. Seul `POST /manage/machines/:id/check-in-token` le
+fait tourner, pour un autocollant perdu ou photographié. Une collision étant
+impossible par construction, `MachineNfcTagTakenError` et le code
+`MACHINE_NFC_TAG_TAKEN` ont disparu.
+
+Le fabmanager imprime le QR depuis `/manage/machines/:id/qr`, une page du
+quatrième route group, `(print)` : pas d'`AppShell`, fond blanc, et le jeton
+écrit en clair sous le code pour la ressaisie de secours. Le SVG est calculé
+côté serveur (`core/lib/qr-code.ts`, `qrcode` en dépendance) et rendu en data
+URI dans un `<img>` — aucun octet de JavaScript client, et la page reste `◐`.
 
 Le `BookingHttpAdapter` lit le `code` du corps d'erreur, pas seulement le
 status : cinq refus se partagent le 409, et le §11 demande que chaque règle
@@ -346,7 +353,7 @@ jalons 2 et 3 : un créneau qui vient de commencer répond 409, et le membre doi
 lire pourquoi. C'est aussi le patron que réclame le §8.9.
 
 Le détail dit au membre que le pointage est ouvert, sans le lui offrir : le
-check-in demande un tag NFC que le navigateur ne sait pas lire — §12.8. C'est le
+check-in demande un QR code que le navigateur n'ouvre pas la caméra pour lire — §12.8. C'est le
 fabmanager qui pointe à sa place, depuis `/manage/bookings`.
 
 Le pointage se filtre par jour et par état. Le jour voyage en `YYYY-MM-DD` dans
@@ -376,7 +383,7 @@ Le `QueryClient` vit dans `MachineWeek`, pas dans un provider racine : un seul
 
 Application Expo / React Native décrite par
 `docs/superpowers/specs/2026-09-17-etabli-mobile-design.md`. Elle n'est pas le
-web en petit : elle existe pour le NFC et pour la position. Sept écrans, deux
+web en petit : elle existe pour la caméra et pour la position. Sept écrans, deux
 layouts, de la connexion au `CHECKED_IN`.
 
 Elle parle à **`apps/api`**. `pnpm build:packages`, puis `pnpm dev:api` et
@@ -388,7 +395,7 @@ Elle parle à **`apps/api`**. `pnpm build:packages`, puis `pnpm dev:api` et
 ### Ce qui est tranché
 
 **Le refus se lit dans le corps, pas dans le statut.** L'API nomme ses erreurs
-`code` (`NFC_TAG_MISMATCH`). `errorCodeOf` — désormais dans
+`code` (`CHECK_IN_TOKEN_MISMATCH`). `errorCodeOf` — désormais dans
 `@etabli/api-client` — le lit et ne retombe sur le statut que faute de mieux :
 cinq règles métier se partagent le 409, le statut ne suffit donc pas à écrire
 une phrase. La v1 nommait ses erreurs `_tag` (`NfcTagMismatchError`) ; cette
@@ -410,12 +417,14 @@ réessayer. Les trois paramètres voyagent ensemble ou pas du tout — le schema
 l'API refuse un `lat` sans `radiusKm`. Le rayon vaut 1000 km : il est un clip
 dur côté SQL, et le but est de **trier**, pas de filtrer.
 
-**Le port NFC a deux implémentations, et l'écran ignore laquelle il tient.**
-`nfc-manager` sur appareil, `manual` — une saisie du tag dans une feuille modale
-— partout ailleurs. `react-native-nfc-manager` est chargé en `require` sous
-`try`, parce qu'Expo Go n'embarque pas le module natif. C'est ce qui permet de
-développer au simulateur et de ne pas perdre la démonstration si le compte
-développeur Apple n'arrive pas à temps (§10 de la conception).
+**Le port de scan a deux implémentations, et l'écran ignore laquelle il tient.**
+`expo-camera` quand la permission caméra est accordée, `manual` — une saisie du
+jeton dans une feuille modale — partout ailleurs. Le module `check-in` a
+remplacé `nfc` : `react-native-nfc-manager` et l'entitlement
+`com.apple.developer.nfc.readersession.formats` sont partis. **C'est le gain du
+QR** : `expo-camera` tourne dans Expo Go, sans compte développeur Apple, là où
+le NFC ne s'exerçait jamais hors d'un development build et retombait en réalité
+sur la saisie manuelle.
 
 **TanStack Query vit à la racine.** C'est le second consommateur annoncé : sur
 le web le `QueryClient` ne sort pas de `MachineWeek`, ici tous les écrans lisent
@@ -510,7 +519,7 @@ sa table `BY_CODE` vivent dans `core/lib/<module>-failure.ts`, partagés ou non 
 quand un module en a plusieurs, le fichier exporte plusieurs fonctions
 (`atelierFailureOf`, `adminAtelierFailureOf`, `manageMachineFailureOf`). Ce qui
 est du calcul pur part aussi en `core/lib/` (`distance.ts` pour le haversine de
-l'annuaire mobile, `nfc-manager-module.ts` pour le `require` sous `try`). Ce qui
+l'annuaire mobile). Ce qui
 ne sert qu'à une seule classe et n'a pas de sens hors d'elle devient un membre
 privé — `onDate`, `matches`, la clé du trousseau. La règle n'a plus d'exception :
 l'`interface Account` des deux in-memory adapters d'identity est descendue dans

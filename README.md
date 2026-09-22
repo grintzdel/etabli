@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/grintzdel/etabli/actions/workflows/ci.yml/badge.svg)](https://github.com/grintzdel/etabli/actions/workflows/ci.yml)
 
-Plateforme d'un réseau d'ateliers partagés : habilitations machine, réservation de créneaux, check-in NFC.
+Plateforme d'un réseau d'ateliers partagés : habilitations machine, réservation de créneaux, pointage par QR code.
 Projet fil rouge M2 EEMI 2026 · Next.js 16.3.
 
 > **Application déployée** : _à renseigner_ · **API** : _à renseigner_
@@ -20,7 +20,7 @@ près de la machine. Les trois se contredisent. Personne ne sait qui est habilit
 personnes réservent le même créneau, et rien ne prouve qu'une réservation a été honorée.
 
 Établi tient une seule source : **l'habilitation conditionne la réservation, le créneau est
-exclusif, la présence est prouvée par NFC.**
+exclusif, la présence est prouvée par QR code.**
 
 ## Fonctionnalités
 
@@ -44,7 +44,7 @@ exclusif, la présence est prouvée par NFC.**
 ### Fabmanager — par atelier
 
 - `/manage/certifications` — file des demandes, accorder ou révoquer
-- `/manage/machines` — parc, création, état, tag NFC
+- `/manage/machines` — parc, création, état, QR de pointage (impression, régénération)
 - `/manage/bookings` — pointage de secours, no-show, annulation, filtres jour et état
 - `/manage/stats` — occupation, heures réservées, heures consommées, no-shows
 
@@ -58,7 +58,7 @@ exclusif, la présence est prouvée par NFC.**
 
 Trois onglets et trois écrans de détail : l'annuaire trié par distance, les réservations, le compte ;
 puis la fiche d'un atelier, la semaine d'une machine, et le détail d'un créneau — où le **pointage
-NFC** se fait. Voir [L'application mobile](#lapplication-mobile--nfc-et-position).
+par QR code** se fait. Voir [L'application mobile](#lapplication-mobile--qr-code-et-position).
 
 ## Comptes de démonstration
 
@@ -125,7 +125,7 @@ s'il tient un TTY. Un téléphone sur le wifi ne joint pas `localhost` : copier
 ### Vérifier
 
 ```bash
-pnpm run check      # build des packages, format, lint, typecheck, 664 tests unitaires
+pnpm run check      # build des packages, format, lint, typecheck, 675 tests unitaires
 pnpm run verify     # check + next build
 ```
 
@@ -133,7 +133,7 @@ Les E2E Playwright tournent à part, contre le Postgres de test :
 
 ```bash
 pnpm run db:test:up     # postgres:18-alpine sur :5433, tmpfs
-pnpm run test:e2e       # 103 scénarios
+pnpm run test:e2e       # 104 scénarios
 pnpm run db:test:down
 ```
 
@@ -151,7 +151,7 @@ pnpm run db:test:down
 | `packages/ui` | design system partagé web et natif — composants, tokens, thème |
 | `apps/api` | l'API : NestJS, Drizzle, Zod, clean architecture port & adapter |
 | `apps/web` | application Next.js — App Router, Server Components, Server Actions |
-| `apps/mobile` | application Expo / React Native — le NFC et la position |
+| `apps/mobile` | application Expo / React Native — la caméra et la position |
 | `scripts/` | `dev.sh`, et les deux scripts Python des visuels de l'annuaire |
 
 Les migrations vivent dans `apps/api/src/infrastructure/database/migrations/` et sont numérotées par
@@ -163,7 +163,7 @@ sept tables, parce qu'une contrainte d'exclusion ne se déduit pas du schéma Ty
 ### Un module par domaine, quatre couches chacun
 
 `apps/api` est un NestJS de sept modules — `auth`, `user`, `atelier`, `membership`, `machine`,
-`certification`, `booking` — qui portent les 38 routes de la spec, plus `health`. Chaque module est coupé en
+`certification`, `booking` — qui portent les 39 routes de la surface, plus `health`. Chaque module est coupé en
 `domain/` (entités, erreurs, interface de repository), `application/` (un use-case par opération),
 `infrastructure/` (l'implémentation Drizzle) et `presentation/` (contrôleur et DTO). Le domaine ne
 connaît que son interface ; l'injection Nest branche l'implémentation sur un token. Une règle métier
@@ -237,7 +237,7 @@ avouerait qu'elle existe — et **403** sur `/admin/*`.
 
 ## Modèle de données
 
-Deux migrations, PostgreSQL.
+Trois migrations, PostgreSQL.
 
 ```
 users ──────┬── memberships ──── ateliers ──── machines
@@ -252,7 +252,7 @@ users ──────┬── memberships ──── ateliers ────
 | `users` | `email text`, `password_hash`, `platform_role`, `practice text[]`, `onboarding_completed_at`, `status` | `email` unique — normalisé en minuscules par le schéma Zod, d'où `text` et non `citext` |
 | `ateliers` | `slug`, `city`, `latitude`/`longitude numeric(9,6)`, `status` | `slug` unique, index sur les coordonnées |
 | `memberships` | `user_id`, `atelier_id`, `role`, `status` | unique `(user_id, atelier_id)` |
-| `machines` | `kind`, `requires_certification`, `slot_duration_minutes`, `status`, `nfc_tag_id` | `nfc_tag_id` unique **sur tout le réseau** |
+| `machines` | `kind`, `requires_certification`, `slot_duration_minutes`, `status`, `check_in_token` | `check_in_token` `NOT NULL`, unique **sur tout le réseau**, généré par le serveur |
 | `certifications` | `user_id`, `machine_id`, `status`, `decided_by` | unique `(user_id, machine_id)` |
 | `bookings` | `start_at`, `end_at`, `status`, `checked_in_at`, `checked_in_via` | voir ci-dessous |
 | `user_preferences` | `theme`, `default_atelier_id` | `theme IN ('dark','light','system')` |
@@ -267,21 +267,24 @@ CONSTRAINT bookings_no_overlap EXCLUDE USING gist (
 ) WHERE (status IN ('CONFIRMED', 'CHECKED_IN'))
 ```
 
+`checked_in_via` vaut `QR` quand le membre a scanné, `MANUAL` quand le fabmanager a pointé à sa place.
+
 `COMPLETED` n'est **jamais écrit** : c'est un prédicat dérivé — pointée, et sa fin passée — projeté
 dans les read models. Aucun ordonnanceur, aucun `GET` qui écrit.
 
-## L'application mobile — NFC et position
+## L'application mobile — QR code et position
 
 `apps/mobile` n'est pas le web en petit : elle existe pour les deux capacités que le navigateur n'a
 pas. Sept écrans et deux layouts, de la connexion au créneau pointé. Sa conception est dans
 `docs/superpowers/specs/2026-09-17-etabli-mobile-design.md`.
 
-- **NFC** — `machines.nfc_tag_id` est unique sur tout le réseau, et le check-in membre n'accepte
-  qu'un `nfcTagId` : une machine sans tag ne peut pas être pointée. Le navigateur ne lit pas un tag,
-  donc sur le web c'est le fabmanager qui pointe depuis `/manage/bookings` ; **le téléphone lit le
-  tag directement.** Le port a deux implémentations et l'écran ignore laquelle il tient :
-  `nfc-manager` sur appareil, une saisie manuelle du tag partout ailleurs — Expo Go n'embarque pas le
-  module natif, et la démonstration ne doit pas dépendre d'un compte développeur Apple.
+- **QR code** — `machines.check_in_token` est unique sur tout le réseau et **généré par le serveur** à
+  la création de la machine ; le fabmanager l'imprime depuis `/manage/machines/:id/qr` et le colle sur
+  le bâti. Le check-in membre n'accepte que ce jeton. Le navigateur n'ouvre pas la caméra du membre,
+  donc sur le web c'est le fabmanager qui pointe depuis `/manage/bookings` ; **le téléphone scanne le
+  code directement.** Le port a deux implémentations et l'écran ignore laquelle il tient :
+  `expo-camera` quand la permission est accordée, une saisie manuelle du jeton partout ailleurs — ce
+  qui garde le simulateur utilisable. Régénérer le jeton invalide l'autocollant en place.
 - **Position** — `ateliers.latitude`/`longitude` portent un index, et l'annuaire trie par distance
   quand la requête porte une position. **La refuser n'est pas une erreur** : sans elle, l'annuaire
   appelle `GET /ateliers` sans coordonnées, la liste n'est simplement plus triée, et l'écran le dit
@@ -327,8 +330,14 @@ refus, la contrainte d'exclusion `gist` qui double la règle 2, la traduction du
 - **Pas de révocation de session.** Changer de mot de passe réémet le jeton de l'auteur du
   changement, mais les jetons des autres appareils restent valides jusqu'à expiration. Dit à
   l'écran, figé par un test.
-- **Le check-in membre n'est pas faisable depuis le web.** Le navigateur ne lit pas le NFC ; sur le
-  web, le pointage passe par le fabmanager. C'est l'application mobile qui lit le tag.
+- **Le check-in membre n'est pas faisable depuis le web.** Le navigateur n'ouvre pas la caméra du
+  membre dans ce parcours ; sur le web, le pointage passe par le fabmanager. C'est l'application
+  mobile qui scanne le code.
+- **Un QR code se photographie.** Le jeton est fixe et imprimé : un membre peut donc pointer sans
+  être devant la machine s'il en détient une photo. La fenêtre de pointage — 15 min avant, 30 min
+  après le début — et l'obligation d'une réservation confirmée sur *cette* machine bornent l'abus ;
+  `POST /manage/machines/:id/check-in-token` permet de retirer un jeton qui a fuité. Un jeton
+  tournant demanderait un écran allumé près de chaque machine, ce que le produit ne suppose pas.
 - **Horaires d'ouverture constants** (8h–22h, `Europe/Paris`) pour tous les ateliers. Par atelier en v1.1.
 - **Aucun e-mail.** Pas de confirmation de réservation, pas de relance, pas de réinitialisation de
   mot de passe. C'est aussi pourquoi il n'y a pas de préférence de notification : un réglage qui ne
@@ -356,8 +365,9 @@ Le monorepo se déploie en deux cibles.
 
 Le cookie de session est posé par Next sur son propre domaine, sans option `domain` : il ne quitte
 jamais le web. C'est le serveur Next qui lit le jeton et le passe à l'API en `Bearer`, donc l'API
-peut vivre sur un autre domaine sans rien partager. `COOKIE_DOMAIN` est encore validée par le schéma
-d'environnement de l'API mais n'est lue nulle part — à retirer.
+peut vivre sur un autre domaine sans rien partager. `COOKIE_SECURE` est lue par le serveur Next, pas
+par l'API : le schéma d'environnement de l'API ne porte plus que `DATABASE_URL`, `JWT_SECRET`, `PORT`
+et `NODE_ENV`.
 
 Les migrations tournent hors du build : `pnpm run db:migrate` avec le `DATABASE_URL` de production,
 puis `pnpm run db:seed` pour les comptes de démonstration.
@@ -369,7 +379,7 @@ Une fois déployé, reporter les deux URLs en tête de ce README.
 664 tests unitaires et d'intégration dans `pnpm check`, 103 E2E Playwright à la demande. Les tests
 sont colocalisés ; les E2E portent l'extension `.test.e2e.ts` et vivent à côté de la page couverte.
 
-`apps/api` en porte 275, sur trois étages : unitaires sur stubs et horloge figée, intégration des
+`apps/api` en porte 277, sur trois étages : unitaires sur stubs et horloge figée, intégration des
 repositories sur PGlite, bout en bout HTTP via supertest. Pas de Docker — chaque suite monte sa
 propre base en mémoire, donc l'isolation y est structurelle, là où les E2E Playwright la tiennent
 d'un `TRUNCATE` au `globalSetup`.

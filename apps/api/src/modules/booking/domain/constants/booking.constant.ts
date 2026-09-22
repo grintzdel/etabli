@@ -18,12 +18,12 @@ export const BOOKING_STATUSES = [
 export const ACTIVE_BOOKING_STATUSES = [BookingStatus.CONFIRMED, BookingStatus.CHECKED_IN] as const
 
 export const CheckInMethod = {
-  NFC: 'NFC',
+  QR: 'QR',
   MANUAL: 'MANUAL',
 } as const
 export type CheckInMethod = (typeof CheckInMethod)[keyof typeof CheckInMethod]
 
-export const CHECK_IN_METHODS = [CheckInMethod.NFC, CheckInMethod.MANUAL] as const
+export const CHECK_IN_METHODS = [CheckInMethod.QR, CheckInMethod.MANUAL] as const
 
 export const SlotReason = {
   FREE: 'FREE',

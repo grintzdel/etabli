@@ -1,6 +1,6 @@
 export type BookingStatus = 'CONFIRMED' | 'CHECKED_IN' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
 
-export type CheckInMethod = 'NFC' | 'MANUAL'
+export type CheckInMethod = 'QR' | 'MANUAL'
 
 export type BookableMachineStatus = 'AVAILABLE' | 'MAINTENANCE' | 'RETIRED'
 
@@ -53,7 +53,7 @@ export type CreateBooking = {
 }
 
 export type CheckInBooking = {
-  readonly nfcTagId: string
+  readonly checkInToken: string
 }
 
 export type BookingDetail = {

@@ -128,37 +128,37 @@ describe('bookings', () => {
     expect(again.body.code).toBe('BOOKING_NOT_CANCELLABLE')
   })
 
-  it('stamps the slot with the machine tag, once and only inside the window', async () => {
+  it('stamps the slot with the machine QR, once and only inside the window', async () => {
     const token = await harness.signIn(SEED.member)
     const created = await book(token, SEED.machine.copeauxBambu)
 
     const early = await api()
       .post(`/bookings/${created.body.id}/check-in`)
       .set('authorization', bearer(token))
-      .send({ nfcTagId: 'nfc-copeaux-bambu-01' })
+      .send({ checkInToken: 'qr-copeaux-bambu-01' })
     expect(early.status).toBe(409)
     expect(early.body.code).toBe('CHECK_IN_WINDOW_CLOSED')
 
     harness.clock.set('2026-09-16T05:50:00.000Z')
 
-    const wrongTag = await api()
+    const wrongToken = await api()
       .post(`/bookings/${created.body.id}/check-in`)
       .set('authorization', bearer(token))
-      .send({ nfcTagId: 'nfc-forge-laser-01' })
-    expect(wrongTag.status).toBe(409)
-    expect(wrongTag.body.code).toBe('NFC_TAG_MISMATCH')
+      .send({ checkInToken: 'qr-forge-laser-01' })
+    expect(wrongToken.status).toBe(409)
+    expect(wrongToken.body.code).toBe('CHECK_IN_TOKEN_MISMATCH')
 
     const stamped = await api()
       .post(`/bookings/${created.body.id}/check-in`)
       .set('authorization', bearer(token))
-      .send({ nfcTagId: 'nfc-copeaux-bambu-01' })
+      .send({ checkInToken: 'qr-copeaux-bambu-01' })
     expect(stamped.status).toBe(200)
     expect(stamped.body.status).toBe('CHECKED_IN')
 
     const twice = await api()
       .post(`/bookings/${created.body.id}/check-in`)
       .set('authorization', bearer(token))
-      .send({ nfcTagId: 'nfc-copeaux-bambu-01' })
+      .send({ checkInToken: 'qr-copeaux-bambu-01' })
     expect(twice.status).toBe(409)
     expect(twice.body.code).toBe('BOOKING_NOT_CHECK_INABLE')
   })
@@ -171,7 +171,7 @@ describe('bookings', () => {
     await api()
       .post(`/bookings/${created.body.id}/check-in`)
       .set('authorization', bearer(token))
-      .send({ nfcTagId: 'nfc-copeaux-bambu-01' })
+      .send({ checkInToken: 'qr-copeaux-bambu-01' })
 
     harness.clock.set('2026-09-16T09:30:00.000Z')
     const detail = await api().get(`/bookings/${created.body.id}`).set('authorization', bearer(token))

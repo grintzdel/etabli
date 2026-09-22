@@ -9,13 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "org.etabli.mobile",
-      "infoPlist": {
-        "NFCReaderUsageDescription": "Établi lit le tag NFC posé sur la machine pour prouver votre présence au début du créneau."
-      },
-      "entitlements": {
-        "com.apple.developer.nfc.readersession.formats": ["NDEF", "TAG"]
-      }
+      "bundleIdentifier": "org.etabli.mobile"
     },
     "android": {
       "package": "org.etabli.mobile",
@@ -49,9 +43,9 @@
         }
       ],
       [
-        "react-native-nfc-manager",
+        "expo-camera",
         {
-          "nfcPermission": "Établi lit le tag NFC posé sur la machine pour prouver votre présence au début du créneau."
+          "cameraPermission": "Établi ouvre l’appareil photo pour scanner le QR code de la machine et prouver votre présence au début du créneau."
         }
       ]
     ],

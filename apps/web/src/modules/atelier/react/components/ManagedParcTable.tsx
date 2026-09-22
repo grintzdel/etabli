@@ -2,14 +2,14 @@ import { Button, StatusBadge } from '@etabli/ui'
 
 import type { MachineStatus, ManagedMachine } from '@/modules/atelier/core/model/atelier'
 import { MACHINE_KIND_LABELS, MACHINE_STATUS_LABELS } from '@/modules/atelier/core/model/atelier'
-import type { NfcTagFormAction } from '@/modules/atelier/core/model/nfc-tag-form'
+import type { CheckInTokenFormAction } from '@/modules/atelier/core/model/check-in-token-form'
 
-import { MachineNfcTagForm } from './MachineNfcTagForm'
+import { MachineQrActions } from './MachineQrActions'
 
 export type ManagedParcTableProps = {
   readonly machines: ReadonlyArray<ManagedMachine>
   readonly action: (formData: FormData) => void | Promise<void>
-  readonly nfcTagAction: NfcTagFormAction
+  readonly checkInTokenAction: CheckInTokenFormAction
 }
 
 const TONES: Readonly<Record<MachineStatus, 'ok' | 'warn' | 'neutral'>> = {
@@ -31,7 +31,7 @@ const NEXT: Readonly<Record<MachineStatus, ReadonlyArray<{ readonly status: Mach
     RETIRED: [{ status: 'AVAILABLE', label: 'Remettre en service' }],
   }
 
-export const ManagedParcTable = ({ machines, action, nfcTagAction }: ManagedParcTableProps) => {
+export const ManagedParcTable = ({ machines, action, checkInTokenAction }: ManagedParcTableProps) => {
   if (machines.length === 0) {
     return <output className="text-graphite-400">Aucune machine dans cet atelier pour l’instant.</output>
   }
@@ -53,7 +53,7 @@ export const ManagedParcTable = ({ machines, action, nfcTagAction }: ManagedParc
             État
           </th>
           <th scope="col" className="py-3 pr-4">
-            Tag NFC
+            QR de pointage
           </th>
           <th scope="col" className="py-3">
             <span className="sr-only">Actions</span>
@@ -73,12 +73,7 @@ export const ManagedParcTable = ({ machines, action, nfcTagAction }: ManagedParc
               <StatusBadge tone={TONES[machine.status]} label={MACHINE_STATUS_LABELS[machine.status]} />
             </td>
             <td className="py-3 pr-4">
-              <MachineNfcTagForm
-                machineId={machine.id}
-                machineName={machine.name}
-                nfcTagId={machine.nfcTagId}
-                action={nfcTagAction}
-              />
+              <MachineQrActions machineId={machine.id} machineName={machine.name} action={checkInTokenAction} />
             </td>
             <td className="py-3">
               <div className="flex flex-wrap gap-2">

@@ -4,7 +4,9 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 export const swaggerConfig = () =>
   new DocumentBuilder()
     .setTitle('Établi API')
-    .setDescription('Réseau d’ateliers partagés : habilitations machine, réservation de créneaux, check-in NFC.')
+    .setDescription(
+      'Réseau d’ateliers partagés : habilitations machine, réservation de créneaux, pointage par QR code.'
+    )
     .setVersion('2.0.0')
     .addBearerAuth()
     .build()

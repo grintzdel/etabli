@@ -15,7 +15,7 @@ export const machines = pgTable(
     requiresCertification: boolean().notNull().default(true),
     slotDurationMinutes: integer().notNull().default(60),
     status: text().notNull().default('AVAILABLE'),
-    nfcTagId: text().unique(),
+    checkInToken: text().notNull().unique(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },

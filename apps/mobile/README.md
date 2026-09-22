@@ -31,30 +31,26 @@ EXPO_PUBLIC_API_URL=http://192.168.1.10:3001
 Comptes de démonstration : ceux du seed, mot de passe `etabli-2026`.
 `membre@etabli.test` a des adhésions, des habilitations et des créneaux.
 
-## NFC
+## Le scan du QR code
 
-**Le NFC ne tourne pas dans Expo Go.** Il faut un *development build*, et sur
-iOS la capability « Near Field Communication Tag Reading », que seule une équipe
-de développeur Apple payante peut ajouter :
+**`expo-camera` tourne dans Expo Go.** Pas de *development build*, pas
+d'entitlement, pas de compte développeur Apple payant : c'est ce que le passage
+du NFC au QR code a acheté. `app.json` déclare la permission caméra par le
+plugin `expo-camera` ; iOS la demande au premier scan.
 
-```sh
-npx expo prebuild --platform ios
-```
+**Le repli.** `dependencies.ts` interroge l'adapter caméra ; si la permission
+est refusée ou impossible à demander, c'est l'adapter `manual` qui répond, et le
+jeton se saisit à la main dans une feuille modale — il est écrit en clair sous
+le QR imprimé. L'écran ne sait pas laquelle des deux implémentations il tient.
 
-`app.json` porte déjà `NFCReaderUsageDescription` et l'entitlement
-`com.apple.developer.nfc.readersession.formats`.
-
-**Le repli.** `dependencies.ts` interroge le lecteur natif ; s'il est absent,
-c'est l'adapter `manual` qui répond, et le tag se saisit à la main dans une
-feuille modale. L'écran ne sait pas laquelle des deux implémentations il tient.
-Le geste n'est alors plus prouvé, mais la démonstration tient.
+Le QR lui-même s'imprime depuis le web, sur `/manage/machines/:id/qr`.
 
 ## Ce que l'application fait
 
 ```
 connexion → l'annuaire se trie sur ma position → un atelier → ses machines
 → une machine → la semaine → je prends un créneau → mes réservations
-→ Pointer → j'approche le tag → CHECKED_IN
+→ Pointer → je scanne le QR → CHECKED_IN
 ```
 
 ## Structure
@@ -70,7 +66,7 @@ connexion → l'annuaire se trie sur ma position → un atelier → ses machines
 | `identity` | connexion, `GET /auth/me`, contexte de session |
 | `atelier` | annuaire, fiche atelier, fiche machine |
 | `booking` | semaine, réservation, liste, détail, pointage |
-| `nfc` | `INfcReaderPort` + `nfc-manager` et `manual` |
+| `check-in` | `ICheckInScannerPort` + `expo-camera` et `manual` |
 | `geo` | `ILocationPort` + `expo-location` |
 
 ## Tests
@@ -80,6 +76,6 @@ pnpm --filter @etabli/mobile test
 ```
 
 Le `core/` est testé au vitest : adapters HTTP sur `fetch` mocké, table de
-traduction des refus, port NFC et port position sur leurs implémentations de
+traduction des refus, port de scan et port position sur leurs implémentations de
 test. **Les écrans ne sont pas testés** — réduction assumée, détaillée au §9 de
 la conception.

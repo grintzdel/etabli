@@ -6,7 +6,7 @@ export interface SeedMachine {
   readonly requiresCertification: boolean
   readonly slotDurationMinutes: number
   readonly status: string
-  readonly nfcTagId: string | null
+  readonly checkInToken: string
 }
 
 export interface SeedAtelier {
@@ -86,7 +86,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: true,
         slotDurationMinutes: 60,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-forge-laser-01',
+        checkInToken: 'qr-forge-laser-01',
       },
       {
         id: '0a7e1f00-0000-4000-8000-000000000102',
@@ -96,7 +96,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: false,
         slotDurationMinutes: 120,
         status: 'MAINTENANCE',
-        nfcTagId: 'nfc-forge-prusa-01',
+        checkInToken: 'qr-forge-prusa-01',
       },
       {
         id: '0a7e1f00-0000-4000-8000-000000000103',
@@ -106,7 +106,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: true,
         slotDurationMinutes: 60,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-forge-tour-01',
+        checkInToken: 'qr-forge-tour-01',
       },
       {
         id: '0a7e1f00-0000-4000-8000-000000000104',
@@ -116,7 +116,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: true,
         slotDurationMinutes: 120,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-forge-cnc-01',
+        checkInToken: 'qr-forge-cnc-01',
       },
       {
         id: '0a7e1f00-0000-4000-8000-000000000105',
@@ -126,7 +126,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: true,
         slotDurationMinutes: 60,
         status: 'RETIRED',
-        nfcTagId: null,
+        checkInToken: 'qr-forge-scie-01',
       },
     ],
   },
@@ -150,7 +150,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: false,
         slotDurationMinutes: 30,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-lyon-juki-01',
+        checkInToken: 'qr-lyon-juki-01',
       },
       {
         id: '0a7e1f00-0000-4000-8000-000000000202',
@@ -160,7 +160,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: false,
         slotDurationMinutes: 60,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-lyon-weller-01',
+        checkInToken: 'qr-lyon-weller-01',
       },
       {
         id: '0a7e1f00-0000-4000-8000-000000000203',
@@ -170,7 +170,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: true,
         slotDurationMinutes: 90,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-lyon-brother-01',
+        checkInToken: 'qr-lyon-brother-01',
       },
     ],
   },
@@ -207,7 +207,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: true,
         slotDurationMinutes: 90,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-copeaux-tour-01',
+        checkInToken: 'qr-copeaux-tour-01',
       },
       {
         id: '0a7e1f00-0000-4000-8000-000000000402',
@@ -217,7 +217,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: false,
         slotDurationMinutes: 180,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-copeaux-bambu-01',
+        checkInToken: 'qr-copeaux-bambu-01',
       },
       {
         id: '0a7e1f00-0000-4000-8000-000000000403',
@@ -227,7 +227,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: true,
         slotDurationMinutes: 120,
         status: 'MAINTENANCE',
-        nfcTagId: 'nfc-copeaux-cnc-01',
+        checkInToken: 'qr-copeaux-cnc-01',
       },
     ],
   },
@@ -251,7 +251,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: false,
         slotDurationMinutes: 30,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-canuts-singer-01',
+        checkInToken: 'qr-canuts-singer-01',
       },
       {
         id: '0a7e1f00-0000-4000-8000-000000000502',
@@ -261,7 +261,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: true,
         slotDurationMinutes: 60,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-canuts-glowforge-01',
+        checkInToken: 'qr-canuts-glowforge-01',
       },
     ],
   },
@@ -285,7 +285,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: false,
         slotDurationMinutes: 180,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-ruche-ultimaker-01',
+        checkInToken: 'qr-ruche-ultimaker-01',
       },
       {
         id: '0a7e1f00-0000-4000-8000-000000000602',
@@ -295,7 +295,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: false,
         slotDurationMinutes: 60,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-ruche-metcal-01',
+        checkInToken: 'qr-ruche-metcal-01',
       },
       {
         id: '0a7e1f00-0000-4000-8000-000000000603',
@@ -305,7 +305,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: true,
         slotDurationMinutes: 45,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-ruche-epilog-01',
+        checkInToken: 'qr-ruche-epilog-01',
       },
     ],
   },
@@ -329,7 +329,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: true,
         slotDurationMinutes: 180,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-vieuxport-haas-01',
+        checkInToken: 'qr-vieuxport-haas-01',
       },
       {
         id: '0a7e1f00-0000-4000-8000-000000000702',
@@ -339,7 +339,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: true,
         slotDurationMinutes: 60,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-vieuxport-tour-01',
+        checkInToken: 'qr-vieuxport-tour-01',
       },
     ],
   },
@@ -363,7 +363,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: false,
         slotDurationMinutes: 60,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-tournevis-rigol-01',
+        checkInToken: 'qr-tournevis-rigol-01',
       },
       {
         id: '0a7e1f00-0000-4000-8000-000000000802',
@@ -373,7 +373,7 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         requiresCertification: false,
         slotDurationMinutes: 120,
         status: 'AVAILABLE',
-        nfcTagId: 'nfc-tournevis-creality-01',
+        checkInToken: 'qr-tournevis-creality-01',
       },
     ],
   },
@@ -742,7 +742,7 @@ export const BOOKINGS: ReadonlyArray<SeedBooking> = [
     localHour: 9,
     minutes: 60,
     status: 'CHECKED_IN',
-    checkedInVia: 'NFC',
+    checkedInVia: 'QR',
   },
   {
     id: '0a7e5000-0000-4000-8000-000000000004',
@@ -753,7 +753,7 @@ export const BOOKINGS: ReadonlyArray<SeedBooking> = [
     localHour: 14,
     minutes: 120,
     status: 'CHECKED_IN',
-    checkedInVia: 'NFC',
+    checkedInVia: 'QR',
   },
   {
     id: '0a7e5000-0000-4000-8000-000000000005',
@@ -808,7 +808,7 @@ export const BOOKINGS: ReadonlyArray<SeedBooking> = [
     localHour: 10,
     minutes: 60,
     status: 'CHECKED_IN',
-    checkedInVia: 'NFC',
+    checkedInVia: 'QR',
   },
   {
     id: '0a7e5000-0000-4000-8000-000000000010',
@@ -830,7 +830,7 @@ export const BOOKINGS: ReadonlyArray<SeedBooking> = [
     localHour: 14,
     minutes: 60,
     status: 'CHECKED_IN',
-    checkedInVia: 'NFC',
+    checkedInVia: 'QR',
   },
   {
     id: '0a7e5000-0000-4000-8000-000000000012',
@@ -876,7 +876,7 @@ export const BOOKINGS: ReadonlyArray<SeedBooking> = [
     localHour: 11,
     minutes: 60,
     status: 'CHECKED_IN',
-    checkedInVia: 'NFC',
+    checkedInVia: 'QR',
   },
   {
     id: '0a7e5000-0000-4000-8000-000000000017',
@@ -931,6 +931,6 @@ export const BOOKINGS: ReadonlyArray<SeedBooking> = [
     localHour: 13,
     minutes: 180,
     status: 'CHECKED_IN',
-    checkedInVia: 'NFC',
+    checkedInVia: 'QR',
   },
 ]

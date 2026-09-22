@@ -40,7 +40,7 @@ const questions = [
   {
     question: 'Pourquoi faut-il pointer sur la machine ?',
     answer:
-      'Parce qu’une réservation ne prouve rien. Le tag NFC collé sur le bâti atteste que vous êtes devant la machine, dans la fenêtre du créneau. Le pointage ne se fait pas depuis le canapé.',
+      'Parce qu’une réservation ne prouve rien. Le QR code collé sur le bâti atteste que vous êtes devant la machine, dans la fenêtre du créneau. Le pointage ne se fait pas depuis le canapé.',
   },
   {
     question: 'Puis-je être membre de plusieurs ateliers ?',

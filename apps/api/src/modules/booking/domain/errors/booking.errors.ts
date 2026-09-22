@@ -71,11 +71,11 @@ export class CheckInWindowClosedError extends ConflictException {
   }
 }
 
-export class NfcTagMismatchError extends ConflictException {
+export class CheckInTokenMismatchError extends ConflictException {
   constructor(bookingId: string, machineId: string) {
     super({
-      code: ApiErrorCode.NFC_TAG_MISMATCH,
-      message: 'Ce tag n’est pas celui de la machine réservée',
+      code: ApiErrorCode.CHECK_IN_TOKEN_MISMATCH,
+      message: 'Ce QR code n’est pas celui de la machine réservée',
       bookingId,
       machineId,
     })

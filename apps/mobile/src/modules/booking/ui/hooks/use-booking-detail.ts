@@ -7,8 +7,8 @@ import type { BookingDetail } from '../../core/model/booking'
 
 export const useBookingDetail = (id: string) => {
   const queryClient = useQueryClient()
-  const [nfcError, setNfcError] = useState<string | null>(null)
-  const [isReading, setIsReading] = useState(false)
+  const [scanError, setScanError] = useState<string | null>(null)
+  const [isScanning, setIsScanning] = useState(false)
 
   const query = useApiQuery<BookingDetail>(['booking', id], (token) => dependencies.booking.getById(token, id))
 
@@ -23,20 +23,20 @@ export const useBookingDetail = (id: string) => {
   )
 
   const checkIn = useApiMutation<BookingDetail, string>(
-    (token, nfcTagId) => dependencies.booking.checkIn(token, id, nfcTagId),
+    (token, checkInToken) => dependencies.booking.checkIn(token, id, checkInToken),
     () => refreshAll()
   )
 
-  const readAndCheckIn = async () => {
-    setNfcError(null)
-    setIsReading(true)
-    const read = await dependencies.nfc.readTagId()
-    setIsReading(false)
-    if (!read.ok) {
-      setNfcError(read.error.message)
+  const scanAndCheckIn = async () => {
+    setScanError(null)
+    setIsScanning(true)
+    const scanned = await dependencies.scanner.scan()
+    setIsScanning(false)
+    if (!scanned.ok) {
+      setScanError(scanned.error.message)
       return
     }
-    checkIn.mutate(read.value)
+    checkIn.mutate(scanned.value)
   }
 
   return {
@@ -46,8 +46,8 @@ export const useBookingDetail = (id: string) => {
     cancel: () => cancel.mutate(),
     isCancelling: cancel.isPending,
     cancelError: cancel.error?.message ?? null,
-    checkIn: () => void readAndCheckIn(),
-    isCheckingIn: isReading || checkIn.isPending,
-    checkInError: nfcError ?? checkIn.error?.message ?? null,
+    checkIn: () => void scanAndCheckIn(),
+    isCheckingIn: isScanning || checkIn.isPending,
+    checkInError: scanError ?? checkIn.error?.message ?? null,
   }
 }
