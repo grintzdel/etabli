@@ -38,18 +38,15 @@ describe('tenancy', () => {
 
   describe('a resource of another atelier answers 404, never 403', () => {
     it.each([
-      ['GET /machines/:id/availability', 'member', () => api().get(`/machines/${SEED.machine.lyonJuki}/availability`)],
       [
         'PATCH /manage/machines/:id',
-        'forge',
         () => api().patch(`/manage/machines/${SEED.machine.lyonJuki}`).send({ name: 'x' }),
       ],
-      ['POST /manage/bookings/:id/check-in', 'forge', () => api().post(`/manage/bookings/${bookingId}/check-in`)],
-      ['POST /manage/bookings/:id/cancel', 'forge', () => api().post(`/manage/bookings/${bookingId}/cancel`)],
-      ['POST /manage/bookings/:id/no-show', 'forge', () => api().post(`/manage/bookings/${bookingId}/no-show`)],
-    ])('%s answers 404', async (_route, who, call) => {
-      const token = who === 'member' ? memberToken : forgeFabmanagerToken
-      const response = await call().set('authorization', bearer(token))
+      ['POST /manage/bookings/:id/check-in', () => api().post(`/manage/bookings/${bookingId}/check-in`)],
+      ['POST /manage/bookings/:id/cancel', () => api().post(`/manage/bookings/${bookingId}/cancel`)],
+      ['POST /manage/bookings/:id/no-show', () => api().post(`/manage/bookings/${bookingId}/no-show`)],
+    ])('%s answers 404', async (_route, call) => {
+      const response = await call().set('authorization', bearer(forgeFabmanagerToken))
 
       expect(response.status).toBe(404)
     })

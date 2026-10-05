@@ -1,5 +1,6 @@
 export * from './atelier'
 export * from './booking'
+export * from './booking-eligibility'
 export * from './build-path'
 export * from './certification'
 export * from './error-code'

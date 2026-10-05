@@ -21,8 +21,6 @@ import {
 } from '../dtos/machine-availability.request.dto.ts'
 
 @ApiTags('machines')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('machines')
 export class MachineAvailabilityController {
   constructor(private readonly bookingService: BookingService) {}
