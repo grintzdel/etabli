@@ -24,14 +24,17 @@ test('opens the directory filtered on a machine kind', async ({ page }) => {
 
 test('shows ateliers of the network, linked to their page', async ({ page }) => {
   await page.goto('/')
-  const cards = page.getByRole('list', { name: /^ateliers$/i }).getByRole('listitem')
-  await expect(cards).toHaveCount(3)
-  await expect(cards.first().getByRole('link').first()).toHaveAttribute('href', /^\/ateliers\/[\w-]+$/)
+  const names = page.getByRole('list', { name: /^ateliers$/i }).getByRole('heading', { level: 3 })
+  await expect(names).toHaveCount(3)
+  await expect(names.first().getByRole('link')).toHaveAttribute('href', /^\/ateliers\/[\w-]+$/)
 })
 
 test('ends on a way to create an account', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('link', { name: /créer un compte/i })).toHaveAttribute('href', '/inscription')
+  await expect(page.getByRole('main').getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
+    'href',
+    '/inscription'
+  )
 })
 
 test('carries the heading over the photo, not beside it', async ({ page }) => {
