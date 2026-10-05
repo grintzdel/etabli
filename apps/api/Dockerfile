@@ -16,6 +16,14 @@ FROM base AS deps
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --filter @etabli/api...
 
+FROM deps AS dev
+COPY tsconfig.json tsconfig.base.json tsconfig.app-base.json tsconfig.pkg-base.json tsconfig.root.json ./
+COPY packages/contract ./packages/contract
+RUN pnpm --filter @etabli/contract run build
+WORKDIR /app/apps/api
+EXPOSE 3001
+CMD ["sh", "-c", "pnpm --filter @etabli/contract exec tsdown --watch --no-clean & pnpm exec tsx src/infrastructure/database/migrate.ts && pnpm exec tsx src/infrastructure/database/seed.cli.ts && exec pnpm exec nest start --watch"]
+
 FROM deps AS builder
 COPY tsconfig.json tsconfig.base.json tsconfig.app-base.json tsconfig.pkg-base.json tsconfig.root.json ./
 COPY packages/contract ./packages/contract

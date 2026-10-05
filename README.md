@@ -153,7 +153,7 @@ données — le `compose.yaml` embarque tout.
 ### Tout lancer
 
 ```bash
-docker compose up --build        # web :3000, API :3001, PostgreSQL
+docker compose up --build        # web :3000, API :3001, PostgreSQL — en développement
 ```
 
 L'API applique les migrations et le seed à son démarrage : les
@@ -163,6 +163,27 @@ dès que `web` est healthy, sur [http://localhost:3000](http://localhost:3000).
 ```bash
 docker compose logs -f web       # suivre un service
 docker compose down              # tout arrêter
+```
+
+**Un `docker compose up` est un environnement de développement.** `compose.override.yaml`, que
+Compose charge tout seul, monte le dépôt dans les conteneurs et lance `next dev` et
+`nest start --watch` sur le stage `dev` des deux Dockerfiles. Une modification du web se voit au
+rafraîchissement de la page, une modification de l'API redémarre Nest en une seconde ;
+`@etabli/contract` et `@etabli/api-client` sont recompilés par `tsdown --watch`. Aucun rebuild.
+
+Les `node_modules`, le `.next` et les `dist` des packages restent dans des volumes anonymes : les
+binaires natifs de l'hôte (swc, esbuild, `@parcel/watcher`) ne sont pas ceux de Linux. Après un
+changement de dépendances, il faut donc reconstruire **et** renouveler ces volumes :
+
+```bash
+docker compose up --build -V
+```
+
+Les images de production — `output: 'standalone'`, sans gestionnaire de paquets, sous l'utilisateur
+`node` — ne lisent que `compose.yaml` :
+
+```bash
+docker compose -f compose.yaml up --build
 ```
 
 La base `db` n'est publiée sur aucun port de l'hôte : l'API la joint par le réseau du compose, et
