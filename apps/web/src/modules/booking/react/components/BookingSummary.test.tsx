@@ -27,10 +27,10 @@ describe('BookingSummary', () => {
     expect(screen.getByText(/cette réservation est close/i)).toBeInTheDocument()
   })
 
-  it('points to the tag when the check-in window is open', () => {
+  it('points to the QR code when the check-in window is open', () => {
     render(<BookingSummary booking={bookingDetailFixture({ canCheckIn: true })} cancel={noop} />)
 
-    expect(screen.getByText(/approchez votre téléphone du tag/i)).toBeInTheDocument()
+    expect(screen.getByText(/scannez le QR code de la machine/i)).toBeInTheDocument()
   })
 
   it('links back to the atelier', () => {

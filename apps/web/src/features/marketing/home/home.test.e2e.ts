@@ -7,8 +7,34 @@ test('states the promise in a single heading', async ({ page }) => {
 
 test('explains the product in three steps', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('listitem').filter({ hasText: /habilit/i })).toHaveCount(1)
-  await expect(page.getByRole('list', { name: /fonctionnement/i }).getByRole('listitem')).toHaveCount(3)
+  const steps = page.getByRole('list', { name: /fonctionnement/i }).getByRole('listitem')
+  await expect(steps).toHaveCount(3)
+  await expect(steps.filter({ hasText: /habilit/i })).toHaveCount(1)
+})
+
+test('opens the directory filtered on a machine kind', async ({ page }) => {
+  await page.goto('/')
+  const kinds = page.getByRole('list', { name: /types de machines du réseau/i }).getByRole('link')
+  await expect(kinds).toHaveCount(6)
+  await expect(kinds.filter({ hasText: /découpe laser/i })).toHaveAttribute(
+    'href',
+    '/ateliers?machineKind=LASER_CUTTER'
+  )
+})
+
+test('shows ateliers of the network, linked to their page', async ({ page }) => {
+  await page.goto('/')
+  const names = page.getByRole('list', { name: /^ateliers$/i }).getByRole('heading', { level: 3 })
+  await expect(names).toHaveCount(3)
+  await expect(names.first().getByRole('link')).toHaveAttribute('href', /^\/ateliers\/[\w-]+$/)
+})
+
+test('ends on a way to create an account', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByRole('main').getByRole('link', { name: /créer un compte/i })).toHaveAttribute(
+    'href',
+    '/inscription'
+  )
 })
 
 test('carries the heading over the photo, not beside it', async ({ page }) => {

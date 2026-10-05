@@ -1,0 +1,29 @@
+# Loaded by a plain `docker compose up`: sources are mounted and hot-reloaded.
+# Production images only: `docker compose -f compose.yaml up --build`.
+x-workspace-volumes: &workspace-volumes
+  - .:/app
+  - /app/node_modules
+  - /app/apps/web/node_modules
+  - /app/apps/web/.next
+  - /app/apps/api/node_modules
+  - /app/packages/contract/node_modules
+  - /app/packages/contract/dist
+  - /app/packages/api-client/node_modules
+  - /app/packages/api-client/dist
+  - /app/packages/ui/node_modules
+
+services:
+  api:
+    build:
+      target: dev
+    command: !reset null
+    init: true
+    environment:
+      NODE_ENV: development
+    volumes: *workspace-volumes
+
+  web:
+    build:
+      target: dev
+    init: true
+    volumes: *workspace-volumes

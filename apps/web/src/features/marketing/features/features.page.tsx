@@ -29,7 +29,7 @@ const capabilities = [
   },
   {
     title: 'Pointage par QR code',
-    body: 'Le tag collé sur le bâti prouve la présence. Le pointage ouvre 15 minutes avant le créneau et ferme 30 minutes après son début ; passé cette fenêtre, l’absence est acquise.',
+    body: 'Le QR code collé sur le bâti prouve la présence. Le pointage ouvre 15 minutes avant le créneau et ferme 30 minutes après son début ; passé cette fenêtre, l’absence est acquise.',
   },
   {
     title: 'Back-office fabmanager',
@@ -74,15 +74,19 @@ export const FeaturesPage = () => (
     </section>
 
     <section className="flex flex-col gap-4">
-      <h2 className="font-display text-2xl font-semibold tracking-wide uppercase">Bientôt, sur le téléphone</h2>
+      <h2 className="font-display text-2xl font-semibold tracking-wide uppercase">Sur le téléphone</h2>
       <Surface className="text-graphite-200 flex flex-col gap-3">
         <p>
-          Le pointage se fait déjà par QR code : l’application mobile scanne le code directement, là où le navigateur ne
-          sait pas le faire.
+          L’application mobile scanne le QR code collé sur la machine et pointe le créneau, là où le navigateur ne sait
+          pas ouvrir la caméra. Sans caméra, le jeton imprimé sous le code se saisit à la main.
         </p>
         <p>
-          Chaque atelier porte ses coordonnées : l’annuaire mobile ouvrira sur les ateliers autour de vous, et non sur
-          une liste alphabétique.
+          L’annuaire s’ouvre sur les ateliers autour de vous, triés par distance, et se filtre par ville et par type de
+          machine. Refuser la position ne ferme rien : la liste perd seulement son tri.
+        </p>
+        <p>
+          Rejoindre un atelier, demander une habilitation, réserver et annuler s’y font sans repasser par le navigateur.
+          Les gestes du fabmanager restent sur le web.
         </p>
       </Surface>
     </section>

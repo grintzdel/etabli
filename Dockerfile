@@ -16,6 +16,14 @@ COPY packages/ui/package.json packages/ui/
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --filter @etabli/web...
 
+FROM deps AS dev
+ENV NEXT_TELEMETRY_DISABLED=1
+COPY tsconfig.json tsconfig.base.json tsconfig.app-base.json tsconfig.pkg-base.json tsconfig.root.json ./
+COPY packages ./packages
+RUN pnpm run build:packages
+EXPOSE 3000
+CMD ["sh", "-c", "pnpm --parallel --filter @etabli/contract --filter @etabli/api-client exec tsdown --watch --no-clean & exec pnpm --filter @etabli/web exec next dev --hostname 0.0.0.0 --port 3000"]
+
 FROM deps AS builder
 COPY tsconfig.json tsconfig.base.json tsconfig.app-base.json tsconfig.pkg-base.json tsconfig.root.json ./
 COPY packages ./packages

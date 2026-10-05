@@ -24,7 +24,7 @@ describe('bookingFailureOf', () => {
     expect(bookingFailureOf(409, { code })).toBe(expected)
   })
 
-  it('tells a wrong tag apart from a closed check-in window, both on a 409', () => {
+  it('tells a wrong token apart from a closed check-in window, both on a 409', () => {
     expect(bookingFailureOf(409, { code: ApiErrorCode.CHECK_IN_TOKEN_MISMATCH })).toBe('CHECK_IN_TOKEN_MISMATCH')
     expect(bookingFailureOf(409, { code: ApiErrorCode.CHECK_IN_WINDOW_CLOSED })).toBe('CHECK_IN_WINDOW_CLOSED')
   })
