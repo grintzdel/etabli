@@ -64,8 +64,8 @@ Ce qui existe, domaine par domaine — les modules d'`apps/api` :
   Côté fabmanager, `GET /manage/bookings`, `POST /manage/bookings/:id/check-in`
   et `POST /manage/bookings/:id/no-show`.
   `POST /manage/bookings/:id/cancel`, `GET /manage/stats` et `GET /admin/stats`.
-  Côté web, `/machines/:id` porte la fiche publique et n'ouvre la semaine
-  qu'au membre de l'atelier, `/reservations` et `/reservations/:id` listent,
+  Côté web, `/machines/:id` porte la fiche et la semaine, publiques toutes
+  deux — seul le geste de réserver demande un compte, `/reservations` et `/reservations/:id` listent,
   détaillent et annulent, `/manage/bookings`
   tient le pointage, le no-show et l'annulation de la journée, et `/manage/stats`
   comme `/admin/stats` mesurent l'occupation.
@@ -238,15 +238,46 @@ autre atelier. `/machines` est donc sorti de `PRIVATE_PREFIXES` — donc aussi d
 
 La fiche et la semaine sont deux choses. La fiche vient de `GET /machines/:id`,
 anonyme, `use cache` sous le tag `ateliers` — que `manage.actions.ts` invalide
-déjà quand un fabmanager touche au parc. La semaine vient d'`availability`, qui
-reste réservée aux membres. Qui n'y a pas droit lit `MachineAccessNotice` : le
-visiteur un lien de connexion qui revient sur la machine, le membre d'un autre
-atelier un lien vers l'atelier à rejoindre.
+déjà quand un fabmanager touche au parc. La semaine vient d'`availability`.
 
-D'où le découpage du fichier : la fiche est attendue dans le corps de la page,
-pas dans un `Suspense`, pour qu'une machine retirée rende un **vrai 404** et
-non un 200 portant un corps 404 ; seule la semaine, qui lit le cookie, est
-derrière une frontière. La page passe de `ƒ` à `◐`.
+### Réserver avant de se connecter — ce qui est tranché
+
+**Toutes les étapes d'une réservation se font sans compte, sauf la dernière.**
+`GET /machines/:id/availability` est anonyme : la réponse ne porte que des
+créneaux libres ou pris, aucun nom ni identifiant de membre. Une machine
+`RETIRED` y répond toujours 404. Le web et le mobile lisent la semaine par un
+client anonyme, puisque la distinction est une propriété de la route.
+
+**Se connecter ne suffit pas à réserver**, et c'est ce qui rend le parcours
+moins simple qu'un panier. Trois conditions : un compte, l'adhésion à
+l'atelier (immédiate), l'habilitation sur la machine quand elle l'exige
+(**décidée par un fabmanager, en jours**). `bookingEligibilityOf`, dans
+`@etabli/contract` parce que les deux clients la lisent, les classe en cinq
+états — `ANONYMOUS`, `NOT_MEMBER`, `CERTIFICATION_REQUIRED`,
+`CERTIFICATION_PENDING`, `READY`. Le serveur reste l'autorité :
+`POST /bookings` refuse comme avant, la fonction ne sert qu'à ne pas proposer un
+bouton voué au refus.
+
+**Le créneau choisi survit à la connexion.** Sur le web, il voyage dans l'URL —
+`/machines/:id?creneau=<startAt>` — à travers `/connexion`, `/inscription` et
+`/bienvenue?atelier=<slug>`, qui honorent toutes `next` (filtré par `safeNext`).
+Au retour, la page présélectionne le créneau s'il est encore libre dans la
+première semaine ; sinon rien, sans arithmétique de date. `/bienvenue` sait donc
+servir un membre déjà inscrit qui rejoint un second atelier : avec `atelier`,
+elle ne propose que celui-là, lu par son slug — l'annuaire est plafonné et ne le
+contiendrait pas forcément. `/inscription` passe de `○` à `ƒ`, comme
+`/connexion`. Sur le mobile, la connexion est une modale empilée au-dessus de
+la fiche : elle se referme sur l'écran resté monté, sélection comprise.
+
+`SlotGate` (web et mobile) dit ce qui manque une fois le créneau choisi. Il ne
+porte pas la demande d'habilitation sur mobile : la fiche l'offre déjà dans son
+bloc « Habilitation ». Une habilitation `REVOKED` se redemande, donc compte
+comme `CERTIFICATION_REQUIRED`.
+
+Le découpage du fichier tient toujours : la fiche est attendue dans le corps de
+la page, pas dans un `Suspense`, pour qu'une machine retirée rende un **vrai
+404** et non un 200 portant un corps 404 ; seule la semaine, qui lit le cookie
+pour calculer l'éligibilité, est derrière une frontière.
 
 Le `checkInToken` ne sort pas : la fiche publique a son propre DTO, et un test le
 fige des deux côtés.
@@ -404,10 +435,15 @@ aucun serveur n'émet cette forme, et les captures d'écran de la spec mobile la
 montrent encore à tort.
 
 **Le token vit dans `expo-secure-store`**, le trousseau du système, jamais dans
-`AsyncStorage` qui écrit en clair. Lu une fois au démarrage : présent, on entre
-dans les onglets ; absent ou refusé par `GET /auth/me`, on va sur la connexion.
-Un 401 en cours de route efface le token et ramène à la connexion sans message —
-une session expirée n'est pas une panne. `useApiQuery` tient cette règle en un
+`AsyncStorage` qui écrit en clair. Lu une fois au démarrage : présent et accepté
+par `GET /auth/me`, la session est ouverte ; sinon on reste anonyme. **L'app
+s'ouvre sans compte** — annuaire, fiches d'atelier et de machine, semaines.
+Seuls `bookings/[id]`, `habilitations` et `onboarding` sont derrière
+`Stack.Protected` ; les onglets Réservations et Compte affichent une invitation
+à se connecter. La connexion, avec sa bascule vers l'inscription, est une modale
+qui se referme sur l'écran d'où l'on venait. Un 401 en cours de route efface le
+token et repasse en anonyme sans message — une session expirée n'est pas une
+panne. `useApiQuery` tient cette règle en un
 seul endroit. Le jeton lu au démarrage est ensuite relayé par
 `SessionTokenHolder` — cf. « Adapters » : les adapters le lisent là, jamais dans
 le trousseau.
@@ -465,16 +501,15 @@ membre, donc `request` serait refusé. La fiche n'affiche alors aucun bouton
 plutôt qu'un bouton qui échoue. L'écran `/habilitations`, poussé depuis Compte,
 reste la vue d'ensemble.
 
-**Rejoindre un atelier n'est pas une garde.** Le mobile n'a pas d'écran
-d'inscription : on y arrive avec un compte, qui a ou n'a pas d'adhésion. Un
-`Stack.Protected` sur `memberships.length === 0` enfermerait un membre dans un
-formulaire. L'annuaire affiche donc un encart quand la liste est vide — les
-créneaux sont fermés tant qu'on n'a rejoint personne — et Compte porte la même
-entrée.
+**Rejoindre un atelier n'est pas une garde.** Un `Stack.Protected` sur
+`memberships.length === 0` enfermerait un membre dans un formulaire. L'annuaire
+affiche donc un encart quand la liste est vide, et Compte porte la même entrée.
+Depuis une fiche machine, `onboarding?atelier=<slug>` ne propose que l'atelier
+de la machine, puis revient sur la fiche.
 
 **`SessionProvider` sait se rafraîchir.** Sans cela, `user.memberships` reste
 périmé après l'adhésion : l'encart de l'annuaire ne disparaîtrait pas et la
-semaine resterait fermée jusqu'au prochain démarrage. L'adhésion appelle
+réservation resterait refusée jusqu'au prochain démarrage. L'adhésion appelle
 `refresh()` et invalide tout le cache TanStack — rejoindre un atelier change ce
 que l'application entière a le droit de voir.
 
