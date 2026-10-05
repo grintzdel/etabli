@@ -13,7 +13,7 @@
     "db:reset:test": "pnpm --filter @etabli/api run db:reset:test",
     "db:seed": "pnpm --filter @etabli/api run db:seed",
     "db:seed:test": "pnpm --filter @etabli/api run db:seed:test",
-    "db:test:down": "docker compose down",
+    "db:test:down": "docker compose --profile test down postgres",
     "db:test:up": "docker compose up -d --wait postgres && ([ -f .env.test ] || cp .env.test.example .env.test)",
     "dev": "sh ./scripts/dev.sh",
     "dev:api": "pnpm --filter @etabli/api run dev",

@@ -17,7 +17,7 @@
     "@etabli/contract": "workspace:*",
     "@etabli/ui": "workspace:*",
     "@tanstack/react-query": "^5.102.8",
-    "next": "^16.3.5",
+    "next": "^16.3.6",
     "qrcode": "^1.5.4",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
