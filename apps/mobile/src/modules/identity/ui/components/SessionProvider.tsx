@@ -2,7 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
 
 import { dependencies } from '../../../app/core/dependencies'
-import type { IdentityResult, LoginInput, Session } from '../../core/model/session'
+import type { IdentityResult, LoginInput, RegisterInput, Session } from '../../core/model/session'
 import { SessionContext, type SessionState } from '../hooks/use-session'
 
 export const SessionProvider = ({ children }: { readonly children: ReactNode }) => {
@@ -36,9 +36,9 @@ export const SessionProvider = ({ children }: { readonly children: ReactNode }) 
     }
   }, [])
 
-  const signIn = useCallback(
-    async (input: LoginInput): Promise<IdentityResult<Session>> => {
-      const result = await dependencies.identity.login(input)
+  const open = useCallback(
+    async (pending: Promise<IdentityResult<Session>>): Promise<IdentityResult<Session>> => {
+      const result = await pending
       if (!result.ok) return result
 
       dependencies.sessionToken.write(result.value.token)
@@ -49,6 +49,9 @@ export const SessionProvider = ({ children }: { readonly children: ReactNode }) 
     },
     [queryClient]
   )
+
+  const signIn = useCallback((input: LoginInput) => open(dependencies.identity.login(input)), [open])
+  const signUp = useCallback((input: RegisterInput) => open(dependencies.identity.register(input)), [open])
 
   const refresh = useCallback(async (): Promise<void> => {
     const me = await dependencies.identity.me()
@@ -70,6 +73,7 @@ export const SessionProvider = ({ children }: { readonly children: ReactNode }) 
         token: state.status === 'authenticated' ? state.token : null,
         user: state.status === 'authenticated' ? state.user : null,
         signIn,
+        signUp,
         signOut,
         refresh,
       }}

@@ -1,6 +1,6 @@
 import { createContext, use } from 'react'
 
-import type { CurrentUser, IdentityResult, LoginInput, Session } from '../../core/model/session'
+import type { CurrentUser, IdentityResult, LoginInput, RegisterInput, Session } from '../../core/model/session'
 
 export type SessionState =
   | { readonly status: 'loading' }
@@ -12,6 +12,7 @@ export interface SessionApi {
   readonly token: string | null
   readonly user: CurrentUser | null
   signIn(input: LoginInput): Promise<IdentityResult<Session>>
+  signUp(input: RegisterInput): Promise<IdentityResult<Session>>
   signOut(): void
   refresh(): Promise<void>
 }

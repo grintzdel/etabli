@@ -2,6 +2,7 @@ import { makeFailure, type Failure, type Result } from '@etabli/api-client'
 import type {
   AvailabilitySlot,
   BookingDetail,
+  BookingEligibility,
   BookingStatus,
   CheckInBooking,
   CreateBooking,
@@ -18,6 +19,8 @@ export type {
   MachineAvailability,
   SlotReason,
 }
+
+export { BookingEligibility, bookingEligibilityOf } from '@etabli/contract'
 
 export const BookingFailureCode = {
   MACHINE_NOT_BOOKABLE: 'MACHINE_NOT_BOOKABLE',
@@ -79,6 +82,15 @@ export const SLOT_REASON_LABELS: Readonly<Record<SlotReason, string>> = {
   BOOKED: 'Déjà réservé',
   PAST: 'Passé',
   MACHINE_UNAVAILABLE: 'Machine indisponible',
+}
+
+export const ELIGIBILITY_HINTS: Readonly<Record<BookingEligibility, string>> = {
+  ANONYMOUS: 'Choisissez un créneau libre : la connexion ne vous sera demandée qu’au moment de le réserver.',
+  NOT_MEMBER: 'Choisissez un créneau libre. Pour le réserver, il faudra rejoindre l’atelier.',
+  CERTIFICATION_REQUIRED:
+    'Cette machine exige une habilitation. Demandez-la ci-dessus : sans elle, la réservation est refusée.',
+  CERTIFICATION_PENDING: 'Votre demande d’habilitation attend la décision d’un fabmanager.',
+  READY: 'Choisissez un créneau libre pour le réserver.',
 }
 
 const OPEN_STATUSES: ReadonlySet<BookingStatus> = new Set<BookingStatus>(['CONFIRMED', 'CHECKED_IN'])

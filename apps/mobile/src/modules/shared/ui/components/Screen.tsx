@@ -8,13 +8,14 @@ export type ScreenProps = {
   readonly onRefresh?: () => void
   readonly refreshing?: boolean
   readonly contentStyle?: ViewStyle
+  readonly footer?: ReactNode
 }
 
-export const Screen = ({ children, onRefresh, refreshing = false, contentStyle }: ScreenProps) => {
+export const Screen = ({ children, onRefresh, refreshing = false, contentStyle, footer }: ScreenProps) => {
   const palette = colors[useColorScheme() === 'light' ? 'light' : 'dark']
   const insets = useSafeAreaInsets()
 
-  return (
+  const scroll = (
     <ScrollView
       style={{ backgroundColor: palette.graphite[950] }}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + spacing[16] }, contentStyle]}
@@ -27,6 +28,26 @@ export const Screen = ({ children, onRefresh, refreshing = false, contentStyle }
       <View style={styles.page}>{children}</View>
     </ScrollView>
   )
+
+  if (footer === undefined || footer === null) return scroll
+
+  return (
+    <View style={[styles.fill, { backgroundColor: palette.graphite[950] }]}>
+      {scroll}
+      <View
+        style={[
+          styles.footer,
+          {
+            backgroundColor: palette.graphite[900],
+            borderTopColor: palette.graphite[800],
+            paddingBottom: insets.bottom + spacing[3],
+          },
+        ]}
+      >
+        {footer}
+      </View>
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({
@@ -34,5 +55,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[5],
     paddingTop: spacing[5],
   },
+  fill: { flex: 1 },
+  footer: { borderTopWidth: StyleSheet.hairlineWidth, paddingHorizontal: spacing[5], paddingTop: spacing[3] },
   page: { gap: spacing[5] },
 })

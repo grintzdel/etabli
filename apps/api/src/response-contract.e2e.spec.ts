@@ -102,7 +102,7 @@ describe('every route answers what its schema says', () => {
       'GET /machines/:id/availability',
       () => api().get(`/machines/${SEED.machine.copeauxBambu}/availability`),
       machineAvailabilityResponseSchema,
-      'member',
+      'none',
     ],
     [
       'GET /certifications/mine',

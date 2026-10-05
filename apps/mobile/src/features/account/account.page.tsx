@@ -16,10 +16,24 @@ export const AccountPage = () => {
   const { user, signOut } = useSession()
   const mine = useMyAteliers()
 
+  if (user === null) {
+    return (
+      <Screen>
+        <ScreenTitle title="Compte" />
+        <Notice
+          message="L’annuaire et les semaines des machines sont ouverts à tous. Le compte sert à réserver, à demander une habilitation et à pointer."
+          actionLabel="Se connecter ou créer un compte"
+          onAction={() => router.push('/login')}
+        />
+        <Text variant="caption" tone="muted">{`API : ${API_BASE_URL}`}</Text>
+      </Screen>
+    )
+  }
+
   return (
     <Screen>
       <ScreenTitle title="Compte" />
-      {user === null ? null : <AccountCard user={user} />}
+      <AccountCard user={user} />
 
       <Text variant="label">Mes ateliers</Text>
       {mine.error === null ? null : <Notice tone="danger" title="Ateliers" message={mine.error} />}

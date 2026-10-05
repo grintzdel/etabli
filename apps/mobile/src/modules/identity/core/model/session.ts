@@ -1,10 +1,11 @@
 import { makeFailure, type Failure, type Result } from '@etabli/api-client'
-import type { CurrentUser, LoginInput, MemberAtelier, Session } from '@etabli/contract'
+import type { CurrentUser, LoginInput, MemberAtelier, RegisterInput, Session } from '@etabli/contract'
 
-export type { CurrentUser, LoginInput, MemberAtelier, Session }
+export type { CurrentUser, LoginInput, MemberAtelier, RegisterInput, Session }
 
 export const IdentityFailureCode = {
   INVALID_INPUT: 'INVALID_INPUT',
+  EMAIL_TAKEN: 'EMAIL_TAKEN',
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
   ACCOUNT_SUSPENDED: 'ACCOUNT_SUSPENDED',
   UNAUTHORIZED: 'UNAUTHORIZED',
@@ -24,6 +25,7 @@ export interface Account {
 
 export const FAILURE_MESSAGES: Readonly<Record<IdentityFailureCode, string>> = {
   INVALID_INPUT: 'Vérifiez les informations saisies.',
+  EMAIL_TAKEN: 'Cette adresse a déjà un compte.',
   INVALID_CREDENTIALS: 'Adresse e-mail ou mot de passe incorrect.',
   ACCOUNT_SUSPENDED: 'Ce compte est suspendu.',
   UNAUTHORIZED: 'Votre session a expiré.',

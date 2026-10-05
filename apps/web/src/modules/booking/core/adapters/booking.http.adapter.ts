@@ -13,9 +13,16 @@ import { FAILURE_MESSAGES } from '../model/booking'
 import type { IBookingPort } from '../ports/booking.port'
 
 export class BookingHttpAdapter implements IBookingPort {
+  private readonly anonymous: ApiClient<BookingFailureCode>
   private readonly authenticated: ApiClient<BookingFailureCode>
 
   constructor(baseUrl: string, getAuthToken: AuthTokenProvider) {
+    this.anonymous = createApiClient({
+      baseUrl,
+      messages: FAILURE_MESSAGES,
+      failureOf: bookingFailureOf,
+      cache: 'no-store',
+    })
     this.authenticated = createApiClient({
       baseUrl,
       messages: FAILURE_MESSAGES,
@@ -26,7 +33,7 @@ export class BookingHttpAdapter implements IBookingPort {
   }
 
   availability(machineId: string, from?: string): Promise<BookingResult<MachineAvailability>> {
-    return this.authenticated.get<MachineAvailability>(buildPath(routes.machines.availability, { id: machineId }), {
+    return this.anonymous.get<MachineAvailability>(buildPath(routes.machines.availability, { id: machineId }), {
       query: { from },
     })
   }

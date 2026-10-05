@@ -6,6 +6,7 @@ import { identityFailureOf } from './identity-failure'
 
 const MAPPED: ReadonlyArray<readonly [ApiErrorCode, IdentityFailureCode]> = [
   [ApiErrorCode.VALIDATION_FAILED, 'INVALID_INPUT'],
+  [ApiErrorCode.EMAIL_ALREADY_TAKEN, 'EMAIL_TAKEN'],
   [ApiErrorCode.INVALID_CREDENTIALS, 'INVALID_CREDENTIALS'],
   [ApiErrorCode.ACCOUNT_SUSPENDED, 'ACCOUNT_SUSPENDED'],
   [ApiErrorCode.UNAUTHORIZED, 'UNAUTHORIZED'],

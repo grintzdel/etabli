@@ -5,6 +5,7 @@ import type { IdentityFailureCode } from '../model/session'
 
 const BY_CODE: Readonly<Partial<Record<ApiErrorCode, IdentityFailureCode>>> = {
   [ApiErrorCode.VALIDATION_FAILED]: 'INVALID_INPUT',
+  [ApiErrorCode.EMAIL_ALREADY_TAKEN]: 'EMAIL_TAKEN',
   [ApiErrorCode.INVALID_CREDENTIALS]: 'INVALID_CREDENTIALS',
   [ApiErrorCode.ACCOUNT_SUSPENDED]: 'ACCOUNT_SUSPENDED',
   [ApiErrorCode.UNAUTHORIZED]: 'UNAUTHORIZED',

@@ -3,10 +3,11 @@ import { colors, spacing } from '@etabli/ui/tokens'
 import { Pressable, StyleSheet, useColorScheme, View } from 'react-native'
 
 import { Notice } from '../../../shared/ui/components/Notice'
-import { MACHINE_KIND_LABELS, PRACTICES, type AtelierSummary } from '../../core/model/atelier'
+import type { OnboardingAtelier } from '../../core/lib/onboarding-atelier'
+import { MACHINE_KIND_LABELS, PRACTICES } from '../../core/model/atelier'
 
 export type OnboardingFormProps = {
-  readonly ateliers: ReadonlyArray<AtelierSummary>
+  readonly ateliers: ReadonlyArray<OnboardingAtelier>
   readonly atelierId: string | null
   readonly onSelectAtelier: (id: string) => void
   readonly practice: ReadonlyArray<string>

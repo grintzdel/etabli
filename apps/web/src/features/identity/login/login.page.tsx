@@ -31,7 +31,10 @@ export const LoginPage = async ({ searchParams }: { readonly searchParams: Promi
 
       <p className="text-graphite-400 text-sm">
         Pas encore de compte ?{' '}
-        <Link href="/inscription" className="text-signal-500 underline">
+        <Link
+          href={next === undefined ? '/inscription' : `/inscription?next=${encodeURIComponent(next)}`}
+          className="text-signal-500 underline"
+        >
           Créer un compte
         </Link>
       </p>

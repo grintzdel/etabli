@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 
 import { FAILURE_MESSAGES, AtelierFailureCode } from '@/modules/atelier/core/model/atelier'
 import type { OnboardingFormState } from '@/modules/atelier/core/model/onboarding-form'
+import { safeNext } from '@/modules/identity/core/lib/safe-next'
 
 import { atelierPort } from './container'
 import { requireSession } from './session'
@@ -30,5 +31,6 @@ export const completeOnboardingAction = async (
     return { error: FAILURE_MESSAGES[result.error.code], practice }
   }
 
-  redirect('/compte')
+  const next = formData.get('next')
+  redirect(safeNext(typeof next === 'string' ? next : null, '/compte'))
 }

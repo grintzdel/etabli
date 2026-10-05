@@ -33,20 +33,15 @@ describe('bookings', () => {
     expect(response.body.atelierSlug).toBe('copeaux-et-cie-bastille')
   })
 
-  it('answers 404 on a machine of an atelier the member has not joined', async () => {
-    const token = await harness.signIn(SEED.member)
-    const response = await api()
-      .get(`/machines/${SEED.machine.lyonJuki}/availability`)
-      .set('authorization', bearer(token))
+  it('opens the week to an anonymous visitor, so a slot is chosen before signing in', async () => {
+    const response = await api().get(`/machines/${SEED.machine.lyonJuki}/availability`)
 
-    expect(response.status).toBe(404)
+    expect(response.status).toBe(200)
+    expect(response.body.slots.length).toBeGreaterThan(0)
   })
 
   it('answers 404 on a retired machine, which is out of the parc', async () => {
-    const token = await harness.signIn(SEED.member)
-    const response = await api()
-      .get(`/machines/${SEED.machine.forgeRetired}/availability`)
-      .set('authorization', bearer(token))
+    const response = await api().get(`/machines/${SEED.machine.forgeRetired}/availability`)
 
     expect(response.status).toBe(404)
   })

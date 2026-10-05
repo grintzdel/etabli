@@ -24,7 +24,7 @@ export const AteliersPage = () => {
       {user !== null && user.memberships.length === 0 ? (
         <Notice
           title="Aucune adhésion"
-          message="Les créneaux d’un atelier sont ouverts à ses membres. Tant que vous n’en avez rejoint aucun, la semaine reste fermée."
+          message="Les semaines des machines se consultent librement, mais seuls les membres d’un atelier y réservent un créneau."
           actionLabel="Rejoindre un atelier"
           onAction={() => router.push('/onboarding')}
         />

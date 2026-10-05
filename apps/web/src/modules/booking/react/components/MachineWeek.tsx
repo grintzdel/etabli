@@ -7,14 +7,21 @@ import { useActionState, useEffect, useState } from 'react'
 import { fetchAvailability } from '@/modules/booking/core/lib/fetch-availability'
 import { formatDay, formatRange } from '@/modules/booking/core/lib/format'
 import { groupSlotsByDay } from '@/modules/booking/core/lib/slots'
-import type { BookingActionState, MachineAvailability } from '@/modules/booking/core/model/booking'
+import type { BookingActionState, BookingEligibility, MachineAvailability } from '@/modules/booking/core/model/booking'
+import { ELIGIBILITY_HINTS } from '@/modules/booking/core/model/booking'
 
+import { SlotGate } from './SlotGate'
 import { SlotGrid } from './SlotGrid'
 
 export type MachineWeekProps = {
   readonly machineId: string
+  readonly atelierName: string
+  readonly atelierSlug: string
+  readonly eligibility: BookingEligibility
   readonly initialAvailability: MachineAvailability
+  readonly initialStartAt: string | null
   readonly book: (state: BookingActionState, formData: FormData) => Promise<BookingActionState>
+  readonly requestCertification: (formData: FormData) => Promise<void>
 }
 
 const weekLabelOf = (availability: MachineAvailability): string => {
@@ -25,9 +32,18 @@ const weekLabelOf = (availability: MachineAvailability): string => {
   return `Du ${formatDay(first.startAt)} au ${formatDay(last.startAt)}`
 }
 
-const Week = ({ machineId, initialAvailability, book }: MachineWeekProps) => {
+const Week = ({
+  machineId,
+  atelierName,
+  atelierSlug,
+  eligibility,
+  initialAvailability,
+  initialStartAt,
+  book,
+  requestCertification,
+}: MachineWeekProps) => {
   const [weeks, setWeeks] = useState<ReadonlyArray<string>>([])
-  const [selected, setSelected] = useState<string | null>(null)
+  const [selected, setSelected] = useState<string | null>(initialStartAt)
   const [state, submit, pending] = useActionState(book, { error: null })
   const queryClient = useQueryClient()
   const from = weeks.at(-1)
@@ -90,7 +106,21 @@ const Week = ({ machineId, initialAvailability, book }: MachineWeekProps) => {
       )}
 
       {slot === undefined ? (
-        <p className="text-graphite-400 text-sm">Choisissez un créneau libre pour le réserver.</p>
+        <p className="text-graphite-400 text-sm">{ELIGIBILITY_HINTS[eligibility]}</p>
+      ) : eligibility !== 'READY' ? (
+        <div className="border-graphite-800 flex flex-col gap-4 border-t pt-6">
+          <p className="text-graphite-100">
+            {formatDay(slot.startAt)}, {formatRange(slot.startAt, slot.endAt)}
+          </p>
+          <SlotGate
+            eligibility={eligibility}
+            machineId={machineId}
+            atelierName={atelierName}
+            atelierSlug={atelierSlug}
+            returnTo={`/machines/${machineId}?creneau=${encodeURIComponent(slot.startAt)}`}
+            requestCertification={requestCertification}
+          />
+        </div>
       ) : (
         <form action={submit} className="border-graphite-800 flex flex-wrap items-center gap-4 border-t pt-6">
           <input type="hidden" name="machineId" value={machineId} />

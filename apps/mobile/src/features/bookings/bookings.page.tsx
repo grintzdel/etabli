@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router'
 
 import { BookingList } from '@/modules/booking/ui/components/BookingList'
 import { useMyBookings } from '@/modules/booking/ui/hooks/use-my-bookings'
+import { useSession } from '@/modules/identity/ui/hooks/use-session'
 import { Loader } from '@/modules/shared/ui/components/Loader'
 import { Notice } from '@/modules/shared/ui/components/Notice'
 import { Screen } from '@/modules/shared/ui/components/Screen'
@@ -10,8 +11,22 @@ import { ScreenTitle } from '@/modules/shared/ui/components/ScreenTitle'
 
 export const BookingsPage = () => {
   const router = useRouter()
+  const { user } = useSession()
   const bookings = useMyBookings()
   const open = (id: string) => router.push(`/bookings/${id}`)
+
+  if (user === null) {
+    return (
+      <Screen>
+        <ScreenTitle title="Mes réservations" />
+        <Notice
+          message="Connectez-vous pour retrouver vos créneaux et pointer à votre arrivée."
+          actionLabel="Se connecter"
+          onAction={() => router.push('/login')}
+        />
+      </Screen>
+    )
+  }
 
   return (
     <Screen onRefresh={bookings.refresh} refreshing={bookings.isRefreshing}>

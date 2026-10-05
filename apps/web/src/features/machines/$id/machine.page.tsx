@@ -7,14 +7,16 @@ import { Suspense } from 'react'
 
 import type { MachineDetail } from '@/modules/atelier/core/model/atelier'
 import { MACHINE_KIND_LABELS, MACHINE_STATUS_LABELS } from '@/modules/atelier/core/model/atelier'
-import { MachineAccessNotice } from '@/modules/atelier/react/components/MachineAccessNotice'
-import { BookingFailureCode } from '@/modules/booking/core/model/booking'
+import type { BookingEligibility } from '@/modules/booking/core/model/booking'
+import { bookingEligibilityOf } from '@/modules/booking/core/model/booking'
 import { MachineWeek } from '@/modules/booking/react/components/MachineWeek'
 import { createBookingAction } from '@/server/booking.actions'
-import { atelierPort, bookingPort } from '@/server/container'
+import { requestCertificationAction } from '@/server/certification.actions'
+import { atelierPort, bookingPort, certificationPort, identityPort } from '@/server/container'
 import { hasSession } from '@/server/session'
 
-type PageProps = { readonly params: Promise<{ readonly id: string }> }
+type SearchParams = Promise<{ readonly creneau?: string }>
+type PageProps = { readonly params: Promise<{ readonly id: string }>; readonly searchParams: SearchParams }
 
 const loadMachine = async (id: string) => {
   'use cache'
@@ -44,20 +46,33 @@ export const generateMetadata = async ({ params }: PageProps): Promise<Metadata>
   }
 }
 
-const Week = async ({ machine }: { readonly machine: MachineDetail }) => {
-  const signedIn = await hasSession()
-  const result = signedIn ? await bookingPort.availability(machine.id) : null
+const eligibilityFor = async (machine: MachineDetail): Promise<BookingEligibility> => {
+  if (!(await hasSession())) return bookingEligibilityOf(machine, null)
 
-  if (result === null || (!result.ok && result.error.code === BookingFailureCode.MACHINE_NOT_BOOKABLE)) {
-    return (
-      <MachineAccessNotice
-        signedIn={signedIn}
-        atelierName={machine.atelierName}
-        atelierSlug={machine.atelierSlug}
-        machineId={machine.id}
-      />
-    )
-  }
+  const [user, certifications] = await Promise.all([
+    identityPort.me(),
+    machine.requiresCertification ? certificationPort.mine() : null,
+  ])
+  if (!user.ok) return bookingEligibilityOf(machine, null)
+
+  return bookingEligibilityOf(machine, {
+    memberships: user.value.memberships,
+    certifications: certifications?.ok ? certifications.value : [],
+  })
+}
+
+const Week = async ({
+  machine,
+  searchParams,
+}: {
+  readonly machine: MachineDetail
+  readonly searchParams: SearchParams
+}) => {
+  const [result, eligibility, { creneau }] = await Promise.all([
+    bookingPort.availability(machine.id),
+    eligibilityFor(machine),
+    searchParams,
+  ])
 
   if (!result.ok) {
     return (
@@ -67,21 +82,21 @@ const Week = async ({ machine }: { readonly machine: MachineDetail }) => {
     )
   }
 
-  return (
-    <>
-      {machine.requiresCertification ? (
-        <Surface className="text-graphite-200 flex flex-wrap items-center justify-between gap-4">
-          <p>Cette machine exige une habilitation. Sans elle, la réservation est refusée.</p>
-          <Link href="/habilitations" className="text-signal-500 hover:text-signal-400 text-sm">
-            Mes habilitations
-          </Link>
-        </Surface>
-      ) : null}
+  const preselected = result.value.slots.find((slot) => slot.available && slot.startAt === creneau)
 
-      <Surface>
-        <MachineWeek machineId={machine.id} initialAvailability={result.value} book={createBookingAction} />
-      </Surface>
-    </>
+  return (
+    <Surface>
+      <MachineWeek
+        machineId={machine.id}
+        atelierName={machine.atelierName}
+        atelierSlug={machine.atelierSlug}
+        eligibility={eligibility}
+        initialAvailability={result.value}
+        initialStartAt={preselected?.startAt ?? null}
+        book={createBookingAction}
+        requestCertification={requestCertificationAction}
+      />
+    </Surface>
   )
 }
 
@@ -91,7 +106,7 @@ const WeekFallback = () => (
   </Surface>
 )
 
-export const MachinePage = async ({ params }: PageProps) => {
+export const MachinePage = async ({ params, searchParams }: PageProps) => {
   const { id } = await params
   const result = await loadMachine(id)
   if (!result.ok) notFound()
@@ -123,7 +138,7 @@ export const MachinePage = async ({ params }: PageProps) => {
       </header>
 
       <Suspense fallback={<WeekFallback />}>
-        <Week machine={machine} />
+        <Week machine={machine} searchParams={searchParams} />
       </Suspense>
     </main>
   )
