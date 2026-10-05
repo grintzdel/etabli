@@ -91,6 +91,7 @@ réellement ouvert au moment de la démonstration : la fenêtre court de 15 minu
 ## Démarrer
 
 **Prérequis** : Node 22+ (`.nvmrc` épingle 24), pnpm 10, une base PostgreSQL (Neon, branche dédiée).
+Sans rien installer de tout cela : `docker compose up --build` — voir [Docker](#docker).
 
 ```bash
 pnpm install
@@ -141,6 +142,135 @@ pnpm run db:test:down
 > chaque campagne repart du même état, sans `db:test:down` à penser entre deux runs. La liste des
 > tables vidées est dérivée du schéma Drizzle, et `db:reset:test` refuse toute base dont l'hôte
 > n'est pas local.
+
+## Docker
+
+### Pré-requis
+
+Docker Desktop ou Docker Engine (OrbStack fonctionne). Rien d'autre : ni Node, ni pnpm, ni base de
+données — le `compose.yaml` embarque tout.
+
+### Tout lancer
+
+```bash
+docker compose up --build        # web :3000, API :3001, PostgreSQL
+```
+
+L'API applique les migrations et le seed à son démarrage : les
+[comptes de démonstration](#comptes-de-démonstration) (mot de passe `etabli-2026`) sont utilisables
+dès que `web` est healthy, sur [http://localhost:3000](http://localhost:3000).
+
+```bash
+docker compose logs -f web       # suivre un service
+docker compose down              # tout arrêter
+```
+
+La base `db` n'est publiée sur aucun port de l'hôte : l'API la joint par le réseau du compose, et
+ses données survivent à un `down` dans le volume `db-data` (`docker compose down -v` repart de
+zéro). Le Postgres des E2E, sur `:5433`, est un autre service, sous le profil `test` : il ne
+démarre qu'avec `pnpm db:test:up`.
+
+Aucune variable n'est requise : le compose porte des valeurs de démonstration. `JWT_SECRET` peut
+être surchargé par l'environnement (`JWT_SECRET=... docker compose up`).
+
+### Construire et lancer l'image Next.js seule
+
+```bash
+docker build -t etabli-web .
+docker run --name etabli-web -p 3000:3000 \
+  -e API_URL=http://host.docker.internal:3001 \
+  -e COOKIE_SECURE=false \
+  etabli-web
+```
+
+L'application dépend de l'API pour tout parcours au-delà des pages statiques : seule, l'image sert
+les coquilles mais ni l'annuaire ni la connexion. D'où le compose ci-dessus, qui reste la commande
+de référence.
+
+Le `Dockerfile` racine est celui de l'app Next.js, en trois stages sur `node:24-alpine` :
+
+- **deps** — les manifests du workspace et `pnpm install --frozen-lockfile --filter @etabli/web...`
+  (un install filtré, mais tous les `package.json` sont copiés : un frozen install valide chaque
+  importer du lockfile). Tant que les manifests ne bougent pas, ce layer sort du cache.
+- **builder** — build des packages (`tsdown`) puis `next build` en `output: 'standalone'` : Next
+  trace les fichiers réellement requis et produit un runtime autonome, sans `node_modules` complet.
+- **runner** — ne reçoit que le standalone, `.next/static` et `public/`, tourne sous l'utilisateur
+  `node` (pas root), et les CLI npm/corepack/yarn de l'image de base sont supprimés — voir la
+  section sécurité. `CMD ["node", "apps/web/server.js"]`.
+
+### Build time ≠ runtime
+
+| Variable | Moment | Rôle |
+|---|---|---|
+| `NEXT_PUBLIC_SITE_URL` | build (`--build-arg`) | cuite dans `robots.txt` / `sitemap.xml` prérendus — `http://localhost:3000` par défaut |
+| `API_URL` | runtime | où le serveur Next joint l'API |
+| `COOKIE_SECURE` | runtime | `true` derrière HTTPS |
+
+Les secrets ne passent jamais en build arg, et `.env` ne rentre jamais dans l'image : le
+`.dockerignore` exclut `node_modules`, `.git`, `.next`, `dist` et tous les `.env*`.
+
+### L'image API
+
+```bash
+docker build -f apps/api/Dockerfile -t etabli-api .
+docker run --name etabli-api -p 3001:3001 \
+  -e DATABASE_URL=postgresql://... -e JWT_SECRET=... \
+  etabli-api
+```
+
+Même logique multi-stage, plus un stage `prod-deps` (`pnpm install --prod`) pour que le runner ne
+porte que les dépendances de production. Les migrations et le seed sont des entrées séparées —
+`node dist/infrastructure/database/migrate.js`, `node dist/infrastructure/database/seed.cli.js` —
+que le compose enchaîne avant `node dist/main.js`.
+
+### Scanner
+
+```bash
+docker scout quickview etabli-web
+docker scout cves etabli-web
+```
+
+## Docker — sécurité & IA
+
+Les Dockerfiles ont été écrits puis analysés avec Claude Code (Claude Fable 5), sur le workflow
+scan réel → analyse IA → vérification humaine → correction → rebuild → rescan. Chaque commande et
+chaque chiffre ci-dessous vient d'un scan réellement exécuté.
+
+**Scan initial** (`docker scout quickview` / `docker scout cves`), images sur
+`node:24-bookworm-slim` :
+
+| Image | Critiques | Hautes | Moyennes | Basses |
+|---|---|---|---|---|
+| `etabli-web` | 3 | 20 | 18 | 33 |
+| `etabli-api` | 2 | 20 | 18 | 33 |
+
+L'analyse a séparé trois origines : `next@16.3.5` portait GHSA-vcvr-r3jv-pc5j (critique,
+CVSS 9.5, corrigée en 16.3.6) ; la base Debian apportait les critiques `perl` et les hautes
+`util-linux` / `gcc-12` ; le reste (`brace-expansion`, `tar`, `undici`…) vivait dans le CLI npm
+embarqué par l'image de base, jamais exécuté par un conteneur dont le `CMD` est `node`.
+
+**Accepté** — les trois corrections proposées, vérifiées une à une :
+
+1. `next` 16.3.5 → 16.3.8 (`pnpm update`), vérifié par les 294 tests du web et le typecheck ;
+2. base `node:24-bookworm-slim` → `node:24-alpine` sur les deux images — élimine les CVE Debian,
+   et réduit l'image web de 406 à 297 Mo ;
+3. suppression de npm, corepack et yarn du stage runner — les 8 hautes restantes vivaient toutes
+   dans `/usr/local/lib/node_modules/npm`, vérifié dans le conteneur avant suppression.
+
+**Refusé** — le passage à une image distroless, proposé pendant l'analyse : le gain résiduel est
+nul une fois les CLI retirés (scan à zéro), et la perte du shell casserait l'enchaînement
+migrations → seed → serveur du compose et compliquerait tout débogage en soutenance.
+
+**Résultat après rebuild et rescan** :
+
+| Image | Critiques | Hautes | Moyennes | Basses |
+|---|---|---|---|---|
+| `etabli-web` | 0 | 0 | 0 | 0 |
+| `etabli-api` | 0 | 0 | 0 | 0 |
+
+Les findings restants de `docker scout quickview` sur la ligne « Base image » décrivent
+`node:24-alpine` telle que publiée ; les deux images livrées n'en héritent plus, puisque les
+paquets concernés en sont retirés.
 
 ## Organisation
 
