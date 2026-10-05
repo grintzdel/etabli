@@ -5,6 +5,8 @@ export const apiUrl = process.env.API_URL ?? 'http://localhost:3001'
 
 export const SEED_PASSWORD = 'etabli-2026'
 
+export const FRESH_PASSWORD = 'un-mot-de-passe'
+
 export const signIn = async (page: Page, email: string, password: string = SEED_PASSWORD): Promise<void> => {
   await page.goto('/connexion')
   await page.getByLabel(/adresse e-mail/i).fill(email)
@@ -31,7 +33,7 @@ export const freshMember = async (
   options: { readonly atelierId?: string; readonly displayName?: string } = {}
 ): Promise<string> => {
   const email = `e2e-${crypto.randomUUID()}@etabli.test`
-  const password = 'un-mot-de-passe'
+  const password = FRESH_PASSWORD
 
   const registered = await request.post(`${apiUrl}/auth/register`, {
     data: { email, password, displayName: options.displayName ?? 'Compte isolé' },

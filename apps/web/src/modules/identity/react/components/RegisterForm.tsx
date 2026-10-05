@@ -11,13 +11,15 @@ import { AuthFormError } from './AuthFormError'
 export interface RegisterFormProps {
   readonly action: AuthFormAction
   readonly initialState: AuthFormState
+  readonly next?: string
 }
 
-export const RegisterForm = ({ action, initialState }: RegisterFormProps) => {
+export const RegisterForm = ({ action, initialState, next }: RegisterFormProps) => {
   const [state, submit, pending] = useActionState(action, initialState)
 
   return (
     <form action={submit} className="flex flex-col gap-5">
+      {next === undefined ? null : <input type="hidden" name="next" value={next} />}
       <TextField
         label="Nom affiché"
         name="displayName"

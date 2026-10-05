@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 
+import { safeNext } from '@/modules/identity/core/lib/safe-next'
 import type { AuthFormState } from '@/modules/identity/core/model/session'
 
 import { identityPort } from './container'
@@ -12,9 +13,6 @@ const text = (formData: FormData, name: string): string => {
   return typeof value === 'string' ? value : ''
 }
 
-const safeNext = (candidate: string): string =>
-  candidate.startsWith('/') && !candidate.startsWith('//') ? candidate : '/tableau-de-bord'
-
 export const registerAction = async (_previous: AuthFormState, formData: FormData): Promise<AuthFormState> => {
   const email = text(formData, 'email')
   const displayName = text(formData, 'displayName')
@@ -23,7 +21,7 @@ export const registerAction = async (_previous: AuthFormState, formData: FormDat
   if (!result.ok) return { error: result.error.message, email, displayName }
 
   await writeSessionCookie(result.value.token, result.value.expiresAt)
-  redirect('/bienvenue')
+  redirect(safeNext(text(formData, 'next'), '/bienvenue'))
 }
 
 export const loginAction = async (_previous: AuthFormState, formData: FormData): Promise<AuthFormState> => {
@@ -33,7 +31,7 @@ export const loginAction = async (_previous: AuthFormState, formData: FormData):
   if (!result.ok) return { error: result.error.message, email, displayName: '' }
 
   await writeSessionCookie(result.value.token, result.value.expiresAt)
-  redirect(safeNext(text(formData, 'next')))
+  redirect(safeNext(text(formData, 'next'), '/tableau-de-bord'))
 }
 
 export const logoutAction = async (): Promise<void> => {

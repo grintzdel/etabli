@@ -3,17 +3,18 @@
 import { Button, Surface } from '@etabli/ui'
 import { useActionState } from 'react'
 
-import type { AtelierSummary } from '@/modules/atelier/core/model/atelier'
+import type { OnboardingAtelier } from '@/modules/atelier/core/lib/onboarding-atelier'
 import { MACHINE_KIND_LABELS, PRACTICES } from '@/modules/atelier/core/model/atelier'
 import type { OnboardingFormAction, OnboardingFormState } from '@/modules/atelier/core/model/onboarding-form'
 
 export type OnboardingFormProps = {
   readonly action: OnboardingFormAction
   readonly initialState: OnboardingFormState
-  readonly ateliers: ReadonlyArray<AtelierSummary>
+  readonly ateliers: ReadonlyArray<OnboardingAtelier>
+  readonly next?: string
 }
 
-export const OnboardingForm = ({ action, initialState, ateliers }: OnboardingFormProps) => {
+export const OnboardingForm = ({ action, initialState, ateliers, next }: OnboardingFormProps) => {
   const [state, submit, pending] = useActionState(action, initialState)
 
   if (ateliers.length === 0) {
@@ -22,6 +23,7 @@ export const OnboardingForm = ({ action, initialState, ateliers }: OnboardingFor
 
   return (
     <form action={submit} className="flex flex-col gap-10">
+      {next === undefined ? null : <input type="hidden" name="next" value={next} />}
       <fieldset className="flex flex-col gap-4">
         <legend className="font-display mb-2 text-xl font-semibold tracking-wide uppercase">1 · Votre atelier</legend>
         <div className="grid gap-3 sm:grid-cols-2">

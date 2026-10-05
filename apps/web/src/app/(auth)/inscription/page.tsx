@@ -1,1 +1,1 @@
-export { metadata, RegisterPage as default } from '@/features/identity/register/register.page'
+export { instant, metadata, RegisterPage as default } from '@/features/identity/register/register.page'
