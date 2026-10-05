@@ -1,4 +1,4 @@
-import { Stack, useRouter } from 'expo-router'
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 
 import { OnboardingForm } from '@/modules/atelier/ui/components/OnboardingForm'
 import { useOnboarding } from '@/modules/atelier/ui/hooks/use-onboarding'
@@ -9,7 +9,8 @@ import { ScreenTitle } from '@/modules/shared/ui/components/ScreenTitle'
 
 export const OnboardingPage = () => {
   const router = useRouter()
-  const onboarding = useOnboarding(() => (router.canGoBack() ? router.back() : router.replace('/')))
+  const { atelier } = useLocalSearchParams<{ atelier?: string }>()
+  const onboarding = useOnboarding(atelier, () => (router.canGoBack() ? router.back() : router.replace('/')))
 
   return (
     <Screen>

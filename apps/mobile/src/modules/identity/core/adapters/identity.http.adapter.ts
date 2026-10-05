@@ -9,6 +9,7 @@ import {
   type IdentityResult,
   type LoginInput,
   type MemberAtelier,
+  type RegisterInput,
   type Session,
 } from '../model/session'
 import type { IIdentityPort } from '../ports/identity.port'
@@ -21,6 +22,10 @@ export class IdentityHttpAdapter implements IIdentityPort {
     const shared = { baseUrl, messages: FAILURE_MESSAGES, failureOf: identityFailureOf }
     this.anonymous = createApiClient(shared)
     this.authenticated = createApiClient({ ...shared, getAuthToken })
+  }
+
+  register(input: RegisterInput): Promise<IdentityResult<Session>> {
+    return this.anonymous.post<Session>(routes.auth.register, input)
   }
 
   login(input: LoginInput): Promise<IdentityResult<Session>> {

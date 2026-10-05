@@ -2,17 +2,24 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { dependencies } from '../../../app/core/dependencies'
-import { useApiMutation } from '../../../app/ui/hooks/use-api-query'
+import { useApiMutation, usePublicQuery } from '../../../app/ui/hooks/use-api-query'
 import { useSession } from '../../../identity/ui/hooks/use-session'
-import type { CompleteOnboardingInput, OnboardingResult } from '../../core/model/atelier'
+import { onboardingAtelierOf } from '../../core/lib/onboarding-atelier'
+import type { AtelierDetail, CompleteOnboardingInput, OnboardingResult } from '../../core/model/atelier'
 import { useAtelierDirectory } from './use-atelier-directory'
 
-export const useOnboarding = (onJoined: () => void) => {
+export const useOnboarding = (slug: string | undefined, onJoined: () => void) => {
   const directory = useAtelierDirectory()
-  const { refresh } = useSession()
+  const target = usePublicQuery<AtelierDetail>(
+    ['atelier', slug],
+    () => dependencies.atelier.getBySlug(slug ?? ''),
+    slug !== undefined
+  )
+  const { user, refresh } = useSession()
   const queryClient = useQueryClient()
-  const [atelierId, setAtelierId] = useState<string | null>(null)
-  const [practice, setPractice] = useState<ReadonlyArray<string>>([])
+  const [chosen, setChosen] = useState<string | null>(null)
+  const [practice, setPractice] = useState<ReadonlyArray<string>>(user?.practice ?? [])
+  const atelierId = chosen ?? target.data?.id ?? null
   const [invalid, setInvalid] = useState<string | null>(null)
 
   const joined = useApiMutation<OnboardingResult, CompleteOnboardingInput>(
@@ -25,11 +32,12 @@ export const useOnboarding = (onJoined: () => void) => {
   )
 
   return {
-    ateliers: directory.ateliers,
-    isPending: directory.isPending,
-    error: directory.error,
+    ateliers:
+      slug === undefined ? directory.ateliers : target.data === undefined ? [] : [onboardingAtelierOf(target.data)],
+    isPending: slug === undefined ? directory.isPending : target.isPending,
+    error: slug === undefined ? directory.error : (target.error?.message ?? null),
     atelierId,
-    selectAtelier: setAtelierId,
+    selectAtelier: setChosen,
     practice,
     togglePractice: (value: string) =>
       setPractice((previous) =>

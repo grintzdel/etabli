@@ -5,7 +5,10 @@ import { StyleSheet, View } from 'react-native'
 
 import { MACHINE_KIND_LABELS, MACHINE_STATUS_LABELS, MACHINE_STATUS_TONES } from '@/modules/atelier/core/model/atelier'
 import { useMachine } from '@/modules/atelier/ui/hooks/use-machine'
+import { ELIGIBILITY_HINTS } from '@/modules/booking/core/model/booking'
+import { SlotGate } from '@/modules/booking/ui/components/SlotGate'
 import { SlotGrid } from '@/modules/booking/ui/components/SlotGrid'
+import { useBookingEligibility } from '@/modules/booking/ui/hooks/use-booking-eligibility'
 import { useMachineWeek } from '@/modules/booking/ui/hooks/use-machine-week'
 import { MY_STATUS_LABELS, MY_STATUS_TONES } from '@/modules/certification/core/model/certification'
 import { useMachineCertification } from '@/modules/certification/ui/hooks/use-machine-certification'
@@ -19,9 +22,23 @@ export const MachinePage = ({ id }: { readonly id: string }) => {
   const { machine, isPending, error } = useMachine(id)
   const week = useMachineWeek(id, (booking) => router.push(`/bookings/${booking.id}`))
   const certification = useMachineCertification(id)
+  const eligibility = useBookingEligibility(machine)
+
+  const gate =
+    eligibility === null || machine === null || week.selected === null ? null : (
+      <SlotGate
+        slot={week.selected}
+        eligibility={eligibility}
+        atelierName={machine.atelierName}
+        isBooking={week.isBooking}
+        onBook={week.book}
+        onSignIn={() => router.push('/login')}
+        onJoin={() => router.push({ pathname: '/onboarding', params: { atelier: machine.atelierSlug } })}
+      />
+    )
 
   return (
-    <Screen>
+    <Screen footer={gate}>
       <Stack.Screen options={{ title: machine?.name ?? 'Machine' }} />
 
       {error === null ? null : <Notice tone="danger" title="Machine" message={error} />}
@@ -68,6 +85,7 @@ export const MachinePage = ({ id }: { readonly id: string }) => {
       )}
 
       <Text variant="label">Semaine</Text>
+      {eligibility === null ? null : <Text tone="muted">{ELIGIBILITY_HINTS[eligibility]}</Text>}
 
       {week.error === null ? null : <Notice message={week.error} />}
       {week.bookingError === null ? null : <Notice tone="danger" title="Réservation" message={week.bookingError} />}
@@ -84,7 +102,12 @@ export const MachinePage = ({ id }: { readonly id: string }) => {
               Semaine suivante
             </Button>
           </View>
-          <SlotGrid days={week.days} disabled={week.isBooking} onPick={week.book} />
+          <SlotGrid
+            days={week.days}
+            selectedStartAt={week.selected?.startAt ?? null}
+            disabled={week.isBooking}
+            onPick={week.select}
+          />
         </>
       )}
     </Screen>

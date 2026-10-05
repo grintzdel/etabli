@@ -8,11 +8,12 @@ import { SLOT_REASON_LABELS } from '../../core/model/booking'
 
 export type SlotGridProps = {
   readonly days: ReadonlyArray<SlotDay>
+  readonly selectedStartAt: string | null
   readonly disabled: boolean
   readonly onPick: (startAt: string) => void
 }
 
-export const SlotGrid = ({ days, disabled, onPick }: SlotGridProps) => (
+export const SlotGrid = ({ days, selectedStartAt, disabled, onPick }: SlotGridProps) => (
   <View style={styles.days}>
     {days.map((day) => (
       <Surface key={day.key}>
@@ -23,8 +24,9 @@ export const SlotGrid = ({ days, disabled, onPick }: SlotGridProps) => (
               <Button
                 key={slot.startAt}
                 size="sm"
-                variant={slot.available ? 'primary' : 'ghost'}
+                variant={slot.startAt === selectedStartAt ? 'primary' : 'ghost'}
                 disabled={disabled || !slot.available}
+                accessibilityState={{ selected: slot.startAt === selectedStartAt }}
                 accessibilityLabel={`${formatTime(slot.startAt)} — ${SLOT_REASON_LABELS[slot.reason]}`}
                 onPress={() => onPick(slot.startAt)}
               >
