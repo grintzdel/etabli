@@ -40,17 +40,27 @@ const questions = [
   {
     question: 'Pourquoi faut-il pointer sur la machine ?',
     answer:
-      'Parce qu’une réservation ne prouve rien. Le QR code collé sur le bâti atteste que vous êtes devant la machine, dans la fenêtre du créneau. Le pointage ne se fait pas depuis le canapé.',
+      'Parce qu’une réservation ne prouve rien. Le QR code collé sur le bâti atteste que vous êtes devant la machine. Le pointage ouvre 15 minutes avant le début du créneau et ferme 30 minutes après ; passé ce délai, le créneau est marqué non honoré.',
+  },
+  {
+    question: 'Comment pointer, concrètement ?',
+    answer:
+      'Avec l’application mobile : elle scanne le QR code de la machine, et sans caméra le jeton imprimé sous le code se saisit à la main. Le navigateur ne sait pas lire le code. Sans téléphone, demandez au fabmanager présent : il peut vous pointer depuis son écran.',
+  },
+  {
+    question: 'Y a-t-il une application mobile ?',
+    answer:
+      'Oui, pour le parcours membre : l’annuaire trié par distance, l’adhésion à un atelier, la demande d’habilitation, la réservation, l’annulation et le pointage. Les gestes du fabmanager et de l’administration restent sur le web.',
   },
   {
     question: 'Puis-je être membre de plusieurs ateliers ?',
     answer:
-      'Oui. Vos adhésions, vos habilitations et vos créneaux sont listés ensemble sur votre tableau de bord. Vous pouvez désigner un atelier par défaut dans vos paramètres.',
+      'Oui. Le tableau de bord rassemble votre prochain créneau et vos demandes en attente, tous ateliers confondus ; vos réservations, vos habilitations et vos adhésions ont chacune leur page. Vous pouvez désigner un atelier par défaut dans vos paramètres.',
   },
   {
     question: 'Qui voit mes données ?',
     answer:
-      'Les fabmanagers des ateliers dont vous êtes membre voient vos créneaux sur leurs machines et vos demandes d’habilitation. Rien de ce qui concerne un autre atelier ne leur est visible.',
+      'Les fabmanagers des ateliers dont vous êtes membre voient vos créneaux sur leurs machines et vos demandes d’habilitation ; rien de ce qui concerne un autre atelier ne leur est visible. L’administration de la plateforme voit votre compte — nom, e-mail, pratiques, ateliers — pour nommer les fabmanagers et suspendre un compte si besoin.',
   },
   {
     question: 'Je change de mot de passe : mes autres appareils sont-ils déconnectés ?',

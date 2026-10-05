@@ -58,7 +58,8 @@ export const BookingSummary = ({ booking, cancel }: BookingSummaryProps) => (
 
     {booking.canCheckIn ? (
       <p className="text-graphite-300 text-sm">
-        Le pointage est ouvert : approchez votre téléphone du tag posé sur la machine.
+        Le pointage est ouvert : scannez le QR code de la machine avec l’application mobile, ou demandez au fabmanager
+        présent de vous pointer.
       </p>
     ) : null}
 
