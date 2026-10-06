@@ -5,8 +5,8 @@ import { Suspense } from 'react'
 
 import type { DirectoryFilters } from '@/modules/atelier/core/model/atelier'
 import { parseDirectoryFilters } from '@/modules/atelier/core/model/atelier'
+import { AtelierDirectoryExplorer } from '@/modules/atelier/react/components/AtelierDirectoryExplorer'
 import { AtelierDirectoryFilters } from '@/modules/atelier/react/components/AtelierDirectoryFilters'
-import { AtelierList } from '@/modules/atelier/react/components/AtelierList'
 import { atelierPort } from '@/server/container'
 
 export const metadata: Metadata = {
@@ -40,7 +40,7 @@ const Directory = async ({ searchParams }: { readonly searchParams: SearchParams
     <>
       <AtelierDirectoryFilters filters={filters} />
       {result.ok ? (
-        <AtelierList ateliers={result.value} />
+        <AtelierDirectoryExplorer key={JSON.stringify(filters)} ateliers={result.value} />
       ) : (
         <p role="alert" className="text-status-danger">
           {result.error.message}
@@ -57,7 +57,7 @@ const DirectoryFallback = () => (
 )
 
 export const AteliersPage = ({ searchParams }: { readonly searchParams: SearchParams }) => (
-  <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-20">
+  <main className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 py-20">
     <header className="flex flex-col gap-3">
       <h1 className="font-display text-4xl font-bold tracking-tight uppercase">Les ateliers</h1>
       <p className="text-graphite-200 max-w-2xl text-lg">
