@@ -14,3 +14,4 @@ playwright-report/
 !.env.test.example
 .tsbuildinfo-root
 *.tsbuildinfo-native
+.idea
