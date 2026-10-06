@@ -11,6 +11,11 @@ describe('AtelierList', () => {
     expect(screen.getByRole('status')).toHaveTextContent(/aucun atelier/i)
   })
 
+  it('lets the caller say why nothing is listed', () => {
+    render(<AtelierList ateliers={[]} emptyMessage="Aucun atelier dans cette zone." />)
+    expect(screen.getByRole('status')).toHaveTextContent('Aucun atelier dans cette zone.')
+  })
+
   it('gives one list item per atelier', () => {
     render(<AtelierList ateliers={[summaryFixture(), summaryFixture()]} />)
     expect(screen.getByRole('list', { name: 'Ateliers' }).children).toHaveLength(2)

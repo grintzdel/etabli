@@ -9,6 +9,55 @@ body {
   font-family: var(--font-sans);
 }
 
+.atelier-map.leaflet-container {
+  background-color: var(--color-graphite-900);
+  font-family: var(--font-sans);
+}
+
+.atelier-map .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.4);
+}
+
+.atelier-map .atelier-marker {
+  stroke: var(--color-graphite-950);
+  stroke-width: 2;
+  fill: var(--color-signal-500);
+  fill-opacity: 0.9;
+}
+
+.atelier-map .leaflet-popup-content-wrapper,
+.atelier-map .leaflet-popup-tip {
+  background-color: var(--color-graphite-900);
+  color: var(--color-graphite-100);
+}
+
+.atelier-map .leaflet-popup-content a {
+  color: var(--color-signal-400);
+}
+
+.atelier-map.leaflet-container .leaflet-control-attribution {
+  background-color: color-mix(in srgb, var(--color-graphite-950) 80%, transparent);
+  color: var(--color-graphite-400);
+}
+
+.atelier-map.leaflet-container .leaflet-control-attribution a {
+  color: var(--color-graphite-200);
+}
+
+.atelier-map.leaflet-container .leaflet-bar {
+  border-color: var(--color-graphite-700);
+}
+
+.atelier-map.leaflet-container .leaflet-bar a {
+  background-color: var(--color-graphite-900);
+  border-color: var(--color-graphite-700);
+  color: var(--color-graphite-100);
+}
+
+.atelier-map.leaflet-container .leaflet-bar a:hover {
+  background-color: var(--color-graphite-800);
+}
+
 :focus-visible {
   outline: 2px solid var(--color-signal-500);
   outline-offset: 2px;

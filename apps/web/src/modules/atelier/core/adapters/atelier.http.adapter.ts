@@ -12,7 +12,7 @@ import type {
   MachineDetail,
   OnboardingResult,
 } from '../model/atelier'
-import { FAILURE_MESSAGES } from '../model/atelier'
+import { DIRECTORY_LIMIT, FAILURE_MESSAGES } from '../model/atelier'
 import type { IAtelierPort } from '../ports/atelier.port'
 
 export class AtelierHttpAdapter implements IAtelierPort {
@@ -27,7 +27,7 @@ export class AtelierHttpAdapter implements IAtelierPort {
 
   list(filters: DirectoryFilters): Promise<AtelierResult<ReadonlyArray<AtelierSummary>>> {
     return this.anonymous.get<ReadonlyArray<AtelierSummary>>(routes.ateliers.list, {
-      query: { city: filters.city, machineKind: filters.machineKind },
+      query: { city: filters.city, machineKind: filters.machineKind, limit: DIRECTORY_LIMIT },
     })
   }
 

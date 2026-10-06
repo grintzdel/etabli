@@ -59,6 +59,29 @@ test('narrows the directory down to one machine kind', async ({ page }) => {
   await expect(ateliers.getByRole('link', { name: 'Fabrique Lyonnaise' })).toHaveCount(0)
 })
 
+test('puts one marker on the map per listed atelier', async ({ page }) => {
+  await page.goto('/ateliers')
+  const map = page.getByRole('region', { name: 'Carte des ateliers' })
+  const cards = page.getByRole('list', { name: 'Ateliers' }).locator(':scope > li')
+
+  await expect(map.locator('.atelier-marker').first()).toBeVisible()
+  await expect(map.locator('.atelier-marker')).toHaveCount(await cards.count())
+})
+
+test('narrows the list to what the map shows when zooming in', async ({ page }) => {
+  await page.goto('/ateliers')
+  const map = page.getByRole('region', { name: 'Carte des ateliers' })
+  const cards = page.getByRole('list', { name: 'Ateliers' }).locator(':scope > li')
+  await expect(map.locator('.atelier-marker').first()).toBeVisible()
+  const total = await cards.count()
+
+  await map.locator('.leaflet-container').focus()
+  await page.keyboard.type('+++++')
+
+  await expect.poll(() => cards.count()).toBeLessThan(total)
+  await expect(page.getByText(/dans la zone affichée|aucun atelier dans cette zone/i)).toBeVisible()
+})
+
 test('gives every card a photo of a machine that atelier publishes', async ({ page }) => {
   await page.goto('/ateliers')
   const cards = page.getByRole('list', { name: 'Ateliers' }).getByRole('listitem')

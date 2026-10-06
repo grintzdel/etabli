@@ -82,6 +82,8 @@ export const FAILURE_MESSAGES: Readonly<Record<AtelierFailureCode, string>> = {
 
 export const failure = makeFailure(FAILURE_MESSAGES)
 
+export const DIRECTORY_LIMIT = 100
+
 export interface DirectoryFilters {
   readonly city?: string
   readonly machineKind?: MachineKind

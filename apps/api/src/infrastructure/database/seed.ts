@@ -148,9 +148,9 @@ export const seedDemo = async (db: Database): Promise<DemoReport> => {
 
   for (const booking of BOOKINGS) {
     const { start, end } =
-      booking.startsInMinutes === undefined
-        ? slotAt(booking.dayOffset, booking.localHour, booking.minutes)
-        : startingIn(booking.startsInMinutes, booking.minutes)
+      'startsInMinutes' in booking
+        ? startingIn(booking.startsInMinutes, booking.minutes)
+        : slotAt(booking.dayOffset, booking.localHour, booking.minutes)
     const cancelledAt = booking.status === 'CANCELLED' ? new Date(start.getTime() - 2 * 60 * 60_000) : null
 
     await db.insert(bookings).values({
