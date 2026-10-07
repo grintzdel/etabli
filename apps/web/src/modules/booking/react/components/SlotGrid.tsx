@@ -10,12 +10,31 @@ export type SlotGridProps = {
   readonly onSelect: (startAt: string) => void
 }
 
+const freeLabelOf = (count: number): string =>
+  count === 0 ? 'Complet' : count === 1 ? '1 créneau libre' : `${count} créneaux libres`
+
 export const SlotGrid = ({ days, selectedStartAt, onSelect }: SlotGridProps) => (
-  <div className="flex flex-col gap-6">
-    {days.map((day) => (
-      <section key={day.key} className="flex flex-col gap-2">
-        <h3 className="font-display text-graphite-400 text-xs tracking-wider uppercase">{day.label}</h3>
-        <ul className="flex flex-wrap gap-2">
+  <div className="flex flex-col gap-3">
+    {days.map((day, index) => (
+      <details key={day.key} open={index === 0} className="group border-graphite-800 bg-graphite-900 rounded-sm border">
+        <summary className="hover:bg-graphite-800/50 flex cursor-pointer list-none items-center gap-4 p-3 [&::-webkit-details-marker]:hidden">
+          <span
+            aria-hidden="true"
+            className="border-graphite-700 bg-graphite-950 flex w-14 shrink-0 flex-col items-center rounded-sm border py-1"
+          >
+            <span className="font-display text-signal-500 text-[0.65rem] tracking-wider uppercase">{day.weekday}</span>
+            <span className="font-display text-graphite-50 text-xl leading-tight">{day.date}</span>
+            <span className="font-display text-graphite-400 text-[0.65rem] tracking-wider uppercase">{day.month}</span>
+          </span>
+          <span className="flex flex-1 flex-col gap-0.5">
+            <h3 className="font-display text-graphite-100 text-sm tracking-wide first-letter:uppercase">{day.label}</h3>
+            <span className="text-graphite-400 text-xs">{freeLabelOf(day.freeCount)}</span>
+          </span>
+          <span aria-hidden="true" className="text-graphite-400 transition-transform group-open:rotate-180">
+            ▾
+          </span>
+        </summary>
+        <ul className="border-graphite-800 flex flex-wrap gap-2 border-t p-3">
           {day.slots.map((slot) => (
             <li key={slot.startAt}>
               <button
@@ -37,7 +56,7 @@ export const SlotGrid = ({ days, selectedStartAt, onSelect }: SlotGridProps) => 
             </li>
           ))}
         </ul>
-      </section>
+      </details>
     ))}
   </div>
 )

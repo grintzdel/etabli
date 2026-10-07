@@ -1,4 +1,4 @@
-import type { APIRequestContext } from '@playwright/test'
+import type { APIRequestContext, Page } from '@playwright/test'
 import { expect } from '@playwright/test'
 
 import { apiUrl } from './auth.fixture'
@@ -9,6 +9,14 @@ export const MAINTENANCE_MACHINE_ID = '0a7e1f00-0000-4000-8000-000000000102'
 export const RETIRED_MACHINE_ID = '0a7e1f00-0000-4000-8000-000000000105'
 // Singer 4423 of the Atelier des Canuts: neither the demo member nor Théo belongs to that atelier.
 export const OUTSIDE_MACHINE_ID = '0a7e1f00-0000-4000-8000-000000000501'
+
+export const unfoldWeek = async (page: Page): Promise<void> => {
+  const folded = page.locator('details:not([open]) > summary')
+  if ((await folded.count()) === 0) return
+
+  await folded.first().click()
+  return unfoldWeek(page)
+}
 
 type Slot = { readonly startAt: string; readonly available: boolean }
 type Availability = { readonly slots: ReadonlyArray<Slot> }

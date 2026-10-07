@@ -52,6 +52,22 @@ describe('SlotGrid', () => {
     expect(screen.getByRole('button', { name: /déjà réservé/i })).toHaveAttribute('aria-pressed', 'false')
   })
 
+  it('unfolds the first day and folds the others', () => {
+    const nextDay: AvailabilitySlot = {
+      ...free,
+      startAt: '2026-06-02T08:00:00.000Z',
+      endAt: '2026-06-02T10:00:00.000Z',
+    }
+    const { container } = grid([free, nextDay], null)
+
+    expect([...container.querySelectorAll('details')].map((day) => day.open)).toEqual([true, false])
+  })
+
+  it('counts the free slots of a day on its fold', () => {
+    grid([free, booked], null)
+    expect(screen.getByText('1 créneau libre')).toBeInTheDocument()
+  })
+
   it('says nothing at all for a week without slots', () => {
     grid([], null)
     expect(screen.queryByRole('button')).not.toBeInTheDocument()

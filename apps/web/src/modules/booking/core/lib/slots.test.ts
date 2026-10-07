@@ -40,6 +40,15 @@ describe('groupSlotsByDay', () => {
     expect(days[0]?.label).toBe('lundi 1 juin')
   })
 
+  it('breaks the day into a calendar leaf and counts what is still free', () => {
+    const [day] = groupSlotsByDay([
+      slot('2026-06-01T06:00:00.000Z', '2026-06-01T07:00:00.000Z'),
+      { ...slot('2026-06-01T07:00:00.000Z', '2026-06-01T08:00:00.000Z'), available: false, reason: 'BOOKED' },
+    ])
+
+    expect(day).toMatchObject({ weekday: 'lun', date: '1', month: 'juin', freeCount: 1 })
+  })
+
   it('gives nothing back for no slot', () => {
     expect(groupSlotsByDay([])).toEqual([])
   })
