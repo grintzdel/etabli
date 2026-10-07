@@ -420,6 +420,12 @@ layouts, de la connexion au `CHECKED_IN`.
 Elle parle à **`apps/api`**. `pnpm build:packages`, puis `pnpm dev:api` et
 `pnpm dev:mobile` — ou `pnpm dev`, qui lance les trois.
 
+L'URL de l'API est **déduite de l'hôte du serveur Expo** (`Constants.expoConfig.hostUri`),
+port 3001 : le téléphone joint déjà cette machine pour charger le bundle. Une IP
+écrite dans `.env` périmait à chaque changement d'adresse wifi et rendait
+`UNREACHABLE`. `EXPO_PUBLIC_API_URL` reste un forçage, pour un tunnel ou une API
+distante ; derrière un tunnel, sans elle, on retombe sur `localhost`.
+
 `src/app/` ne porte que des coquilles, comme les routes du web : un import de
 `src/features/`, et rien d'autre. Tout vit dans `src/modules/<module>/{core,ui}`.
 
@@ -480,6 +486,15 @@ React Native n'a pas de gradient sans `expo-linear-gradient`, qui n'est pas une
 dépendance. La photo est donc une bande — 160 pt en tête de carte, 200 pt en
 tête de fiche — et le titre vit dessous. Rien n'est posé sur une image dont on ne
 maîtrise pas le contraste.
+
+**La carte de l'annuaire est `react-native-maps`, pas `expo-maps`.** Il tourne
+dans Expo Go sans clé — Apple Maps sur iOS — là où `expo-maps` exige un
+development build ; même raison que pour le QR. Une clé Google ne sera due qu'à
+la publication Android. Comme sur le web, la carte resserre la liste sur la zone
+affichée ; `map-region.ts` reprend les prédicats de `map-bounds.ts` du web,
+recopiés et non partagés, plus la conversion depuis la `Region` (centre + écarts)
+que rend la carte. La carte est remontée à chaque changement de filtre pour se
+recadrer sur la nouvelle liste.
 
 **Le port de scan a deux implémentations, et l'écran ignore laquelle il tient.**
 `expo-camera` quand la permission caméra est accordée, `manual` — une saisie du
