@@ -1,81 +1,165 @@
-# Établi mobile
+# @etabli/mobile
 
-Application Expo / React Native du projet fil rouge. Elle existe pour les deux
-gestes que le navigateur ne sait pas faire : **approcher un téléphone d'une
-machine** et **savoir où l'on est**. La conception est décrite par
-`docs/superpowers/specs/2026-09-17-etabli-mobile-design.md`.
-
-## Lancer
-
-Le mobile parle à l'API. Depuis la racine du dépôt :
-
-```sh
-pnpm build:packages   # @etabli/contract est consommé compilé
-pnpm dev:api          # l'API NestJS sur :3001
-pnpm dev:mobile       # Expo
-```
-
-`pnpm dev` lance l'autre implémentation du back (`packages/server`, v1) sur le
-même port. Les deux servent les mêmes routes, et les adapters lisent les deux
-formes d'erreur (`code` côté NestJS, `_tag` côté Effect), donc le parcours tient
-dans les deux cas.
-
-**Un téléphone sur le wifi ne joint pas `localhost`.** Copier `.env.example` en
-`.env` et y mettre l'adresse IP de la machine sur le réseau
-(`ipconfig getifaddr en0`) :
+L'application Expo / React Native d'Établi. Elle n'est pas le web en petit : elle existe pour les
+deux gestes que le navigateur ne sait pas faire — **scanner le QR code collé sur une machine** et
+**savoir où l'on est**. Elle parle à la même API que le web (`apps/api`) et partage ses comptes, ses
+ateliers et ses réservations. Conception : `docs/superpowers/specs/2026-09-17-etabli-mobile-design.md`.
 
 ```
-EXPO_PUBLIC_API_URL=http://192.168.1.10:3001
+annuaire trié par distance → un atelier → une machine → la semaine → un créneau
+→ connexion (modale, le créneau survit) → mes réservations → Pointer → scan du QR → CHECKED_IN
 ```
 
-Comptes de démonstration : ceux du seed, mot de passe `etabli-2026`.
-`membre@etabli.test` a des adhésions, des habilitations et des créneaux.
+## Lancer — Expo Go sur téléphone réel
 
-## Le scan du QR code
+**Expo Go suffit, aucun development build n'est requis** : `expo-camera`, `expo-location`,
+`expo-secure-store` et `react-native-maps` tournent tous dans Expo Go.
 
-**`expo-camera` tourne dans Expo Go.** Pas de *development build*, pas
-d'entitlement, pas de compte développeur Apple payant : c'est ce que le passage
-du NFC au QR code a acheté. `app.json` déclare la permission caméra par le
-plugin `expo-camera` ; iOS la demande au premier scan.
+1. Installer **Expo Go** sur le téléphone (App Store / Play Store).
+2. Mettre le téléphone et l'ordinateur sur **le même réseau wifi**.
+3. Depuis la racine du dépôt :
 
-**Le repli.** `dependencies.ts` interroge l'adapter caméra ; si la permission
-est refusée ou impossible à demander, c'est l'adapter `manual` qui répond, et le
-jeton se saisit à la main dans une feuille modale — il est écrit en clair sous
-le QR imprimé. L'écran ne sait pas laquelle des deux implémentations il tient.
+   ```bash
+   pnpm install
+   pnpm build:packages      # @etabli/contract et @etabli/api-client sont consommés compilés
+   pnpm dev                 # API :3001 + web :3000 en fond, Expo au premier plan
+   ```
 
-Le QR lui-même s'imprime depuis le web, sur `/manage/machines/:id/qr`.
+   ou, si l'API tourne déjà (par exemple `docker compose up`) : `pnpm dev:mobile`.
+4. Scanner le QR code affiché par Expo avec l'appareil photo (iOS) ou depuis Expo Go (Android).
 
-## Ce que l'application fait
+**L'URL de l'API est déduite toute seule** de l'adresse du serveur Expo
+(`Constants.expoConfig.hostUri`), port 3001 : le téléphone joint déjà cette machine pour charger le
+bundle. Rien à configurer quand l'adresse wifi change.
 
-```
-connexion → l'annuaire se trie sur ma position → un atelier → ses machines
-→ une machine → la semaine → je prends un créneau → mes réservations
-→ Pointer → je scanne le QR → CHECKED_IN
-```
+| Variable | Obligatoire | Rôle |
+|---|---|---|
+| `EXPO_PUBLIC_API_URL` | non | forçage, pour un tunnel (`expo start --tunnel`) ou une API distante |
 
-## Structure
+Copier `.env.example` en `.env` seulement pour ce cas. Derrière un tunnel sans elle, l'app retombe
+sur `localhost`, que le téléphone ne joint pas.
 
-`src/app/` ne contient que des coquilles : chaque fichier importe une page de
-`src/features/` et la rend. Toute la logique vit dans `src/modules/` :
+> **Hôte, conteneur, téléphone.** Avec `docker compose up`, l'API est publiée sur le port 3001 **de
+> l'ordinateur** : c'est cette adresse-là, sur le wifi, que le téléphone appelle — jamais le nom
+> `api` du réseau compose, qui n'existe qu'entre conteneurs.
 
-| Module | Contenu |
+Simulateur : `pnpm --filter @etabli/mobile ios` ou `android`. Le simulateur n'a pas de caméra : le
+scan retombe sur la saisie manuelle du jeton (voir plus bas).
+
+## Comptes de démonstration
+
+Ceux du seed, mot de passe **`etabli-2026`**. Pour le pointage : `membre@etabli.test` (déjà habilité),
+ou `demo@etabli.test` pour le parcours complet depuis la demande d'habilitation — voir le
+[parcours de démonstration](../../README.md#parcours-de-démonstration).
+Liste complète dans le [README racine](../../README.md#comptes-de-démonstration).
+
+## Tester le scan QR
+
+Le QR code porte le `checkInToken` de la machine — un jeton généré par le serveur, unique sur tout
+le réseau. Le scan déclenche `POST /bookings/:id/check-in` ; l'API vérifie que le jeton est celui de
+la machine réservée et que la fenêtre de pointage est ouverte (15 min avant le début, 30 min après).
+
+**Préparer le QR**
+
+1. `pnpm db:demo:docker` (ou `pnpm db:demo` sur la base de `.env`) **juste avant la démo** : le seed place un créneau de `membre@etabli.test` sur la
+   **Shapeoko 4 XXL** de La Forge, commencé il y a 10 minutes — sa fenêtre est donc ouverte pendant
+   ~40 minutes.
+2. Sur le web, se connecter en `fabmanager.forge@etabli.test`, ouvrir `/manage/machines`, puis
+   « QR de pointage » de la Shapeoko — ou directement
+   `http://localhost:3000/manage/machines/0a7e1f00-0000-4000-8000-000000000104/qr`.
+   Imprimer, ou laisser la page à l'écran. Le jeton (`qr-forge-cnc-01`) est écrit en clair dessous.
+
+**Scénario nominal**
+
+1. Sur le téléphone, onglet Réservations → se connecter en `membre@etabli.test`.
+2. Ouvrir le créneau Shapeoko du jour → **Pointer**.
+3. Au premier scan, iOS/Android demande l'accès à l'appareil photo → accepter.
+4. Cadrer le QR → l'app envoie le jeton → le créneau passe à **Pointée** (`CHECKED_IN`), l'heure du
+   pointage s'affiche et le bouton disparaît.
+5. Côté web, `/manage/bookings` (fabmanager) montre la ligne pointée par `QR`.
+
+**Cas d'erreur à montrer**
+
+| Geste | Retour attendu |
 |---|---|
-| `shared/core/http` | client `fetch`, `Result`, lecture du code d'erreur |
-| `shared/core/session` | le token — port + adapter `expo-secure-store` |
-| `app/core` | l'URL de l'API, et le câblage des adapters |
-| `identity` | connexion, `GET /auth/me`, contexte de session |
-| `atelier` | annuaire, fiche atelier, fiche machine |
-| `booking` | semaine, réservation, liste, détail, pointage |
-| `check-in` | `ICheckInScannerPort` + `expo-camera` et `manual` |
-| `geo` | `ILocationPort` + `expo-location` |
+| Scanner le QR d'une **autre** machine (ex. `/manage/machines/0a7e1f00-0000-4000-8000-000000000101/qr`, la Trotec) | « Ce QR code n'est pas celui de la machine réservée. » (`CHECK_IN_TOKEN_MISMATCH`) |
+| Scanner un QR quelconque (un QR qui n'est pas d'Établi) | même refus : le serveur ne reconnaît pas le jeton |
+| Pointer une seconde fois | impossible depuis l'app — le bouton disparaît ; l'API refuse de toute façon (`BOOKING_NOT_CHECK_INABLE`) pour que le premier pointage reste seul opposable |
+| Pointer hors fenêtre | le bouton n'est pas proposé ; l'API répond `CHECK_IN_WINDOW_CLOSED` |
+| **Refuser** la permission caméra | « Sans accès à l'appareil photo, le QR code ne peut pas être scanné. » ; au tap suivant, la permission ne pouvant plus être redemandée, une feuille de saisie manuelle du jeton s'ouvre |
+| Fermer la caméra sans scanner | « Scan interrompu. », le créneau reste confirmé |
+
+La saisie manuelle est le repli voulu, pas un contournement : le jeton est imprimé sous le QR pour
+le cas d'une caméra refusée ou absente. Le serveur applique exactement les mêmes vérifications.
+
+## Tester la géolocalisation
+
+L'annuaire (premier onglet) demande la position au premier affichage
+(`expo-location`, permission « pendant l'utilisation »).
+
+| Cas | Comportement |
+|---|---|
+| Permission **accordée** | `GET /ateliers?lat=…&lng=…&radiusKm=1000` ; chaque carte d'atelier affiche sa distance, la liste est triée de la plus proche à la plus lointaine |
+| Permission **refusée** | pas d'erreur bloquante : l'annuaire appelle `GET /ateliers` sans coordonnées, n'affiche aucune distance et le dit — « Sans votre position, l'annuaire n'est pas trié par distance. » — avec un bouton **Réessayer** |
+| Position illisible (GPS coupé, délai) | même repli, avec « Votre position n'a pas pu être lue. » |
+
+Pour vérifier le tri : les ateliers du seed sont répartis entre Montreuil, Paris, Lyon, Toulouse,
+Nantes, Marseille, Lille et Bordeaux. Depuis l'Île-de-France, Montreuil et Paris sortent en tête ;
+un simulateur iOS réglé sur Lyon (*Features → Location → Custom Location*, 45.76 / 4.83) fait
+remonter les ateliers lyonnais.
+
+Pour rejouer le refus : Réglages du téléphone → Expo Go → Position → Jamais, puis revenir dans
+l'app.
+
+## Organisation
+
+`src/app/` ne porte que des coquilles Expo Router : un import de `src/features/`, et rien d'autre.
+
+```
+src/
+├── app/                 _layout (Stack + Stack.Protected), (tabs) annuaire/réservations/compte,
+│                        (auth)/login en modale, ateliers/[slug], machines/[id], bookings/[id],
+│                        habilitations, onboarding
+├── features/            orchestrateurs d'écran
+└── modules/
+    ├── app/core         URL de l'API, câblage des adapters (dependencies.ts)
+    ├── shared/core      session : port + adapter expo-secure-store, SessionTokenHolder
+    ├── identity         connexion, inscription, GET /auth/me, SessionProvider
+    ├── atelier          annuaire, carte, fiche atelier, fiche machine, onboarding
+    ├── booking          semaine, réservation, liste, détail, pointage
+    ├── certification    mes habilitations, demande
+    ├── check-in         ICheckInScannerPort — adapters expo-camera et saisie manuelle
+    └── geo              ILocationPort — adapter expo-location
+```
+
+Chaque module suit `core/{model,ports,adapters,lib}` + `ui/{components,hooks}` ; `core/` n'importe
+ni React ni React Native.
+
+## Choix techniques
+
+- **Le jeton vit dans `expo-secure-store`** (trousseau du système), jamais dans `AsyncStorage`. Il
+  est lu une fois au démarrage ; un 401 en cours de route l'efface et repasse en anonyme.
+- **L'app s'ouvre sans compte.** Seuls le détail d'une réservation, les habilitations et
+  l'onboarding sont derrière `Stack.Protected`.
+- **Le refus se lit dans le `code` du corps**, pas dans le statut : cinq règles partagent le 409.
+- **TanStack Query à la racine** pour tous les écrans ; états loading / error / empty / success
+  rendus par chaque écran.
+- **Hermes s'arrête à l'ES2022** : `lib: ["DOM", "ES2022"]` dans le tsconfig pour que `toSorted` &
+  co. soient une erreur de type plutôt qu'un crash sur l'appareil.
 
 ## Tests
 
-```sh
-pnpm --filter @etabli/mobile test
+```bash
+pnpm --filter @etabli/mobile test        # 92 tests Vitest
+pnpm --filter @etabli/mobile typecheck
 ```
 
-Le `core/` est testé au vitest : adapters HTTP sur `fetch` mocké, table de
-traduction des refus, port de scan et port position sur leurs implémentations de
-test. **Les écrans ne sont pas testés** — réduction assumée, détaillée au §9 de
-la conception.
+Modèles, tables de traduction des refus, calcul des créneaux, construction de la requête de
+l'annuaire, URL de l'API. **Les écrans ne sont pas testés** : monter React Native sous Vitest demande
+un preset et des mocks natifs pour un parcours qui se vérifie à la main, sur téléphone.
+
+## Build de production
+
+Non préparé : la soutenance se fait sur Expo Go. `app.json` porte déjà `bundleIdentifier` et
+`package` (`org.etabli.mobile`) ; une build EAS demanderait `eas build:configure` et, pour Android,
+une clé Google Maps.

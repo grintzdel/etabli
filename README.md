@@ -11,6 +11,13 @@ Projet fil rouge M2 EEMI 2026 · Next.js 16.3.
 La conception complète — produit, règles métier, modèle de données, surface d'API — est dans
 `docs/superpowers/specs/2026-09-14-etabli-design.md`.
 
+**Sommaire** — [Produit](#le-problème) · [Comptes de démo](#comptes-de-démonstration) · [Parcours de démo](#parcours-de-démonstration) ·
+[Installation et variables](#démarrer) · [Commandes Next.js, React Native, API, Docker](#commandes-par-application) ·
+[Docker](#docker) · [Scan Docker Scout et IA](#docker--sécurité--ia) · [Architecture](#organisation) ·
+[Mobile](#lapplication-mobile--qr-code-et-position) · [Tester le scan QR](#tester-le-scan-qr) ·
+[Tester la géolocalisation](#tester-la-géolocalisation) · [Usage de l'IA](#usage-de-lia) ·
+[Limites connues](#limites-connues) · [Déploiement](#déploiement)
+
 ---
 
 ## Le problème
@@ -29,7 +36,8 @@ exclusif, la présence est prouvée par QR code.**
 - Page d'accueil, `/fonctionnalites`, `/faq` — prérendues, `sitemap.xml` et `robots.txt`
 - `/ateliers` — annuaire filtrable par ville et par type de machine
 - `/ateliers/[slug]` — fiche d'un atelier et parc publié
-- `/machines/[id]` — fiche d'une machine ; la semaine réservable n'ouvre qu'aux membres de l'atelier
+- `/machines/[id]` — fiche d'une machine et sa semaine de créneaux ; seul le geste de réserver demande
+  un compte, et le créneau choisi survit à la connexion
 
 ### Membre
 
@@ -56,37 +64,101 @@ exclusif, la présence est prouvée par QR code.**
 
 ### Mobile — le parcours membre
 
-Trois onglets et trois écrans de détail : l'annuaire trié par distance, les réservations, le compte ;
-puis la fiche d'un atelier, la semaine d'une machine, et le détail d'un créneau — où le **pointage
-par QR code** se fait. Voir [L'application mobile](#lapplication-mobile--qr-code-et-position).
+Trois onglets — l'annuaire trié par distance et sa carte, les réservations, le compte — puis la fiche
+d'un atelier, la semaine d'une machine, le détail d'un créneau — où le **pointage par QR code** se
+fait — les habilitations et l'onboarding. Voir
+[L'application mobile](#lapplication-mobile--qr-code-et-position).
 
 ## Comptes de démonstration
 
-`pnpm db:seed` insère ces comptes de façon idempotente. **Mot de passe commun : `etabli-2026`.**
+**Mot de passe commun : `etabli-2026`.**
 
-Le seed pose aussi 16 habilitations et 20 réservations — à venir, pointées, non honorée, annulée —
-pour que le tableau de bord, les files de validation et les statistiques ouvrent sur des chiffres.
-Chaque compte actif a de quoi montrer quelque chose, l'administrateur comme les fabmanagers.
+### Remettre la démo à zéro
 
-**Les créneaux sont datés relativement à maintenant** : un `db:seed` les réécrit pour que le
-« prochain créneau » soit toujours devant. C'est la seule partie du seed qui remplace au lieu
-d'ignorer les conflits.
+```bash
+pnpm db:demo            # base de .env (Neon) : migrations, TRUNCATE de toutes les tables, seed
+pnpm db:demo:docker     # base du compose (`docker compose up` lancé) : TRUNCATE et seed dans le conteneur api
+```
 
-Deux créneaux sont ancrés sur l'horloge et non sur la grille, pour que le **pointage** soit
-réellement ouvert au moment de la démonstration : la fenêtre court de 15 minutes avant le créneau à
-30 minutes après son début. Reséedez juste avant de démontrer.
+**À lancer juste avant chaque démonstration.** Contrairement à `pnpm db:seed`, qui n'ajoute que ce
+qui manque, `db:demo` repart d'une base vide : les comptes créés, les mots de passe changés, les
+réservations prises, les jetons de QR régénérés et les ateliers modifiés pendant un essai
+disparaissent. Il refuse de tourner avec `NODE_ENV=production`.
+
+Le seed pose 9 ateliers, 21 machines, 15 comptes, 23 habilitations et 60 réservations — à venir,
+pointées, non honorées, annulées — pour que le tableau de bord, les files de validation et les
+statistiques ouvrent sur des chiffres. **Les créneaux sont datés relativement à maintenant.**
+
+Deux créneaux sont ancrés sur l'horloge et non sur la grille, pour que le **pointage** soit ouvert au
+moment du seed : la fenêtre court de 15 minutes avant le créneau à 30 minutes après son début.
+
+La **Station de soudure Weller** de La Forge a des créneaux d'un quart d'heure : le prochain créneau
+libre commence donc toujours dans moins de 15 minutes, et son pointage est ouvert **dès la
+réservation**. C'est elle qui permet de dérouler réservation et scan d'une traite — voir le
+[parcours de démonstration](#parcours-de-démonstration).
 
 | E-mail | Rôle | À quoi il sert |
 |---|---|---|
+| `demo@etabli.test` | Membre — La Forge, **aucune habilitation, aucune réservation** | Le [parcours de démonstration](#parcours-de-démonstration), de la demande d'habilitation au scan |
 | `admin@etabli.test` | Administrateur plateforme, 2 ateliers | Tout `/admin/*`, et un tableau de bord garni : créneaux à venir, **pointage ouvert**, 1 demande en attente |
-| `fabmanager.forge@etabli.test` | Fabmanager — La Forge | Tout `/manage/*` sur un atelier, 3 demandes dans sa file |
+| `fabmanager.forge@etabli.test` | Fabmanager — La Forge | Tout `/manage/*` sur un atelier, 3 demandes dans sa file ; accorde l'habilitation de `demo` |
 | `fabmanager.lyon@etabli.test` | Fabmanager — deux ateliers | Vérifier le cloisonnement multi-atelier |
-| `membre@etabli.test` | Membre habilité, 2 ateliers | Parcours complet : créneaux à venir, **pointage ouvert**, historique, 1 demande en attente |
+| `membre@etabli.test` | Membre habilité, 2 ateliers, habilité sur la soudure | Parcours court : créneaux à venir, **pointage ouvert**, historique, 1 demande en attente |
 | `lea@etabli.test` | Membre — La Forge | Une habilitation accordée, une en attente, une révoquée |
 | `theo@etabli.test` | Membre — 2 ateliers | Membre sans habilitation sur la découpe laser |
 | `manon@etabli.test` | Membre — Copeaux & Cie | Alimente la file de son fabmanager |
 | `nouveau@etabli.test` | Membre sans onboarding | Voir la redirection vers `/bienvenue` |
 | `suspendu@etabli.test` | Compte suspendu | Voir le refus de connexion |
+
+## Parcours de démonstration
+
+De la découverte d'un atelier à la présence prouvée par QR code. Compter 10 minutes. **Entre 8 h et
+21 h 45** (heure de Paris) : hors des heures d'ouverture, le prochain créneau est le lendemain 8 h.
+
+**0. Préparer** — `pnpm db:demo:docker` (ou `pnpm db:demo`). Sur le web, se connecter en
+`fabmanager.forge@etabli.test`, ouvrir `/manage/machines` → « QR de pointage » de la **Station de
+soudure Weller**, et garder la page ouverte à l'écran (ou l'imprimer), puis se déconnecter. Le jeton
+`qr-forge-soudure-01` est écrit sous le code.
+
+**1. Découvrir sans compte** (web `http://localhost:3000` ou mobile, onglet Annuaire)
+- `/ateliers` : l'annuaire, sa carte, les filtres ville et type. Sur mobile, accepter la position :
+  la liste se trie par distance.
+- Ouvrir **La Forge**, puis la **Station de soudure Weller WT 1010** : la fiche et la semaine sont
+  publiques. Choisir le premier créneau libre.
+- **Se connecter pour réserver** : le créneau choisi voyage dans l'URL (`?creneau=`) et sera
+  retrouvé après la connexion.
+
+**2. Se connecter** en `demo@etabli.test` — retour sur la fiche, créneau toujours sélectionné.
+L'écran dit ce qui manque : **une habilitation**. Cliquer « Demander l'habilitation ».
+Visible aussi dans `/habilitations` (statut *en attente*).
+
+**3. Le fabmanager décide** — dans une fenêtre privée, `fabmanager.forge@etabli.test` →
+`/manage/certifications` : la demande d'Alex Martin est dans la file → **Accorder**.
+
+**4. Réserver** — de retour en `demo@etabli.test` sur la fiche de la soudure (recharger) : choisir le
+premier créneau libre → **Réserver ce créneau**. Le créneau apparaît dans `/reservations` et sur
+`/tableau-de-bord` comme prochain créneau. Essayer de réserver le même créneau depuis un autre compte
+habilité (`membre@etabli.test`) : refusé, le créneau est pris.
+
+**5. Pointer avec le téléphone** (Expo Go, voir [`apps/mobile`](apps/mobile/README.md))
+- Onglet Réservations → se connecter en `demo@etabli.test` → ouvrir le créneau de la soudure.
+- Le bloc **Pointer** est proposé : la fenêtre est ouverte. Appuyer, accepter la caméra.
+- Viser d'abord **le QR d'une autre machine** (`/manage/machines/0a7e1f00-0000-4000-8000-000000000101/qr`,
+  la Trotec) → « Ce QR code n'est pas celui de la machine réservée. »
+- Puis le QR de la soudure → le créneau passe à **Pointée**, avec l'heure ; le bouton disparaît.
+
+**6. Le fabmanager voit la présence** — `fabmanager.forge@etabli.test` → `/manage/bookings` : la ligne
+d'Alex Martin est pointée par **QR**. `/manage/stats` compte le créneau.
+
+**Variante courte** — `membre@etabli.test` est déjà habilité sur la soudure : se connecter, réserver
+la soudure, pointer. Il a aussi un créneau sur la **Shapeoko** dont le pointage est ouvert pendant
+~40 minutes après le seed.
+
+**Variantes à montrer**
+- Annuler une réservation à venir depuis `/reservations/:id` (motif affiché si elle a commencé).
+- Refuser la caméra : message, puis saisie manuelle du jeton au tap suivant.
+- Refuser la position : l'annuaire mobile s'affiche sans tri et propose **Réessayer**.
+- `nouveau@etabli.test` : redirigé vers `/bienvenue` pour l'onboarding.
 
 ## Démarrer
 
@@ -112,21 +184,30 @@ pnpm run dev                  # API :3001, web :3000, et Expo au premier plan
 Seules `DATABASE_URL` et `JWT_SECRET` sont obligatoires côté API ; les autres ont une valeur par
 défaut de développement.
 
-### L'application mobile
+### Commandes par application
 
-`pnpm run dev` lance les trois — Expo reste au premier plan, parce qu'il n'imprime son QR code que
-s'il tient un TTY. Un téléphone sur le wifi ne joint pas `localhost` : copier
-`apps/mobile/.env.example` en `apps/mobile/.env` et y mettre l'adresse IP de la machine
-(`ipconfig getifaddr en0` sur macOS).
+| Application | Développement | Production / build | Tests |
+|---|---|---|---|
+| **Next.js** — `apps/web` | `pnpm dev:web` (:3000) | `pnpm --filter @etabli/web build` puis `start` | `pnpm --filter @etabli/web test`, `pnpm test:e2e` |
+| **React Native** — `apps/mobile` | `pnpm dev:mobile` (Expo) | — (Expo Go) | `pnpm --filter @etabli/mobile test` |
+| **API** — `apps/api` | `pnpm dev:api` (:3001) | `pnpm --filter @etabli/api build` puis `start` | `pnpm --filter @etabli/api test` |
+| **Docker** | `docker compose up --build` | `docker compose -f compose.yaml up --build` | `docker scout cves etabli-web` |
 
-| Variable | Rôle |
-|---|---|
-| `EXPO_PUBLIC_API_URL` | Où le téléphone joint l'API — une IP du réseau local, pas `localhost` |
+### L'application mobile — Expo Go
+
+**Expo Go suffit**, aucun development build : la caméra, la position, le trousseau et la carte y
+tournent tous. Installer Expo Go sur le téléphone, le mettre sur le même wifi que l'ordinateur,
+lancer `pnpm run dev` et scanner le QR code d'Expo. Expo reste au premier plan, parce qu'il n'imprime
+son QR code que s'il tient un TTY.
+
+**Rien à configurer** : l'app déduit l'URL de l'API de l'adresse du serveur Expo, port 3001.
+`EXPO_PUBLIC_API_URL` (dans `apps/mobile/.env`) n'est qu'un forçage, pour un tunnel ou une API
+distante. Procédure complète : [`apps/mobile/README.md`](apps/mobile/README.md).
 
 ### Vérifier
 
 ```bash
-pnpm run check      # build des packages, format, lint, typecheck, 675 tests unitaires
+pnpm run check      # build des packages, format, lint, typecheck, 785 tests unitaires
 pnpm run verify     # check + next build
 ```
 
@@ -305,6 +386,11 @@ paquets concernés en sont retirés.
 | `apps/mobile` | application Expo / React Native — la caméra et la position |
 | `scripts/` | `dev.sh`, et les deux scripts Python des visuels de l'annuaire |
 
+Chaque application et chaque package a son propre README :
+[`apps/api`](apps/api/README.md) · [`apps/web`](apps/web/README.md) ·
+[`apps/mobile`](apps/mobile/README.md) · [`packages/contract`](packages/contract/README.md) ·
+[`packages/api-client`](packages/api-client/README.md) · [`packages/ui`](packages/ui/README.md).
+
 Les migrations vivent dans `apps/api/src/infrastructure/database/migrations/` et sont numérotées par
 `drizzle-kit`. `0001` est écrite à la main : `drizzle-kit generate --custom` l'a ordonnée après les
 sept tables, parce qu'une contrainte d'exclusion ne se déduit pas du schéma TypeScript.
@@ -426,7 +512,8 @@ dans les read models. Aucun ordonnanceur, aucun `GET` qui écrit.
 ## L'application mobile — QR code et position
 
 `apps/mobile` n'est pas le web en petit : elle existe pour les deux capacités que le navigateur n'a
-pas. Sept écrans et deux layouts, de la connexion au créneau pointé. Sa conception est dans
+pas. De l'annuaire au créneau pointé, avec la même API, les mêmes comptes et les mêmes données que le
+web. Sa conception est dans
 `docs/superpowers/specs/2026-09-17-etabli-mobile-design.md`.
 
 - **QR code** — `machines.check_in_token` est unique sur tout le réseau et **généré par le serveur** à
@@ -443,6 +530,26 @@ pas. Sept écrans et deux layouts, de la connexion au créneau pointé. Sa conce
 
 Le token vit dans `expo-secure-store` — le trousseau du système — jamais dans `AsyncStorage`, qui
 écrit en clair.
+
+### Tester le scan QR
+
+1. `pnpm db:demo:docker` (ou `pnpm db:demo`) **juste avant la démo** : un créneau de `membre@etabli.test` sur la
+   **Shapeoko 4 XXL** (La Forge) commence 10 minutes plus tôt, sa fenêtre de pointage est ouverte.
+2. Web, en `fabmanager.forge@etabli.test` : `/manage/machines` → « QR de pointage » de la Shapeoko
+   (`/manage/machines/0a7e1f00-0000-4000-8000-000000000104/qr`). Le jeton `qr-forge-cnc-01` est
+   écrit en clair sous le code.
+3. Téléphone, en `membre@etabli.test` : Réservations → le créneau Shapeoko → **Pointer** → accepter
+   la caméra → cadrer le QR. Le créneau passe à **Pointée** ; `/manage/bookings` affiche `QR`.
+4. Refus à montrer : le QR d'une autre machine (la Trotec, `…0101/qr`) → « Ce QR code n'est pas celui
+   de la machine réservée. » ; caméra refusée → message, puis saisie manuelle du jeton.
+
+### Tester la géolocalisation
+
+Premier onglet du mobile. Position accordée : chaque atelier affiche sa distance et la liste est
+triée de la plus proche à la plus lointaine (`GET /ateliers?lat&lng&radiusKm`). Position refusée
+(Réglages → Expo Go → Position → Jamais) : l'annuaire s'affiche quand même, sans tri, le dit, et
+propose **Réessayer**. Détail des deux scénarios et des cas d'erreur dans
+[`apps/mobile/README.md`](apps/mobile/README.md#tester-le-scan-qr).
 
 ## Usage de l'IA
 
@@ -527,10 +634,10 @@ Une fois déployé, reporter les deux URLs en tête de ce README.
 
 ## Tests
 
-664 tests unitaires et d'intégration dans `pnpm check`, 103 E2E Playwright à la demande. Les tests
+785 tests unitaires et d'intégration dans `pnpm check`, 104 E2E Playwright à la demande. Les tests
 sont colocalisés ; les E2E portent l'extension `.test.e2e.ts` et vivent à côté de la page couverte.
 
-`apps/api` en porte 277, sur trois étages : unitaires sur stubs et horloge figée, intégration des
+`apps/api` en porte 282, sur trois étages : unitaires sur stubs et horloge figée, intégration des
 repositories sur PGlite, bout en bout HTTP via supertest. Pas de Docker — chaque suite monte sa
 propre base en mémoire, donc l'isolation y est structurelle, là où les E2E Playwright la tiennent
 d'un `TRUNCATE` au `globalSetup`.
