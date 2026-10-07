@@ -127,6 +127,16 @@ export const ATELIERS: ReadonlyArray<SeedAtelier> = [
         status: 'RETIRED',
         checkInToken: 'qr-forge-scie-01',
       },
+      {
+        id: '0a7e1f00-0000-4000-8000-000000000106',
+        name: 'Station de soudure Weller WT 1010',
+        description: 'Poste de soudure électronique en libre-service, créneaux d’un quart d’heure.',
+        kind: 'ELECTRONICS_BENCH',
+        requiresCertification: true,
+        slotDurationMinutes: 15,
+        status: 'AVAILABLE',
+        checkInToken: 'qr-forge-soudure-01',
+      },
     ],
   },
   {
@@ -510,6 +520,15 @@ export const USERS: ReadonlyArray<SeedUser> = [
     status: 'ACTIVE',
   },
   {
+    id: '0a7e2000-0000-4000-8000-000000000015',
+    email: 'demo@etabli.test',
+    displayName: 'Alex Martin',
+    platformRole: 'MEMBER',
+    practice: ['électronique'],
+    onboardingCompleted: true,
+    status: 'ACTIVE',
+  },
+  {
     id: '0a7e2000-0000-4000-8000-000000000006',
     email: 'suspendu@etabli.test',
     displayName: 'Lou Marchand',
@@ -651,6 +670,13 @@ export const MEMBERSHIPS: ReadonlyArray<SeedMembership> = [
     id: '0a7e3000-0000-4000-8000-000000000019',
     userId: '0a7e2000-0000-4000-8000-000000000014',
     atelierId: '0a7e1f00-0000-4000-8000-000000000002',
+    role: 'MEMBER',
+    status: 'ACTIVE',
+  },
+  {
+    id: '0a7e3000-0000-4000-8000-000000000020',
+    userId: '0a7e2000-0000-4000-8000-000000000015',
+    atelierId: '0a7e1f00-0000-4000-8000-000000000001',
     role: 'MEMBER',
     status: 'ACTIVE',
   },
@@ -832,6 +858,14 @@ export const CERTIFICATIONS: ReadonlyArray<SeedCertification> = [
     status: 'PENDING',
     decidedBy: null,
     requestedDaysAgo: 5,
+  },
+  {
+    id: '0a7e4000-0000-4000-8000-000000000023',
+    userId: '0a7e2000-0000-4000-8000-000000000004',
+    machineId: '0a7e1f00-0000-4000-8000-000000000106',
+    status: 'GRANTED',
+    decidedBy: '0a7e2000-0000-4000-8000-000000000002',
+    requestedDaysAgo: 12,
   },
 ]
 

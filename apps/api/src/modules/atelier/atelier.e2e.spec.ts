@@ -38,7 +38,7 @@ describe('ateliers', () => {
     const response = await api().get('/ateliers/la-forge-montreuil')
 
     expect(response.status).toBe(200)
-    expect(response.body.machines).toHaveLength(4)
+    expect(response.body.machines).toHaveLength(5)
     expect(response.body.machines.every((machine: { readonly status: string }) => machine.status !== 'RETIRED')).toBe(
       true
     )
