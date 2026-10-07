@@ -28,9 +28,10 @@ describe('AtelierRepositoryDrizzlePg', () => {
     expect(summaries.map((summary) => summary.slug)).not.toContain('atelier-des-chartrons')
 
     const forge = summaries.find((summary) => summary.slug === 'la-forge-montreuil')
-    expect(forge?.machineCount).toBe(4)
+    expect(forge?.machineCount).toBe(5)
     expect([...(forge?.machineKinds ?? [])].toSorted()).toEqual([
       'CNC_MILL',
+      'ELECTRONICS_BENCH',
       'LASER_CUTTER',
       'PRINTER_3D',
       'WOOD_LATHE',
@@ -86,7 +87,7 @@ describe('AtelierRepositoryDrizzlePg', () => {
   it('leaves the retired machines out of the public list', async () => {
     const machines = await repository.listPublicMachines('0a7e1f00-0000-4000-8000-000000000001')
 
-    expect(machines).toHaveLength(4)
+    expect(machines).toHaveLength(5)
     expect(machines.every((machine) => machine.status !== 'RETIRED')).toBe(true)
   })
 

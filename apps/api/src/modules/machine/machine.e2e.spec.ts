@@ -23,7 +23,7 @@ describe('machine parcs', () => {
     expect(response.status).toBe(200)
     expect(response.body).toHaveLength(1)
     expect(response.body[0].atelier.slug).toBe('la-forge-montreuil')
-    expect(response.body[0].machines).toHaveLength(5)
+    expect(response.body[0].machines).toHaveLength(6)
   })
 
   it('answers an empty list to a member who runs no atelier', async () => {

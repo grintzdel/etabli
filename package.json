@@ -8,6 +8,8 @@
     "build:packages": "pnpm --filter \"./packages/**\" --if-present run build",
     "check": "pnpm run build:packages && pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test",
     "db:generate": "pnpm --filter @etabli/api run db:generate",
+    "db:demo": "pnpm run build:packages && pnpm run db:migrate && pnpm --filter @etabli/api run db:reset:demo",
+    "db:demo:docker": "docker compose exec api pnpm exec tsx src/infrastructure/database/demo-reset.cli.ts",
     "db:migrate": "pnpm --filter @etabli/api run db:migrate",
     "db:migrate:test": "pnpm --filter @etabli/api run db:migrate:test",
     "db:reset:test": "pnpm --filter @etabli/api run db:reset:test",

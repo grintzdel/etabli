@@ -34,15 +34,15 @@ describe('MachineRepositoryDrizzlePg', () => {
   it('keeps the retired machines in the atelier parc', async () => {
     const machines = await repository.listForAtelier(SEED.atelier.forge)
 
-    expect(machines).toHaveLength(5)
+    expect(machines).toHaveLength(6)
     expect(machines.some((machine) => machine.status === 'RETIRED')).toBe(true)
   })
 
   it('lists the machines of several ateliers at once, without duplicates', async () => {
     const machines = await repository.listForAteliers([SEED.atelier.forge, SEED.atelier.forge, SEED.atelier.lyon])
 
-    expect(machines).toHaveLength(8)
-    expect(new Set(machines.map((machine) => machine.id)).size).toBe(8)
+    expect(machines).toHaveLength(9)
+    expect(new Set(machines.map((machine) => machine.id)).size).toBe(9)
   })
 
   it('answers an empty list when no atelier is given', async () => {
