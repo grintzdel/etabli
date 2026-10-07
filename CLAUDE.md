@@ -420,6 +420,12 @@ layouts, de la connexion au `CHECKED_IN`.
 Elle parle à **`apps/api`**. `pnpm build:packages`, puis `pnpm dev:api` et
 `pnpm dev:mobile` — ou `pnpm dev`, qui lance les trois.
 
+L'URL de l'API est **déduite de l'hôte du serveur Expo** (`Constants.expoConfig.hostUri`),
+port 3001 : le téléphone joint déjà cette machine pour charger le bundle. Une IP
+écrite dans `.env` périmait à chaque changement d'adresse wifi et rendait
+`UNREACHABLE`. `EXPO_PUBLIC_API_URL` reste un forçage, pour un tunnel ou une API
+distante ; derrière un tunnel, sans elle, on retombe sur `localhost`.
+
 `src/app/` ne porte que des coquilles, comme les routes du web : un import de
 `src/features/`, et rien d'autre. Tout vit dans `src/modules/<module>/{core,ui}`.
 
