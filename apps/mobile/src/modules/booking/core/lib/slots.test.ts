@@ -26,4 +26,13 @@ describe('groupSlotsByDay', () => {
 
     expect(day?.label).toBe('jeudi 17 septembre')
   })
+
+  it('breaks the day into a calendar leaf and counts what is still free', () => {
+    const [day] = groupSlotsByDay([
+      slot('2026-09-17T08:00:00.000Z'),
+      { ...slot('2026-09-17T09:00:00.000Z'), available: false, reason: 'BOOKED' },
+    ])
+
+    expect(day).toMatchObject({ weekday: 'jeu', date: '17', month: 'sept', freeCount: 1 })
+  })
 })

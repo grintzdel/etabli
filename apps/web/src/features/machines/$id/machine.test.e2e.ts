@@ -8,12 +8,14 @@ import {
   OUTSIDE_MACHINE_ID,
   releaseBooking,
   RETIRED_MACHINE_ID,
+  unfoldWeek,
 } from '@/e2e/fixtures/booking.fixture'
 
 test('a visitor picks a slot, signs in, and books it where they left it', async ({ page, request }) => {
   await page.goto(`/machines/${BOOKABLE_MACHINE_ID}`)
 
   await expect(page.getByRole('heading', { name: 'Bambu Lab P1S' })).toBeVisible()
+  await unfoldWeek(page)
   const slot = page.getByRole('button', { name: /— Libre$/ }).first()
   const label = (await slot.getAttribute('aria-label')) ?? ''
   await slot.click()
@@ -26,6 +28,7 @@ test('a visitor picks a slot, signs in, and books it where they left it', async 
   await page.getByRole('button', { name: /se connecter/i }).click()
 
   await expect(page).toHaveURL(new RegExp(`/machines/${BOOKABLE_MACHINE_ID}\\?creneau=`))
+  await unfoldWeek(page)
   await expect(page.getByRole('button', { name: label, exact: true })).toHaveAttribute('aria-pressed', 'true')
   await page.getByRole('button', { name: /réserver ce créneau/i }).click()
 
@@ -39,6 +42,7 @@ test('a member of another atelier joins it from the slot and comes back to book 
   await page.goto(`/machines/${OUTSIDE_MACHINE_ID}`)
 
   await expect(page.getByRole('heading', { name: 'Singer 4423 Heavy Duty' })).toBeVisible()
+  await unfoldWeek(page)
   await page
     .getByRole('button', { name: /— Libre$/ })
     .first()
@@ -71,6 +75,7 @@ test('a member takes a free slot and lands on its booking', async ({ page, reque
   await page.goto(`/machines/${BOOKABLE_MACHINE_ID}`)
 
   await expect(page.getByRole('heading', { name: 'Bambu Lab P1S' })).toBeVisible()
+  await unfoldWeek(page)
   await page
     .getByRole('button', { name: /— Libre$/ })
     .first()
@@ -91,6 +96,7 @@ test('a machine that demands an habilitation offers the request, not a booking b
   await page.goto(`/machines/${CERTIFIED_MACHINE_ID}`)
 
   await expect(page.getByText(/cette machine exige une habilitation/i)).toBeVisible()
+  await unfoldWeek(page)
   await page
     .getByRole('button', { name: /— Libre$/ })
     .first()
@@ -105,6 +111,7 @@ test('a machine under maintenance offers not a single slot', async ({ page }) =>
   await page.goto(`/machines/${MAINTENANCE_MACHINE_ID}`)
 
   await expect(page.getByText('En maintenance')).toBeVisible()
+  await unfoldWeek(page)
   await expect(page.getByRole('button', { name: /— Libre$/ })).toHaveCount(0)
   await expect(page.getByRole('button', { name: /— Machine indisponible$/ }).first()).toBeDisabled()
 })
