@@ -229,11 +229,12 @@ pnpm run db:test:down
 ### Pré-requis
 
 Docker Desktop ou Docker Engine (OrbStack fonctionne). Rien d'autre : ni Node, ni pnpm, ni base de
-données — le `compose.yaml` embarque tout.
+données — le `compose.yaml` embarque tout, sauf les secrets, qui viennent de `.env.docker`.
 
 ### Tout lancer
 
 ```bash
+cp .env.docker.example .env.docker   # puis y mettre de vrais secrets, voir plus bas
 docker compose up --build        # web :3000, API :3001, PostgreSQL — en développement
 ```
 
@@ -272,8 +273,25 @@ ses données survivent à un `down` dans le volume `db-data` (`docker compose do
 zéro). Le Postgres des E2E, sur `:5433`, est un autre service, sous le profil `test` : il ne
 démarre qu'avec `pnpm db:test:up`.
 
-Aucune variable n'est requise : le compose porte des valeurs de démonstration. `JWT_SECRET` peut
-être surchargé par l'environnement (`JWT_SECRET=... docker compose up`).
+Le compose ne porte aucun secret. Les identifiants de `db` et le `JWT_SECRET` de l'API vivent dans
+`.env.docker`, ignoré par git — distinct du `.env` racine, qui pointe sur Neon et qu'aucune
+interpolation du compose ne doit ramasser :
+
+```bash
+cp .env.docker.example .env.docker
+openssl rand -hex 32             # une fois pour POSTGRES_PASSWORD (à reporter dans DATABASE_URL), une fois pour JWT_SECRET
+```
+
+Le mot de passe est en hexadécimal parce qu'il entre tel quel dans `DATABASE_URL` : un `/` ou un `@`
+casserait l'URL. Sans le fichier, rien ne démarre en silence — Postgres refuse de s'initialiser
+sans mot de passe et l'API refuse un `JWT_SECRET` de moins de 32 caractères. Le fichier n'est pas
+exigé par Compose lui-même, pour que `pnpm db:test:up` fonctionne sans lui.
+
+Postgres ne lit `POSTGRES_PASSWORD` qu'à l'initialisation du volume : après un changement de mot de
+passe, `docker compose down -v` est nécessaire, sans quoi l'API se voit refuser la connexion.
+
+Le Postgres des E2E garde ses identifiants `etabli` / `etabli` en clair : base jetable en `tmpfs`,
+publiée sur `127.0.0.1:5433` uniquement, et miroir de `.env.test.example`.
 
 ### Construire et lancer l'image Next.js seule
 

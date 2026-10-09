@@ -1,3 +1,9 @@
+x-postgres-healthcheck: &postgres-healthcheck
+  test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+  interval: 1s
+  timeout: 3s
+  retries: 30
+
 services:
   postgres:
     profiles: ['test']
@@ -7,39 +13,31 @@ services:
       POSTGRES_PASSWORD: etabli
       POSTGRES_DB: etabli_test
     ports:
-      - '5433:5432'
+      - '127.0.0.1:5433:5432'
     # PGDATA moved under /var/lib/postgresql/<major>/docker in the 18 image; the
     # declared volume is still the parent, so the tmpfs has to cover the parent.
     tmpfs:
       - /var/lib/postgresql
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U etabli -d etabli_test']
-      interval: 1s
-      timeout: 3s
-      retries: 30
+    healthcheck: *postgres-healthcheck
 
   db:
     image: postgres:18-alpine
-    environment:
-      POSTGRES_USER: etabli
-      POSTGRES_PASSWORD: etabli
-      POSTGRES_DB: etabli
+    env_file:
+      - path: .env.docker
+        required: false
     volumes:
       - db-data:/var/lib/postgresql
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U etabli -d etabli']
-      interval: 1s
-      timeout: 3s
-      retries: 30
+    healthcheck: *postgres-healthcheck
 
   api:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
     command: sh -c "node dist/infrastructure/database/migrate.js && node dist/infrastructure/database/seed.cli.js && node dist/main.js"
+    env_file:
+      - path: .env.docker
+        required: false
     environment:
-      DATABASE_URL: postgresql://etabli:etabli@db:5432/etabli
-      JWT_SECRET: ${JWT_SECRET:-docker-demo-secret-at-least-thirty-two-characters}
       PORT: 3001
       NODE_ENV: production
     ports:

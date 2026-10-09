@@ -12,6 +12,7 @@ playwright-report/
 .env.*
 !.env.example
 !.env.test.example
+!.env.docker.example
 .tsbuildinfo-root
 *.tsbuildinfo-native
 .idea
